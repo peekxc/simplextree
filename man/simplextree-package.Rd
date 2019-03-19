@@ -5,7 +5,11 @@
 \alias{simplextree-package}
 \title{simplextree package}
 \description{
-Provides an R/Rcpp implementation of a Simplex Tree dsat structure and its related tools.
+Provides an R/Rcpp implementation of a Simplex Tree data structure and its related tools.
+}
+\details{
+This package provides a lightweight implementation of a Simplex Tree data structure, exported as an Rcpp Module.
+The current implementation provides a limited API and a subset of the functionality described in the paper.
 }
 \author{
 Matt Piekenbrock

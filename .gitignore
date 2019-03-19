@@ -37,6 +37,7 @@ rsconnect/
 
 # source files
 **/*.o
+**/*.so
 
 # working directory 
 ignore

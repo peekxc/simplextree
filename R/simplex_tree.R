@@ -10,8 +10,7 @@
 #' The current implementation provides a limited API and a subset of the functionality described in the paper.
 #' @section Methods: 
 #' \describe{
-## \subsection{Network and Configuration}{
-#'     \item{$\code{\link{print_tree}()}}{ Prints the simplex tree. }
+#'     \item{$\code{print_tree}}{ Prints the simplex tree. }
 #'     \item{$\code{\link[simplextree:apply.simplex_tree]{apply}}()}{ Applies a function to a subset of the simplex tree. }
 #'     \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie, if it doesn't exist. }
 #'     \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie, if it exists. }
@@ -21,12 +20,11 @@
 #'     \item{$\code{\link{is_face}}}{ Checks for faces. }
 #'     \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
 #'     \item{$\code{\link{unserialize}}}{ Unserializes a stored simplex tree. }
-#'     \item{$\code{\link{as_list}}}{ Converts the complex to a list. }
-#'     \item{$\code{\link{as_adjacency_matrix}}}{ Converts the 1-skeleton to an adjacency matrix. }
-#'     \item{$\code{\link{as_adjacency_list}}}{ Converts the 1-skeleton to an adjacenecy list. }
-#'     \item{$\code{\link{as_edgelist}}}{ Converts the 1-skeleton to an edgelist. }
+#'     \item{$\code{as_list}}{ Converts the complex to a list. }
+#'     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
+#'     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacenecy list. }
+#'     \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
 #' }
-## }
 #' @field n_simplexes A vector, where each index k denotes the number (k-1)-simplices.
 #' @field max_depth The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.
 #' @author Matt Piekenbrock

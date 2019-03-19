@@ -14,7 +14,7 @@ A stable CRAN release is planned for the future.
 
 ## Getting Started
 
-```r
+```R
 library(simplextree)
 st <- simplex_tree()
 st$insert_simplex(c(1, 2, 3))
@@ -24,4 +24,8 @@ st$print_tree()
 # 3 (h = 0): 
 ```
 
+## API 
+```R
+## see ?simplextree
+```
 ...TODO 
