@@ -1,0 +1,19 @@
+Package: simplextree
+Type: Package
+Title: Provides tools for representing general Simplicial Complexes
+Version: 0.5.1
+Date: 2019-03-12
+Author: Matt Piekenbrock
+Maintainer: Matt Piekenbrock <matt.piekenbrock@gmail.com>
+Description: This package provides access to queryable, efficient Simplex Tree data structure, implemented as an Rcpp module
+License: MIT
+LinkingTo: Rcpp
+RcppModules: simplex_tree_module
+Imports: Rcpp
+Encoding: UTF-8
+LazyData: true
+VignetteBuilder: knitr
+SystemRequirements: C++11
+RoxygenNote: 6.1.0
+Suggests: 
+    testthat
