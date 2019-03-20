@@ -85,6 +85,13 @@ setClass("Rcpp_SimplexTree")
 #'     stree$apply(simplex, print, "link")
 #'   }
 #' }, "bfs")
+#' 
+#' ## To see the cofaces of a given simplex 
+#' stree <- simplex_tree()
+#' stree$insert_simplex(c(1, 2, 3))
+#' stree$apply(1L, print, "cofaces")
+#' stree$apply(2L, print, "cofaces")
+#' stree$apply(3L, print, "cofaces")
 NULL
 
 #' @name as_XPtr
@@ -147,11 +154,34 @@ NULL
 #' @usage $collapse(tau, sigma)
 #' @details This function performs an \emph{elementary collapse} in the sense described by (1), which is 
 #' summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if 
-#' \eqn{\sigma} is the only coface of \eqn{\tau}. This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
+#' \eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
 #' (if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed. 
 #' \code{tau} and \code{sigma} are sorted before comparison.
 #' @return boolean indicating whether \code{tau} is a coface of \code{sigma}, and the two were removed. 
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @examples 
+#' stree <- simplextree::simplex_tree()
+#' stree$insert_simplex(c(1, 2, 3))
+#' stree$collapse(c(1, 2), c(1, 2, 3))
+#' stree$print_tree()
+#' # 1 (h = 1): .( 3 )
+#' # 2 (h = 1): .( 3 )
+#' # 3 (h = 0):
+#' 
+#' stree$insert_simplex(1:3)
+#' stree$insert_simplex(2:5)
+#' stree$print_tree()
+#' # 1 (h = 2): .( 2 3 )..( 3 )
+#' # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
+#' # 3 (h = 2): .( 4 5 )..( 5 )
+#' # 4 (h = 1): .( 5 )
+#' # 5 (h = 0): 
+#' stree$collapse(2:4, 2:5)
+#' # 1 (h = 2): .( 2 3 )..( 3 )
+#' # 2 (h = 2): .( 3 4 5 )..( 5 5 )
+#' # 3 (h = 2): .( 4 5 )..( 5 )
+#' # 4 (h = 1): .( 5 )
+#' # 5 (h = 0): 
 NULL
 
 #' @name contract
@@ -169,6 +199,17 @@ NULL
 #' \code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
 #' Note that edge contraction is not symmetric.
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @examples 
+#' stree <- simplextree::simplex_tree()
+#' stree$insert_simplex(1:3)
+#' stree$print_tree()
+#' # 1 (h = 2): .( 2 3 )..( 3 )
+#' # 2 (h = 1): .( 3 )
+#' # 3 (h = 0): 
+#' stree$contract(c(1, 3))
+#' stree$print_tree()
+#' # 1 (h = 1): .( 2 )
+#' # 2 (h = 0): 
 NULL
 
 
@@ -180,6 +221,13 @@ NULL
 #' @details Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
 #' simplices which have themselves as a unique coface are saved. 
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @examples 
+#' stree <- simplex_tree()
+#' stree$insert_simplex(c(1, 2, 3))
+#' stree$serialize("test.rds")
+#' readRDS("test.rds")
+#' # [[1]]
+#' # [1] 1 2 3
 NULL
 
 #' @name unserialize
@@ -190,6 +238,16 @@ NULL
 #' @details Reads the simplex tree stored in the compressed RDS file given by \code{filename} with \code{\link{readRDS}}, 
 #' successively reinserting the simplices into the current tree. 
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @examples 
+#' stree <- simplex_tree()
+#' stree$insert_simplex(c(1, 2, 3))
+#' stree$serialize("test.rds")
+#' stree <- simplex_tree()
+#' print(stree)
+#' # < empty simplex tree >
+#' stree$unserialize("test.rds")
+#' print(stree)
+#' # Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
 NULL
 
 

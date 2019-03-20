@@ -1,5 +1,5 @@
 # simplextree
-This package provides an interface for simplifying the storing and performing general computation on simplicial complexes. The package provides an a Simplex Tree data structure, implemented as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). The Simplex Tree was introduced in the following paper: 
+This package provides an interface for simplifying basic computational operations on general simplicial complexes. This is accomplished by providing a _Simplex Tree_ data structure, implemented as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). The Simplex Tree was introduced in the following paper: 
 
 > Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 

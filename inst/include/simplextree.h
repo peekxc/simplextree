@@ -106,8 +106,8 @@ struct SimplexTree {
   size_t depth(node_ptr cn);
   size_t max_depth(node_ptr cn);
   void remove_subtree(node_ptr parent);
-  bool collapse(node_ptr tau, node_ptr sigma);
-  bool collapseR(vector< idx_t >, vector< idx_t >);
+  void collapse(node_ptr tau, node_ptr sigma);
+  void collapseR(vector< idx_t >, vector< idx_t >);
   void contract(vector< idx_t > edge);
     
   // Constructs the full simplex from a given node, recursively
@@ -117,8 +117,7 @@ struct SimplexTree {
   
   // Locate cofaces
   vector<node_ptr> locate_cofaces(node_ptr cn);
-  vector<node_ptr> expand_subtree(node_ptr sigma); // unpacks a subtree
-  vector<node_ptr> expand_subtrees(vector< node_ptr >); // unpacks multiple subtrees
+  vector<node_ptr> subtree_to_vec(node_ptr sigma); // unpacks a subtree
   
   // Locate links  
   vector< node_ptr > link(node_ptr);
@@ -131,13 +130,12 @@ struct SimplexTree {
   void serialize(std::string);
   void unserialize(std::string);
   
-  // Printing 
   void print_tree();
-  void print_subtree(node_ptr);
-  void print_simplex(node_ptr);
-  
-  // debugging 
-  void test(vector<idx_t>); 
+  void print_subtree(node_ptr cn);
+  void print_cousins();
+  void print_simplex(node_ptr cn);
+  void print_cofaces(vector<idx_t> simplex);
+  void test(); // debugging 
     
   // Standrad typedefs for iterating   
   typedef std::ptrdiff_t difference_type;

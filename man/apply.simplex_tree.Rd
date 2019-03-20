@@ -42,4 +42,11 @@ stree$apply(NULL, function(simplex){
     stree$apply(simplex, print, "link")
   }
 }, "bfs")
+
+## To see the cofaces of a given simplex 
+stree <- simplex_tree()
+stree$insert_simplex(c(1, 2, 3))
+stree$apply(1L, print, "cofaces")
+stree$apply(2L, print, "cofaces")
+stree$apply(3L, print, "cofaces")
 }

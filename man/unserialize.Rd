@@ -16,6 +16,17 @@ Provides basic unserialization of the simplex tree with the help of \code{\link{
 Reads the simplex tree stored in the compressed RDS file given by \code{filename} with \code{\link{readRDS}}, 
 successively reinserting the simplices into the current tree.
 }
+\examples{
+stree <- simplex_tree()
+stree$insert_simplex(c(1, 2, 3))
+stree$serialize("test.rds")
+stree <- simplex_tree()
+print(stree)
+# < empty simplex tree >
+stree$unserialize("test.rds")
+print(stree)
+# Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
+}
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 }

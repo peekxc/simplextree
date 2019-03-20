@@ -3,7 +3,7 @@
 // Original Reference: Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: 
 // An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 
-#include "SimplexTree.h"
+#include "simplextree.h"
 
 // Constructs the simplex tree
 SimplexTree::SimplexTree() {  
@@ -22,6 +22,38 @@ SEXP SimplexTree::as_XPtr(){
   Rcpp::XPtr< SimplexTree> p(this, false);
   return(p);
 }
+
+
+// --------- Begin C++ only API --------- 
+// These functions are only available through the included header, and thus can only be accessed 
+// on the C++ side. R-facing functions are exported through the module. 
+
+// Returns a 0-based integer vector of the first ids available to allocate new vertices
+vector< idx_t > SimplexTree::vertex_available(idx_t n_vertices){
+  std::map< idx_t, node_ptr > top_vertices = root->children;
+  idx_t max = top_vertices.size() + n_vertices;
+  vector< idx_t > new_idx = vector< idx_t >();
+  for (idx_t cc = 0; cc < max; ++cc){
+    if (top_vertices.find(cc) == top_vertices.end()){
+      new_idx.push_back(cc);
+      if (new_idx.size() == n_vertices){ break; }
+    }
+  }
+  return(new_idx);
+}
+
+// Returns an integer vector of the 0-simplices IDs
+vector< idx_t > SimplexTree::get_vertices(){
+  if (n_simplexes.size() == 0){ return vector< idx_t >(); }
+  vector< idx_t > res = vector< idx_t >(n_simplexes[0]);
+  std::transform(root->children.begin(), root->children.end(), res.begin(), [](std::pair<idx_t, node_ptr> v){
+    return(v.first);
+  });
+  return(res);
+}
+
+// --------- Begin R API --------- 
+// These functions are exported through the Rcpp module. 
 
 // Search the level map (cousins) to quickly get the adjacency relations. 
 // The set of adjcency relations are the 0-simplexes connected to a given vertex v. 
@@ -74,20 +106,6 @@ size_t SimplexTree::vertex_index(const idx_t v_id){
   return(-1);
 }
 
-// Returns a 0-based integer vector of the first ids available to allocate new vertices
-// vector< idx_t > SimplexTree::vertex_available(idx_t n_vertices){
-//   std::map< idx_t, node_ptr > top_vertices = root->children;
-//   idx_t max = top_vertices.size() + n_vertices;
-//   vector< idx_t > new_idx = vector< idx_t >();
-//   for (idx_t cc = 0; cc < max; ++cc){
-//     if (top_vertices.find(cc) == top_vertices.end()){
-//       new_idx.push_back(cc);
-//       if (new_idx.size() == n_vertices){ break; }
-//     }
-//   }
-//   return(new_idx);
-// }
-  
 // Emplace v_i new 0-simplices. Ids are automatically assigned. 
 // void SimplexTree::add_vertices(const idx_t v_i){
 //   const size_t n = root->children.size();
@@ -523,18 +541,6 @@ IntegerMatrix SimplexTree::as_edge_list(){
   return(res);
 }
 
-// Returns an integer vector of the 0-simplices IDs
-IntegerVector SimplexTree::get_vertices(){
-  if (n_simplexes.size() == 0){ return(IntegerVector::create()); }
-  IntegerVector res = no_init_vector(n_simplexes[0]);
-  std::transform(root->children.begin(), root->children.end(), res.begin(), [](std::pair<idx_t, node_ptr> v){
-    return(v.first);
-  });
-  return(res);
-}
-
-
-
 // Exports the k-skeleton as a list
 List SimplexTree::as_list(){
   List res = List();
@@ -604,12 +610,10 @@ bool SimplexTree::is_face(vector<idx_t> tau, vector<idx_t> sigma){
 
 // Given a node 'sigma', returns a vector of all the nodes part of the subtree of sigma, 
 // including sigma.
-vector< node_ptr > SimplexTree::subtree_to_vec(node_ptr sigma){
+vector< node_ptr > SimplexTree::expand_subtree(node_ptr sigma){
   vector< node_ptr > subtree_nodes = vector< node_ptr >();
   std::for_each(begin_dfs(sigma), end_dfs(), [&subtree_nodes](const node_ptr tau){
-    if (tau->children.empty()){
-      subtree_nodes.push_back(tau);
-    }
+    subtree_nodes.push_back(tau);
   });
   return(subtree_nodes);
 }
@@ -652,24 +656,46 @@ vector<node_ptr> SimplexTree::locate_cofaces(node_ptr cn){
   return output; 
 }
 
+// Expand a given vector of subtrees, collected all of the simplices under these trees. 
+vector< node_ptr > SimplexTree::expand_subtrees(vector< node_ptr > roots){
+  vector< node_ptr > faces = vector< node_ptr >();
+  std::for_each(roots.begin(), roots.end(), [this, &faces](const node_ptr subtree_root){
+    vector< node_ptr > tmp = expand_subtree(subtree_root);
+    faces.insert(faces.end(), tmp.begin(), tmp.end());
+  });
+  return(faces);
+}
+
 // vector<node_ptr> SimplexTree::cofaces(vector<idx_t> simplex){
 //   
 // }
 
 // Elementary collapse - only capable of collapsing sigma through tau, and only if tau has sigma 
 // as its only coface.
-void SimplexTree::collapse(node_ptr tau, node_ptr sigma){
-  vector< node_ptr > cofaces = locate_cofaces(tau);
-  if (cofaces.size() == 1 && cofaces.at(0) == sigma){
+bool SimplexTree::collapse(node_ptr tau, node_ptr sigma){
+  vector< node_ptr > cofaces = expand_subtrees(locate_cofaces(tau));
+  bool tau_is_coface = std::find(cofaces.begin(), cofaces.end(), tau) != cofaces.end();
+  bool sigma_is_coface = std::find(cofaces.begin(), cofaces.end(), sigma) != cofaces.end();
+  if (cofaces.size() == 2 && (tau_is_coface && sigma_is_coface)){
     // There are technically two cases, either tau and sigma are both leaves or tau contains 
     // sigma as its unique child. Both can be handled by removing sigma first, then tau. 
     remove_leaf(sigma->parent, sigma->label);
     remove_leaf(tau->parent, tau->label);
-    // if (tau->children.empty() && sigma->children.empty()) ...
+    return(true);
   } else {
     Function warning("warning");
     warning("Invalid collapse: tau does not have sigma as its only coface.");
   }
+  return(false);
+}
+
+// R-version
+bool SimplexTree::collapseR(vector< idx_t > tau, vector< idx_t > sigma){
+  std::sort(tau.begin(), tau.end());
+  std::sort(sigma.begin(), sigma.end());
+  node_ptr t = find(tau), s = find(sigma);
+  if (t != nullptr && s != nullptr){ return collapse(t, s); }
+  return false; 
 }
 
 // Alternative way to specify collapse
@@ -677,12 +703,6 @@ void SimplexTree::collapse(node_ptr tau, node_ptr sigma){
 // void SimplexTree::collapse(node_ptr u, node_ptr v, node_ptr w){
 //   
 // }
-
-// R-version
-void SimplexTree::collapseR(vector< idx_t > tau, vector< idx_t > sigma){
-  node_ptr t = find(tau), s = find(sigma);
-  if (t != nullptr && s != nullptr){ collapse(t, s); }
-}
 
 // Edge contraction 
 void SimplexTree::contract(vector< idx_t > edge){
@@ -790,12 +810,7 @@ void SimplexTree::apply(SEXP simp, Function f, std::string type){
   }
   else if (type == "cofaces" || type == "star") {
     if (sigma != nullptr){
-      vector< node_ptr > coface_roots = locate_cofaces(sigma);
-      vector< node_ptr > cofaces = vector< node_ptr >();
-      std::for_each(coface_roots.begin(), coface_roots.end(), [this, &cofaces](const node_ptr coface_root){
-        vector< node_ptr > cofaces_tmp = subtree_to_vec(coface_root);
-        cofaces.insert(cofaces.end(), cofaces_tmp.begin(), cofaces_tmp.end());
-      });
+      vector< node_ptr > cofaces = expand_subtrees( locate_cofaces(sigma) );
       vector< node_ptr >::iterator co = cofaces.begin();
       for (; co != cofaces.end(); ++co){
         vector<idx_t> simplex = full_simplex(*co);
@@ -817,12 +832,12 @@ void SimplexTree::apply(SEXP simp, Function f, std::string type){
 }
 
 // Prints the keys for the level map
-void SimplexTree::print_cousins(){
-  Rcout << "< id >-< depth >: < # of cousins >" << std::endl;
-  for(auto kv : level_map) {
-    Rcout << kv.first << ": " << kv.second.size() << std::endl;
-  } 
-}
+// void SimplexTree::print_cousins(){
+//   Rcout << "< id >-< depth >: < # of cousins >" << std::endl;
+//   for(auto kv : level_map) {
+//     Rcout << kv.first << ": " << kv.second.size() << std::endl;
+//   }
+// }
 
 void SimplexTree::print_simplex(node_ptr cn){
   vector< idx_t > si = full_simplex(cn);
@@ -831,7 +846,9 @@ void SimplexTree::print_simplex(node_ptr cn){
   Rcout << "}" << std::endl; 
 }
 
-void SimplexTree::test(){
+void SimplexTree::test(vector<idx_t> sigma){
+  
+  node_ptr cn = find(sigma); // get the node
   
   // Testing DFS
   // use root or root->children[1]
@@ -843,26 +860,40 @@ void SimplexTree::test(){
   //   });
   //   Rcout << std::endl;
   // });
+
+  
+  // Testing subtree expansion
+  if (cn != nullptr){
+    vector< node_ptr > subtree_nodes = expand_subtree(cn);
+    Rcout << "subtree simplices: " << std::endl;
+    std::for_each(subtree_nodes.begin(), subtree_nodes.end(), [this](const node_ptr si){
+      print_simplex(si);
+    });
+  }
   
   // Testing cofaces 
-  // vector<idx_t> s = { 4, 5 };
-  // node_ptr cn = find(s);
-  // if (cn != nullptr){
-  //   vector<node_ptr> cofaces = aces(cn);
-  //   // Rcout << "# cofaces to (4,5) == " << cofaces.size() << std::endl;  
-  //   std::for_each(cofaces.begin(), cofaces.end(), [this](const node_ptr coface){
-  //     print_simplex(coface);
-  //   });
-  // }
+  if (cn != nullptr){
+    vector<node_ptr> coface_roots = locate_cofaces(cn);
+    Rcout << "Coface roots: " << std::endl;
+    std::for_each(coface_roots.begin(), coface_roots.end(), [this](const node_ptr croot){
+      print_simplex(croot);
+    });
+    
+    vector<node_ptr> cofaces = expand_subtrees(coface_roots);
+    Rcout << "Cofaces: " << std::endl;
+    std::for_each(cofaces.begin(), cofaces.end(), [this](const node_ptr coface){
+      print_simplex(coface);
+    });
+  }
   
   // Looking at the ref count
-  std::for_each(begin_dfs(root), end_dfs(), [=](const node_ptr& o){
-    if (o == root){ return; }
-    Rprintf("%d use count: %d, is_leaf: %d\n", o->label, o.use_count(), o->children.empty());
-  });
-  // Testing removing a subtree
-  vector<idx_t> s2 = { 2, 3 };
-  remove_subtree(find(s2));
+  // std::for_each(begin_dfs(root), end_dfs(), [=](const node_ptr& o){
+  //   if (o == root){ return; }
+  //   Rprintf("%d use count: %d, is_leaf: %d\n", o->label, o.use_count(), o->children.empty());
+  // });
+  // // Testing removing a subtree
+  // vector<idx_t> s2 = { 2, 3 };
+  // remove_subtree(find(s2));
 
   
   // Testing simplex retrieval
@@ -876,6 +907,7 @@ void SimplexTree::test(){
   //   Rcout << std::endl;
   // });
 }
+
 
 
 // Exposed Rcpp Module 
@@ -929,10 +961,22 @@ stree$remove_simplex(c(2, 3))
 stree$remove_simplex(c(1, 2, 3))
 stree$print_cofaces(c(1, 2, 3))
 
+## Testing collapses
+stree <- simplextree::simplex_tree()
+stree$insert_simplex(c(1, 2))
+stree$test(1)
+stree$apply(1L, print, "cofaces")
 
+stree <- simplextree::simplex_tree()
+stree$insert_simplex(c(1, 2, 3))
+stree$collapse(c(1, 2), c(1, 2, 3))
 # stree$test()
 
+stree <- simplextree::simplex_tree()
+stree$insert_simplex(c(1, 2, 3))
+stree$print_tree()
 stree$contract(c(1, 3))
+stree$print_tree()
 
 stree$insert_simplex(1)
 stree$insert_simplex(2)

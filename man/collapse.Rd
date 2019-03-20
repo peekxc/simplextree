@@ -20,9 +20,33 @@ Performs an elementary collapse.
 \details{
 This function performs an \emph{elementary collapse} in the sense described by (1), which is 
 summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if 
-\eqn{\sigma} is the only coface of \eqn{\tau}. This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
+\eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
 (if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed. 
 \code{tau} and \code{sigma} are sorted before comparison.
+}
+\examples{
+stree <- simplextree::simplex_tree()
+stree$insert_simplex(c(1, 2, 3))
+stree$collapse(c(1, 2), c(1, 2, 3))
+stree$print_tree()
+# 1 (h = 1): .( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0):
+
+stree$insert_simplex(1:3)
+stree$insert_simplex(2:5)
+stree$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
+# 3 (h = 2): .( 4 5 )..( 5 )
+# 4 (h = 1): .( 5 )
+# 5 (h = 0): 
+stree$collapse(2:4, 2:5)
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 2): .( 3 4 5 )..( 5 5 )
+# 3 (h = 2): .( 4 5 )..( 5 )
+# 4 (h = 1): .( 5 )
+# 5 (h = 0): 
 }
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

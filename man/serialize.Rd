@@ -16,6 +16,14 @@ Provides basic serialization of the simplex tree with the help of \code{\link{sa
 Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
 simplices which have themselves as a unique coface are saved.
 }
+\examples{
+stree <- simplex_tree()
+stree$insert_simplex(c(1, 2, 3))
+stree$serialize("test.rds")
+readRDS("test.rds")
+# [[1]]
+# [1] 1 2 3
+}
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 }

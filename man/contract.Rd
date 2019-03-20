@@ -23,6 +23,18 @@ and identity otherwise, to all simplices in the complex. \cr
 \code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
 Note that edge contraction is not symmetric.
 }
+\examples{
+stree <- simplextree::simplex_tree()
+stree$insert_simplex(1:3)
+stree$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0): 
+stree$contract(c(1, 3))
+stree$print_tree()
+# 1 (h = 1): .( 2 )
+# 2 (h = 0): 
+}
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 }
