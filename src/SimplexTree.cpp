@@ -236,9 +236,8 @@ void SimplexTree::remove_leaf(node_ptr parent, idx_t child_label){
     
     // Remove from parents children
     parent->children.erase(child_it);
+    record_new_simplexes(child_depth-1, -1);
   }
-  // Rprintf("removing one %d-simplex\n", child_depth-1);
-  record_new_simplexes(child_depth-1, -1);
 }
   
 // Removes an entire subtree rooted as 'sroot', including 'sroot' itself. This function calls remove_leaf recursively. 
@@ -986,5 +985,42 @@ stree$insert_simplex(c(2, 3))
 stree$insert_simplex(c(1, 3))
 stree$insert_simplex(c(1, 2, 3))
 
+
+stree <- simplex_tree()
+stree$insert_simplex(1:3)
+stree$insert_simplex(2:5)
+stree$insert_simplex(5:9)
+stree$insert_simplex(7:8)
+stree$insert_simplex(10)
+stree$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
+# 3 (h = 2): .( 4 5 )..( 5 )
+# 4 (h = 1): .( 5 )
+# 5 (h = 4): .( 6 7 8 9 )..( 7 8 9 8 9 9 )...( 8 9 9 9 )....( 9 )
+# 6 (h = 3): .( 7 8 9 )..( 8 9 9 )...( 9 )
+# 7 (h = 2): .( 8 9 )..( 9 )
+# 8 (h = 1): .( 9 )
+# 9 (h = 0): 
+# 10 (h = 0): 
+
+## Check cofaces
+stree$apply(tau, print, "cofaces")
+# [1] 2 3 4 5
+# [1] 3 4 5
+
+stree$collapse(tau, sigma)
+# [1] TRUE
+
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 2): .( 3 4 5 )..( 4 5 5 )
+# 3 (h = 1): .( 4 5 )
+# 4 (h = 1): .( 5 )
+# 5 (h = 4): .( 6 7 8 9 )..( 7 8 9 8 9 9 )...( 8 9 9 9 )....( 9 )
+# 6 (h = 3): .( 7 8 9 )..( 8 9 9 )...( 9 )
+# 7 (h = 2): .( 8 9 )..( 9 )
+# 8 (h = 1): .( 9 )
+# 9 (h = 0): 
+# 10 (h = 0): 
 */
 
