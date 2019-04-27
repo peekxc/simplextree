@@ -7,9 +7,11 @@
 using namespace Rcpp;
 
 
+RcppExport SEXP _rcpp_module_boot_union_find_module();
 RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rcpp_module_boot_union_find_module", (DL_FUNC) &_rcpp_module_boot_union_find_module, 0},
     {"_rcpp_module_boot_simplex_tree_module", (DL_FUNC) &_rcpp_module_boot_simplex_tree_module, 0},
     {NULL, NULL, 0}
 };

@@ -19,13 +19,13 @@
 #'     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
 #'     \item{$\code{\link{is_face}}}{ Checks for faces. }
 #'     \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
-#'     \item{$\code{\link{unserialize}}}{ Unserializes a stored simplex tree. }
+#'     \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
 #'     \item{$\code{as_list}}{ Converts the complex to a list. }
 #'     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
 #'     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacenecy list. }
 #'     \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
 #' }
-#' @field n_simplexes A vector, where each index k denotes the number (k-1)-simplices.
+#' @field n_simplices A vector, where each index k denotes the number (k-1)-simplices.
 #' @field max_depth The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.
 #' @author Matt Piekenbrock
 #' @return A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module). 
@@ -45,15 +45,16 @@ simplex_tree <- function(){
 
 setClass("Rcpp_SimplexTree")
 .print_simplex_tree <- setMethod("show", "Rcpp_SimplexTree", function (object) {
-  max_k <- length(object$n_simplexes)
+  max_k <- length(object$n_simplices)
   if (max_k == 0){ cat("< empty simplex tree >\n") }
   else {
-    cat(sprintf("Simplex Tree with (%s) (%s)-simplices\n", paste0(object$n_simplexes, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")))
+    cat(sprintf("Simplex Tree with (%s) (%s)-simplices\n", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")))
   }
 })
 
-#' @name apply.simplex_tree
-#' @title apply
+#' @name traverse.simplex_tree
+#' @aliases traverse
+#' @title traverse
 #' @param sigma The simplex to initialize the traversal, or NULL to use the root. See details.  
 #' @param f An arbitrary function which accepts as input a simplex. See details. 
 #' @param type One of "dfs", "bfs", "cofaces", "star", or "link"
@@ -252,8 +253,43 @@ NULL
 
 
 
-
-# plot.Rcpp_SimplexTree <- function (x) {
+#' @export
+plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL) {
+  if (!missing(coords)){ stopifnot(is.matrix(coords) && all(dim(coords) == c(x$n_simplices[1], 2))) }
+  else {
+    requireNamespace("igraph", quietly = TRUE)
+    g <- igraph::graph_from_adjacency_matrix(x$as_adjacency_matrix())
+    coords <- igraph::layout_with_fr(g)
+  }
+  if (missing(color_pal) || is.null(color_pal)){ color_pal <- heat.colors(x$max_depth, alpha = 0.20) }
+  col_n <- length(color_pal)
+  plot.new()
+  plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
+  v <- x$vertices
+  if (length(x$n_simplices) >= 3){
+    x$traverse(function(simplex){
+      d <- length(simplex)
+      if (d >= 3){
+        p_color <- color_pal[d]
+        ids <- apply(combn(d, 3), 2, function(i){ simplex[i] })
+        apply(ids, 2, function(c_id){
+          idx <- match(c_id, v)
+          do.call(polygon, modifyList(list(x=coords[idx,,drop=FALSE], col=p_color), as.list(polygon_opt)))
+        })
+      }
+    }, "dfs")
+  }
+  if (length(x$n_simplices) >= 2){
+    line_coords <- apply(x$edges, 1, function(e){ t(coords[match(e, x$vertices),,drop=FALSE]) })
+    apply(line_coords, 2, function(s){ 
+      do.call(segments, modifyList(list(x0=s[1], y0=s[2], x1=s[3], y1=s[4]), as.list(edge_opt))) 
+    })
+  }
+  if (length(x$n_simplices) >= 1){
+    do.call(points, modifyList(list(x=coords, pch=21, bg="white", cex=2), as.list(vertex_opt)))
+    do.call(text, modifyList(list(x=coords,labels=as.character(x$vertices), cex=0.75), as.list(text_opt))) 
+  }
+}
 
 #   g <- igraph::graph_from_edgelist(x$as_edgelist(), directed = FALSE)
 #   coords <- igraph::layout.auto(g, dim = 2L)

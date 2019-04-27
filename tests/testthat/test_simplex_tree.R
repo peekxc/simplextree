@@ -72,6 +72,38 @@ test_that("Export types work", {
 
 
 
-
-
-
+## Example from simplicial maps paper (after converting letters to numbers)
+test_that("vertex collapse works", {
+  st <- simplex_tree()
+  st$insert_simplex(c(1,5))
+  st$insert_simplex(c(4,5))
+  st$insert_simplex(c(2,3,4))
+  st$collapse(1, 2, 1)
+  
+  testthat::expect_true(st$find_simplex(c(1, 3, 4)))
+  testthat::expect_true(st$find_simplex(c(1, 5)))
+  testthat::expect_true(st$find_simplex(c(4, 5)))
+  testthat::expect_false(st$find_simplex(2))
+  testthat::expect_equal(st$n_simplexes, c(4, 5, 1))
+  
+  ## Test that {u,v} -> {w} is the same as {u,w} -> {w}, {v,w} -> {w}
+  
+  st1 <- simplex_tree()
+  st1$insert_simplex(1:2)
+  st1$insert_simplex(2:3)
+  st1$insert_simplex(3:5)
+  st1$insert_simplex(c(3,5,6))
+  
+  st2 <- simplex_tree()
+  st2$insert_simplex(1:2)
+  st2$insert_simplex(2:3)
+  st2$insert_simplex(3:5)
+  st2$insert_simplex(c(3,5,6))
+  
+  st1$collapse(1, 5, 5) # {u,w} -> {w}
+  st1$collapse(6, 5, 5) # {v,w} -> {w}
+  st2$collapse(1, 6, 5) # {u,v} -> {w}
+  all.equal(st1$as_list(), st2$as_list())
+  
+  
+})
