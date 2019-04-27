@@ -7,7 +7,7 @@ The Simplex Tree was originally introduced in the following paper:
 
 A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure. Here's a picture of a simplicial complex (left) and its corresponding _Simplex Tree_ (right):
 
-![simplex tree picture](man/figures/simplextree.pdf)
+![simplex tree picture](./man/figures/simplextree.png)
  
 ## Installation 
 The current development version can be installed with the [devtools](https://github.com/r-lib/devtools) package: 
@@ -32,7 +32,10 @@ st$print_tree()
 
 ## Print the set of simplices making up the star of the simplex '2'
 st$traverse(2, function(simplex){ print(simplex) }, "star")
-# [1] 1 2# [1] 1 2 3# [1] 2# [1] 2 3
+# [1] 1 2
+# [1] 1 2 3
+# [1] 2
+# [1] 2 3
 ```
 
 ## API Reference 
@@ -158,13 +161,22 @@ For example, to traverse the simplicial complex in a depth-first manner:
 st <- simplex_tree()
 st$insert_simplex(1:3)
 st$traverse(message, "dfs") # equivalent to 'st$traverse(NULL, message, "dfs")'
-# 1# 12# 123# 13# 2# 23# 3
+# 1
+# 12
+# 123
+# 13
+# 2
+# 23
+# 3
 ```
 Or to print the cofaces of the vertex with label '1': 
 
 ```R
 st$traverse(1, message, "cofaces")
-# 1# 12# 123# 13
+# 1
+# 12
+# 123
+# 13
 ```
 [#](#ltraverse) _SimplexTree_ $ **ltraverse**(...)
 
