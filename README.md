@@ -32,7 +32,10 @@ st$print_tree()
 
 ## Print the set of simplices making up the star of the simplex '2'
 st$traverse(2, function(simplex){ print(simplex) }, "star")
-# [1] 1 2# [1] 1 2 3# [1] 2# [1] 2 3
+# [1] 1 2
+# [1] 1 2 3
+# [1] 2
+# [1] 2 3
 ```
 
 ## API Reference 
@@ -47,7 +50,7 @@ Trivial wrapper for constructing a _SimplexTree_ instance. See below.
 
 [#](#SimplexTree) __SimplexTree__ (_C++ Class_)
 
-Exposed binding for an internal _SimplexTree_ C++ class. The binding is exposed as an [Rcpp Module](). Instantiation returns an object of type _Rcpp\_SimplexTree_. Instantiate with either the above wrapper or `new(SimplexTree)`.
+Exposed binding for an internal _SimplexTree_ C++ class. The binding is exposed as an [Rcpp Module](). Instantiation returns an object of type _Rcpp\_SimplexTree_. Instantiate with either `simplex_tree()` or `new(SimplexTree)`.
 
 [#](#n_simplexes) _SimplexTree_ $ **n\_simplices**
 
@@ -158,13 +161,22 @@ For example, to traverse the simplicial complex in a depth-first manner:
 st <- simplex_tree()
 st$insert_simplex(1:3)
 st$traverse(message, "dfs") # equivalent to 'st$traverse(NULL, message, "dfs")'
-# 1# 12# 123# 13# 2# 23# 3
+# 1
+# 12
+# 123
+# 13
+# 2
+# 23
+# 3
 ```
 Or to print the cofaces of the vertex with label '1': 
 
 ```R
 st$traverse(1, message, "cofaces")
-# 1# 12# 123# 13
+# 1
+# 12
+# 123
+# 13
 ```
 [#](#ltraverse) _SimplexTree_ $ **ltraverse**(...)
 
@@ -265,7 +277,7 @@ void modify_tree(SEXP stree){
 Then on the R-side, use [as\_XPtr](#as\_XPtr) method to get an [XPtr](https://cran.r-project.org/doc/manuals/R-exts.html#External-pointers-and-weak-references). 
 
 ```R
-// my_source.R
+# my_source.R
 stree <- simplextree::simplex_tree()
 modify_tree(stree$as_XPtr())
 ```  

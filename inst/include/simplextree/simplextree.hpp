@@ -18,6 +18,20 @@ inline void SimplexTree::clear(){
   while(!root->children.empty()){ remove_subtree(*root->children.begin()); }
 }
 
+inline std::string SimplexTree::get_id_policy(){
+  return id_policy == 0 ? std::string("compressed") : std::string("unique");
+}
+
+inline void SimplexTree::set_id_policy(std::string policy){
+  if (policy == "compressed"){
+    id_policy = 0; 
+  } else if (policy == "unique"){
+    id_policy = 1; 
+  } else {
+    stop("Invalid ID policy. Must be either 'compressed' or 'unique'."); 
+  }
+}
+
 // Returns an integer vector of new ids vertex which can be used to insert 0-simplices
 // If compress is set to true, the ids are chosen as the first n unoccupied ids found by iterating 
 // through the current set of vertices. Otherwise, is compress is false, a maximum id value is 
@@ -255,6 +269,7 @@ inline void SimplexTree::remove_simplices(vector< vector< idx_t > > simplices){
 
 // First removes all the cofaces of a given simplex, including the simplex itself.
 inline void SimplexTree::remove_simplex(vector< idx_t > simplex){
+  std::sort(simplex.begin(), simplex.end()); // Demand that labels are sorted on insertion! 
   node_ptr cn = find_node(simplex);
   if (cn != nullptr && cn != root){
     vector< node_ptr > cofaces = locate_cofaces(cn); // Note the cofaces contain the simplex itself!
@@ -290,6 +305,52 @@ inline node_ptr SimplexTree::insert_child(node_ptr c_parent, node_ptr new_child,
 //     insert_child(c_parent, new_child, depth);
 //   });
 // }
+// inline void SimplexTree::insert(IntegerVector simplex){
+//   vector< idx_t > sigma(begin(simplex), end(simplex));
+//   insert_simplex(sigma);
+// }
+
+template <typename ... Args>
+constexpr bool return_void(void(Args ...)) { return true; }
+template <typename R, typename ... Args>
+constexpr bool return_void(R(Args ...)) { return false; }
+
+template <typename Lambda>
+void vector_handler(SEXP sigma, Lambda&& f){
+  const unsigned int s_type = TYPEOF(sigma); 
+  if (s_type == INTSXP || s_type == REALSXP){
+    vector< idx_t > simplex = as< vector< idx_t > >(sigma);
+    f(simplex);
+  } else if (s_type == LISTSXP || s_type == VECSXP){
+    List simplices = List(sigma);
+    const size_t n = simplices.size(); 
+    for (size_t i = 0; i < n; ++i){
+      vector< idx_t > simplex = as< vector< idx_t > >(simplices.at(i));
+      f(simplex);
+    }
+  } else { stop("Unknown type passed, must be list type or vector type."); }
+}
+
+// R-facing insert wrapper
+inline void SimplexTree::insert(SEXP sigma){
+  vector_handler(sigma, [this](vector< idx_t > simplex){
+    insert_simplex(simplex);
+  });
+}
+// R-facing remove wrapper
+inline void SimplexTree::remove(SEXP sigma){
+  vector_handler(sigma, [this](vector< idx_t > simplex){
+    remove_simplex(simplex);
+  });
+}
+// R-facing find wrapper
+inline LogicalVector SimplexTree::find(SEXP sigma){
+  LogicalVector res = LogicalVector();
+  vector_handler(sigma, [this, &res](vector< idx_t > simplex){
+    res.push_back(find_simplex(simplex));
+  });
+  return(res);
+}
 
 // Inserts multiple simplices specified by a container of integer vectors 
 inline void SimplexTree::insert_simplices(vector< vector< idx_t > > simplices){
@@ -338,9 +399,9 @@ inline size_t SimplexTree::vertex_index(const idx_t id){
 }
 
 // Overloaded in the case where a single (1-length vector) label is given
-inline node_ptr SimplexTree::find_by_id(const node_set_t& cont, idx_t label){
-  auto it = std::find_if(begin(cont), end(cont), eq_node_id(label));
-  return it != end(cont) ? (*it) : nullptr; 
+inline node_ptr SimplexTree::find_by_id(const node_set_t& level, idx_t label){
+  auto it = std::find_if(begin(level), end(level), eq_node_id(label));
+  return it != end(level) ? (*it) : nullptr; 
 }
 
 // Wrapper to find a vertex from the top nodes
@@ -629,7 +690,7 @@ inline bool empty_intersection(const vector<idx_t> x, const vector<idx_t> y) {
 inline vector< node_ptr > SimplexTree::locate_cofaces(node_ptr cn){
   const size_t h = depth(cn);
   vector< idx_t > c_word = full_simplex(cn);
-  node_set_t cofaces = { cn }; // a simplex cofaces include the simplex itself
+  set< node_ptr > cofaces = { cn }; // a simplex cofaces include the simplex itself
   for (size_t i = tree_max_depth; i > h; --i){
     std::string key = std::to_string(cn->label) + "-" + std::to_string(i);
     auto ni = level_map.find(key); 
@@ -680,6 +741,13 @@ vector<T> get_unique(vector<T> v){
   auto it = std::unique(begin(v), end(v)); 
   v.resize(std::distance(begin(v), it));
   return v;
+}
+
+inline void SimplexTree::get_cousins(){
+  Rprintf("< id >-< depth >: < number of cousins >\n");
+  for (auto kv: level_map){
+    Rprintf("%s: %d\n", kv.first.c_str(), kv.second.size()); 
+  }
 }
 
 // Vertex collapse - A vertex collapse, in this sense, is the result of applying a 
@@ -751,7 +819,7 @@ inline bool SimplexTree::collapseR(vector< idx_t > tau, vector< idx_t > sigma){
 inline void SimplexTree::contract(vector< idx_t > edge){
   if (edge.size() != 2){ stop("Contraction is only possible on edges."); }
   if (!find_simplex(edge)){ stop("Edge not found."); }
-  node_set_t to_remove;
+  set< node_ptr > to_remove;
   std::for_each(begin_dfs(root), end_dfs(), [this, &edge, &to_remove](node_ptr sigma){
     const idx_t va = edge[0], vb = edge[1];
     if (sigma->label == vb){ // only consider simplices which contain v_lb
@@ -841,14 +909,12 @@ inline void SimplexTree::load(std::string filename){
 // Link of a simplex
 inline vector< node_ptr > SimplexTree::link(node_ptr sigma){
   vector< idx_t > s = full_simplex(sigma);
-  node_set_t links; 
+  set< node_ptr > links; 
   std::for_each(begin_dfs(root), end_dfs(), [this, &links, &s](node_ptr tau){
     vector< idx_t > t = full_simplex(tau); 
     if (t.size() > 0 && empty_intersection(t, s)){
       vector< idx_t > v;
-      std::set_union(s.begin(), s.end(), 
-                     t.begin(), t.end(), 
-                     std::back_inserter(v)); 
+      std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(v)); 
       node_ptr v_node = find_node(v); 
       if (v_node != nullptr){ links.insert(tau); }
     }
@@ -912,7 +978,8 @@ inline void SimplexTree::traverse_bfs(node_ptr s, Lambda f){
 template <typename Lambda> 
 inline void SimplexTree::traverse_cofaces(node_ptr s, Lambda f){
   if (s != nullptr){
-    vector< node_ptr > cofaces = expand_subtrees( locate_cofaces(s) );
+    vector< node_ptr > coface_roots = locate_cofaces(s);
+    vector< node_ptr > cofaces = expand_subtrees( coface_roots );
     for (node_ptr& co: cofaces){ f(co); }
   }
 }

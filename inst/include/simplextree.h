@@ -37,11 +37,11 @@ struct node {
   using node_ptr = s_ptr< node >; 
   idx_t label;
   node_ptr parent;
-  set< node_ptr, ptr_comp< node >  > children;
+  set< node_ptr, ptr_comp< node > > children;
   node(idx_t id, node_ptr c_parent) : label(id), parent(c_parent){ }
   node(const node& other) : label(other.label), parent(other.parent), children(other.children) { }
-  bool operator== (const node& rhs) const { return (label == rhs.label); }
-  bool operator< (const node& rhs) const { return (label < rhs.label); }
+  // bool operator== (const node& rhs) const { return (this == &rhs); } // equivalence by pointer address
+  bool operator< (const node& rhs) const { return (label < rhs.label); } // order by label
 };
 using node_ptr = s_ptr< node >; 
 
@@ -55,7 +55,7 @@ struct bfs_iter;
 struct SimplexTree {
   // Aliases
   using node_ptr = s_ptr< node >; 
-  using node_set_t = set< node_ptr , ptr_comp< node > >;
+  using node_set_t = set< node_ptr, ptr_comp< node > >;
   using simplex_t = vector< idx_t >; 
   using difference_type = std::ptrdiff_t;
   using size_type = std::size_t;
@@ -85,11 +85,14 @@ struct SimplexTree {
   ~SimplexTree(){
     std::vector<idx_t>().swap(n_simplexes);
   };
+  // Read-only property 
+  SEXP dimension(){ return(tree_max_depth == 0 ? R_NilValue : wrap(tree_max_depth-1)); }
   
   // Utilities
   void clear();
   SEXP as_XPtr();
   void record_new_simplexes(const idx_t k, const idx_t n);// record keeping
+  
   
   // Generates a new set of vertex ids, according to the given rule.
   vector< size_t > generate_ids(size_t);
@@ -110,10 +113,15 @@ struct SimplexTree {
   void remove_simplex(simplex_t);
   bool find_simplex(simplex_t);
   
-  // Utilities for multiple operations
+  // Extensions for multiple 
   void insert_simplices(vector< vector< idx_t > >);
   void remove_simplices(vector< vector< idx_t > >);
   vector< bool > find_simplices(vector< simplex_t >);
+  
+  // R-wrappers
+  void insert(SEXP sigma);
+  void remove(SEXP sigma);
+  LogicalVector find(SEXP sigma);
 
   // Export utilities
   IntegerMatrix as_adjacency_matrix(); // Exports the 1-skeleton as an adjacency matrix 
@@ -127,7 +135,7 @@ struct SimplexTree {
   void remove_leaf(node_ptr, idx_t);
   void add_children(node_ptr, const simplex_t&, idx_t);
   void insert(idx_t*, const size_t, const size_t, node_ptr, const idx_t);
-  node_ptr find_by_id(const set< node_ptr , ptr_comp< node > >&, idx_t);
+  node_ptr find_by_id(const node_set_t&, idx_t);
   node_ptr find_node(simplex_t);
   bool is_face(simplex_t, simplex_t);
   node_ptr top_node(node_ptr);
@@ -175,6 +183,8 @@ struct SimplexTree {
   bool vertex_collapseR(idx_t, idx_t, idx_t);
   bool vertex_collapse(node_ptr, node_ptr, node_ptr);
   void contract(simplex_t);
+  
+  void get_cousins();
 
   // Constructs the full simplex from a given node, recursively
   void full_simplex_r(node_ptr, simplex_t&);
@@ -204,6 +214,11 @@ struct SimplexTree {
   void print_level(node_ptr, idx_t);
   void print_subtree(node_ptr);
   void print_simplex(node_ptr);
+  
+  // Policy for generating ids
+  std::string get_id_policy();
+  void set_id_policy(std::string);
+  
 };
 
 #include <stack>

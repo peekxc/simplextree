@@ -4,5 +4,25 @@
 \alias{as_XPtr}
 \title{Convert to external pointer}
 \description{
-Exports the simplex tree as an Rcpp::Xptr for e.g. passing from C++ --> R --> C++. Does not register a finalizer.
+Exports the simplex tree as an \code{externalptr} (i.e. \code{Rcpp::Xptr}) for passing to and from C++ and R. 
+This method does not register a finalizer. An example is given below using the Rcpp \emph{depends} attribute.
+}
+\examples{
+
+## Below is an example 
+\dontrun{
+// my_source.cpp
+#include "Rcpp.h"
+// [[Rcpp::depends(simplextree)]]
+#include "simplextree.h"
+
+[[Rcpp::export]]
+void print_tree(SEXP stree){
+ Rcpp::XPtr<SimplexTree> stree_ptr(stree);
+ stree_ptr->print_tree();
+}
+}
+## Pass to Rcpp as follows
+st <- simplextree::simplex_tree()
+print_tree(stree$as_XPtr())
 }

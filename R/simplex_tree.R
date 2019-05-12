@@ -8,28 +8,48 @@
 #' \if{latex}{\figure{simplextree.pdf}{options: width=12cm}}
 #' \cr 
 #' The current implementation provides a limited API and a subset of the functionality described in the paper.
+#' 
+#' @field n_simplices A vector, where each index k denotes the number (k-1)-simplices.
+#' @field dimension The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.
+#' @section Properties:
+#' Properties are actively bound shortcuts to various methods of the simplex tree that may be thought of as fields. 
+#' Unlike fields, however, properties are not explicitly stored: they are generated on access. 
+#' \describe{
+#'     \item{$\code{\link{id_policy}}}{ The policy used to generate new vertex ids. }
+#'     \item{$\code{\link{vertices}}}{ The 0-simplices of the simplicial complex. }
+#'     \item{$\code{\link{edges}}}{ The 1-simplices of the simplicial complex. }
+#'     \item{$\code{\link{triangles}}}{ The 2-simplices of the simplicial complex. }
+#'     \item{$\code{\link{quads}}}{ The 3-simplices of the simplicial complex. }
+#' } 
 #' @section Methods: 
 #' \describe{
-#'     \item{$\code{print_tree}}{ Prints the simplex tree. }
-#'     \item{$\code{\link[simplextree:apply.simplex_tree]{apply}}()}{ Applies a function to a subset of the simplex tree. }
-#'     \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie, if it doesn't exist. }
-#'     \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie, if it exists. }
-#'     \item{$\code{\link{find_simplex}}}{ Searches the trie for a simplex. }
+#'     \item{$\code{\link{print.simplextree}}}{ Prints the simplex tree. }
+#'     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
+#'     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
+#'     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
+#'     \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
+#'     \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
+#'     \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie. }
+#'     \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie. }
+#'     \item{$\code{\link{find_simplex}}}{ Returns whether a simplex exists in the trie. }
 #'     \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
 #'     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
+#'     \item{$\code{\link[simplextree:traverse.simplex_tree]{traverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
+#'     \item{$\code{\link[simplextree:traverse.simplex_tree]{ltraverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
 #'     \item{$\code{\link{is_face}}}{ Checks for faces. }
+#'     \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
 #'     \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
 #'     \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
-#'     \item{$\code{as_list}}{ Converts the complex to a list. }
+#'     \item{$\code{\link{save}}}{ Saves the simplex tree to a file. }
+#'     \item{$\code{\link{load}}}{ Loads a simplex tree from a file. }
+#'     \item{$\code{\link{as_list}}}{ Converts the simplicial complex to a list. }
 #'     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
 #'     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacenecy list. }
 #'     \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
 #' }
-#' @field n_simplices A vector, where each index k denotes the number (k-1)-simplices.
-#' @field max_depth The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.
 #' @author Matt Piekenbrock
 #' @return A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module). 
-#' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @references Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples
 #' ## Recreating simplex tree from figure. 
 #' stree <- simplex_tree()
@@ -43,6 +63,23 @@ simplex_tree <- function(){
   return(new(SimplexTree))
 }
 
+#' empty_face 
+#' @description Simple alias to the NULL value, used to indicate the empty face. 
+#' @export
+empty_face <- NULL
+
+#' @name print.simplex_tree
+#' @title Prints the simplex tree
+#' @description Prints the simplicial complex to standard out. 
+#' By default, this is set to R's buffered output, which is shown in the R console. 
+#' The printed format is: \cr 
+#' \cr
+#' [vertex] (h = [subtree height]): [subtree depth]([subtree]) \cr 
+#' \cr
+#' Where each lists the top node (\emph{vertex}) and its corresponding subtree. The 
+#' \emph{subtree height} displays the highest order k-simplex in that subtree. Each 
+#' level in the subtree tree is a set of sibling k-simplices whose order is given  
+#' by the number of dots ('.') proceeding the print level.
 setClass("Rcpp_SimplexTree")
 .print_simplex_tree <- setMethod("show", "Rcpp_SimplexTree", function (object) {
   max_k <- length(object$n_simplices)
@@ -52,53 +89,84 @@ setClass("Rcpp_SimplexTree")
   }
 })
 
+#' @name as_XPtr
+#' @title Convert to external pointer
+#' @description Exports the simplex tree as an \code{externalptr} (i.e. \code{Rcpp::Xptr}) for passing to and from C++ and R. 
+#' This method does not register a finalizer. An example is given below using the Rcpp \emph{depends} attribute.
+#' @examples 
+#' 
+#' ## Below is an example 
+#' \dontrun{
+#' // my_source.cpp
+#' #include "Rcpp.h"
+#' // [[Rcpp::depends(simplextree)]]
+#' #include "simplextree.h"
+#' 
+#' [[Rcpp::export]]
+#' void print_tree(SEXP stree){
+#'  Rcpp::XPtr<SimplexTree> stree_ptr(stree);
+#'  stree_ptr->print_tree();
+#' }
+#' }
+#' ## Pass to Rcpp as follows
+#' st <- simplextree::simplex_tree()
+#' print_tree(stree$as_XPtr())
+NULL
+
+#' @name clear
+#' @title Clears the simplex tree
+#' @description Removes all simplices from the simplex tree, except the root node.
+#' @examples 
+#' st <- simplex_tree()
+#' st$insert_simplex(1:3)
+#' st$clear()
+#' print(st) ## < empty simplex tree >
+NULL
+
 #' @name traverse.simplex_tree
 #' @aliases traverse
 #' @title traverse
 #' @param sigma The simplex to initialize the traversal, or NULL to use the root. See details.  
 #' @param f An arbitrary function which accepts as input a simplex. See details. 
-#' @param type One of "dfs", "bfs", "cofaces", "star", or "link"
-#' @description Apply operations across subsets of a simplicial complex.
-#' @details \code{apply} allows for traversing subsets of the simplex tree. 
+#' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton"
+#' @description Traverses subsets of a simplicial complex.
+#' @details \code{\link{traverse}} allows for traversing subsets of the simplex tree. 
 #' A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
 #' two aspects: the traversal \code{type} and the initial simplex \code{sigma}. Given a simplex \code{sigma}, a subset of 
 #' the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}.
 #' See examples for use-cases. 
 #' @examples
 #' ## Starter example complex 
-#' stree <- simplex_tree()
-#' stree$insert_simplex(c(1, 2, 3))
-#' stree$insert_simplex(c(2, 3, 4, 5))
+#' st <- simplex_tree()
+#' st$insert(c(1, 2, 3))
+#' st$insert(c(2, 3, 4, 5))
 #' 
 #' ## Print out complex using depth-first traversal. NULL implies that the DFS will start at the root. 
-#' stree$apply(NULL, print, "dfs")
+#' st$traverse(NULL, print, "dfs")
 #' 
 #' ## Print of subtree rooted at vertex 1 using depth-first traversal. 
-#' stree$apply(1L, print, "dfs")
+#' st$traverse(1L, print, "dfs")
 #' 
 #' ## Print simplices in the star of the edge [4, 5]
-#' stree$apply(c(4, 5), print, "star")
+#' st$traverse(c(4, 5), print, "star")
 #' 
 #' ## Traversals can be chained. Here's an example that prints the link of each vertex.
-#' stree$apply(NULL, function(simplex){
+#' st$traverse(function(simplex){
 #'   if (length(simplex) == 1){
 #'     print(sprintf("Link of %d:", simplex))    
-#'     stree$apply(simplex, print, "link")
+#'     stree$traverse(simplex, print, "link")
 #'   }
 #' }, "bfs")
 #' 
 #' ## To see the cofaces of a given simplex 
 #' stree <- simplex_tree()
 #' stree$insert_simplex(c(1, 2, 3))
-#' stree$apply(1L, print, "cofaces")
-#' stree$apply(2L, print, "cofaces")
-#' stree$apply(3L, print, "cofaces")
+#' stree$traverse(1L, print, "cofaces")
+#' stree$traverse(2L, print, "cofaces")
+#' stree$traverse(3L, print, "cofaces")
 NULL
 
-#' @name as_XPtr
-#' @title Convert to external pointer
-#' @description Exports the simplex tree as an Rcpp::Xptr for e.g. passing from C++ --> R --> C++. Does not register a finalizer. 
-NULL
+
 
 #' @name adjacent_vertices
 #' @title Adjacent vertices.
@@ -261,7 +329,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     g <- igraph::graph_from_adjacency_matrix(x$as_adjacency_matrix())
     coords <- igraph::layout_with_fr(g)
   }
-  if (missing(color_pal) || is.null(color_pal)){ color_pal <- heat.colors(x$max_depth, alpha = 0.20) }
+  if (missing(color_pal) || is.null(color_pal)){ color_pal <- heat.colors(x$dimension, alpha = 0.20) }
   col_n <- length(color_pal)
   plot.new()
   plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))

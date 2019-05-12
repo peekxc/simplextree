@@ -9,13 +9,13 @@
 
 \item{f}{An arbitrary function which accepts as input a simplex. See details.}
 
-\item{type}{One of "dfs", "bfs", "cofaces", "star", or "link"}
+\item{type}{One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton"}
 }
 \description{
-Apply operations across subsets of a simplicial complex.
+Traverses subsets of a simplicial complex.
 }
 \details{
-\code{apply} allows for traversing subsets of the simplex tree. 
+\code{\link{traverse}} allows for traversing subsets of the simplex tree. 
 A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
 two aspects: the traversal \code{type} and the initial simplex \code{sigma}. Given a simplex \code{sigma}, a subset of 
 the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}.
@@ -23,31 +23,31 @@ See examples for use-cases.
 }
 \examples{
 ## Starter example complex 
-stree <- simplex_tree()
-stree$insert_simplex(c(1, 2, 3))
-stree$insert_simplex(c(2, 3, 4, 5))
+st <- simplex_tree()
+st$insert(c(1, 2, 3))
+st$insert(c(2, 3, 4, 5))
 
 ## Print out complex using depth-first traversal. NULL implies that the DFS will start at the root. 
-stree$apply(NULL, print, "dfs")
+st$traverse(NULL, print, "dfs")
 
 ## Print of subtree rooted at vertex 1 using depth-first traversal. 
-stree$apply(1L, print, "dfs")
+st$traverse(1L, print, "dfs")
 
 ## Print simplices in the star of the edge [4, 5]
-stree$apply(c(4, 5), print, "star")
+st$traverse(c(4, 5), print, "star")
 
 ## Traversals can be chained. Here's an example that prints the link of each vertex.
-stree$apply(NULL, function(simplex){
+st$traverse(function(simplex){
   if (length(simplex) == 1){
     print(sprintf("Link of \%d:", simplex))    
-    stree$apply(simplex, print, "link")
+    stree$traverse(simplex, print, "link")
   }
 }, "bfs")
 
 ## To see the cofaces of a given simplex 
 stree <- simplex_tree()
 stree$insert_simplex(c(1, 2, 3))
-stree$apply(1L, print, "cofaces")
-stree$apply(2L, print, "cofaces")
-stree$apply(3L, print, "cofaces")
+stree$traverse(1L, print, "cofaces")
+stree$traverse(2L, print, "cofaces")
+stree$traverse(3L, print, "cofaces")
 }

@@ -71,7 +71,7 @@ inline T index_from(T k, T n, T i){
   return k + i + 1 - n*(n-1)/2 + (n-i)*((n-i)-1)/2; // expects 0-based, returns 0-based 
 }
 
-// Creates a vector with the range [i, j]
+// Creates a vector with the contiguous range [i, j] (inclusive both ends)
 template <typename T>
 vector<T> seq_ij(const T i, const T j){
   static_assert(std::is_integral<T>::value, "Integral-type required as a range storage type.");
@@ -252,6 +252,35 @@ bool nonempty_intersection(Iter a1, Iter a2, Iter b1, Iter b2){
   std::partial_sort_copy(a1, a2, begin(a_sort), end(a_sort)); // partial-sorted elements of y copied to y_sort
   std::partial_sort_copy(b1, b2, begin(b_sort), end(b_sort)); // partial-sorted elements of y copied to y_sort
   return !is_disjoint(a_sort, b_sort);
+}
+
+template <typename Iter>
+bool nonempty_intersection(vector< std::pair< Iter, Iter > > ranges){
+  using it_cat = typename std::iterator_traits<Iter>::iterator_category;
+  static_assert(std::is_same<it_cat, std::random_access_iterator_tag>::value, "Iterator type must be random-access.");
+  using T = typename std::iterator_traits<Iter>::value_type;
+
+  // Either empty == they do not have an intersection
+  const size_t n_rng = ranges.size();
+  vector< size_t > rng_sizes = vector< size_t >(n_rng);
+  std::transform(begin(ranges), end(ranges), begin(rng_sizes), [](const std::pair<Iter, Iter> rng){
+    return std::distance(rng.first, rng.second);
+  });
+  bool any_empty = std::any_of(begin(rng_sizes), end(rng_sizes), [](const size_t sz){ return sz == 0; });
+  if (any_empty){ return(false); };
+
+  // Use multiset to track number of ids
+  std::multiset<T> ids; 
+  const auto insert_rng = [&ids](Iter a, Iter b){ 
+    std::for_each(a, b, [&ids](T elem){ ids.insert(elem); }); 
+  };
+  for (auto rng: ranges){ insert_rng(rng.first, rng.second); };
+  
+  // If any ids appeared k times, there's a nonempty intersection between them all 
+  bool nonempty_int = std::any_of(ids.begin(), ids.end(), [&ids, &n_rng](const T id){
+    return (ids.count(id) == n_rng);
+  });
+  return nonempty_int;
 }
 
 

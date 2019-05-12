@@ -26,25 +26,47 @@ The current implementation provides a limited API and a subset of the functional
 \section{Fields}{
 
 \describe{
-\item{\code{n_simplexes}}{A vector, where each index k denotes the number (k-1)-simplices.}
+\item{\code{n_simplices}}{A vector, where each index k denotes the number (k-1)-simplices.}
 
-\item{\code{max_depth}}{The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.}
+\item{\code{dimension}}{The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.}
 }}
+
+\section{Properties}{
+
+Properties are actively bound shortcuts to various methods of the simplex tree that may be thought of as fields. 
+Unlike fields, however, properties are not explicitly stored: they are generated on access. 
+\describe{
+    \item{$\code{\link{id_policy}}}{ The policy used to generate new vertex ids. }
+    \item{$\code{\link{vertices}}}{ The 0-simplices of the simplicial complex. }
+    \item{$\code{\link{edges}}}{ The 1-simplices of the simplicial complex. }
+    \item{$\code{\link{triangles}}}{ The 2-simplices of the simplicial complex. }
+    \item{$\code{\link{quads}}}{ The 3-simplices of the simplicial complex. }
+}
+}
 
 \section{Methods}{
  
 \describe{
-    \item{$\code{print_tree}}{ Prints the simplex tree. }
-    \item{$\code{\link[simplextree:apply.simplex_tree]{apply}}()}{ Applies a function to a subset of the simplex tree. }
-    \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie, if it doesn't exist. }
-    \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie, if it exists. }
-    \item{$\code{\link{find_simplex}}}{ Searches the trie for a simplex. }
+    \item{$\code{\link{print.simplextree}}}{ Prints the simplex tree. }
+    \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
+    \item{$\code{\link{clear}}}{ Clears the simplex tree. }
+    \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
+    \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
+    \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
+    \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie. }
+    \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie. }
+    \item{$\code{\link{find_simplex}}}{ Returns whether a simplex exists in the trie. }
     \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
+    \item{$\code{\link[simplextree:traverse.simplex_tree]{traverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
+    \item{$\code{\link[simplextree:traverse.simplex_tree]{ltraverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
     \item{$\code{\link{is_face}}}{ Checks for faces. }
+    \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
     \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
-    \item{$\code{\link{unserialize}}}{ Unserializes a stored simplex tree. }
-    \item{$\code{as_list}}{ Converts the complex to a list. }
+    \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
+    \item{$\code{\link{save}}}{ Saves the simplex tree to a file. }
+    \item{$\code{\link{load}}}{ Loads a simplex tree from a file. }
+    \item{$\code{\link{as_list}}}{ Converts the simplicial complex to a list. }
     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacenecy list. }
     \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
@@ -61,7 +83,7 @@ stree$insert_simplex(c(7, 8))
 stree$insert_simplex(10)
 }
 \references{
-1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 }
 \author{
 Matt Piekenbrock

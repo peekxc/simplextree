@@ -107,3 +107,12 @@ test_that("vertex collapse works", {
   
   
 })
+
+
+# st <- simplex_tree()
+# st$insert_simplex(1:3)
+# st$ltraverse(1, identity, "cofaces")
+# st$ltraverse(2, identity, "cofaces")
+# st$ltraverse(3, identity, "cofaces")
+
+
