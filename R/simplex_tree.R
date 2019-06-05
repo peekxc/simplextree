@@ -7,33 +7,36 @@
 #' \if{html}{\figure{simplextree.png}{options: width="80\%" alt="Figure: simplextree.png"}}
 #' \if{latex}{\figure{simplextree.pdf}{options: width=12cm}}
 #' \cr 
-#' The current implementation provides a limited API and a subset of the functionality described in the paper.
+#' The current implementation provides a subset of the functionality described in the paper.
 #' 
 #' @field n_simplices A vector, where each index k denotes the number (k-1)-simplices.
-#' @field dimension The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.
+#' @field dimension The dimension of the simplicial complex.
 #' @section Properties:
 #' Properties are actively bound shortcuts to various methods of the simplex tree that may be thought of as fields. 
 #' Unlike fields, however, properties are not explicitly stored: they are generated on access. 
 #' \describe{
-#'     \item{$\code{\link{id_policy}}}{ The policy used to generate new vertex ids. }
-#'     \item{$\code{\link{vertices}}}{ The 0-simplices of the simplicial complex. }
-#'     \item{$\code{\link{edges}}}{ The 1-simplices of the simplicial complex. }
-#'     \item{$\code{\link{triangles}}}{ The 2-simplices of the simplicial complex. }
-#'     \item{$\code{\link{quads}}}{ The 3-simplices of the simplicial complex. }
+#'     \item{$\code{id_policy}}{ The policy used to generate new vertex ids. May be assigned "compressed" or "unique". See \code{\link{generate_ids}}. }
+#'     \item{$\code{vertices}}{ The 0-simplices of the simplicial complex, as a matrix. }
+#'     \item{$\code{edges}}{ The 1-simplices of the simplicial complex, as a matrix. }
+#'     \item{$\code{triangles}}{ The 2-simplices of the simplicial complex, as a matrix. }
+#'     \item{$\code{quads}}{ The 3-simplices of the simplicial complex, as a matrix. }
+#'     \item{$\code{connected_components}}{ The connected components of the simplicial complex. }
 #' } 
 #' @section Methods: 
 #' \describe{
-#'     \item{$\code{\link{print.simplextree}}}{ Prints the simplex tree. }
+#'     \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
+#'     \item{$\code{\link{print_tree}}}{ Prints the simplex tree structure. }
 #'     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
 #'     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
 #'     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
 #'     \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
 #'     \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
-#'     \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie. }
-#'     \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie. }
-#'     \item{$\code{\link{find_simplex}}}{ Returns whether a simplex exists in the trie. }
+#'     \item{$\code{\link{insert}}}{ Inserts a simplex into the trie. }
+#'     \item{$\code{\link{remove}}}{ Removes a simplex from the trie. }
+#'     \item{$\code{\link{find}}}{ Returns whether a simplex exists in the trie. }
 #'     \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
 #'     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
+#'     \item{$\code{\link{expand}}}{ Performs an k-expansion. }
 #'     \item{$\code{\link[simplextree:traverse.simplex_tree]{traverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
 #'     \item{$\code{\link[simplextree:traverse.simplex_tree]{ltraverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
 #'     \item{$\code{\link{is_face}}}{ Checks for faces. }
@@ -52,23 +55,26 @@
 #' @references Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples
 #' ## Recreating simplex tree from figure. 
-#' stree <- simplex_tree()
-#' stree$insert_simplex(c(1, 2, 3))
-#' stree$insert_simplex(c(2, 3, 4, 5))
-#' stree$insert_simplex(c(5, 6, 9))
-#' stree$insert_simplex(c(7, 8))
-#' stree$insert_simplex(10)
+#' st <- simplex_tree()
+#' st$insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
+#' plot(st)
+#' 
+#' ## Example insertion
+#' st$insert(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
 #' @export
 simplex_tree <- function(){
   return(new(SimplexTree))
 }
 
+# ---- empty_face ----
 #' empty_face 
 #' @description Simple alias to the NULL value, used to indicate the empty face. 
+#' @seealso traverse
 #' @export
 empty_face <- NULL
 
-#' @name print.simplex_tree
+# ---- print_tree ----
+#' @name print_tree
 #' @title Prints the simplex tree
 #' @description Prints the simplicial complex to standard out. 
 #' By default, this is set to R's buffered output, which is shown in the R console. 
@@ -80,6 +86,7 @@ empty_face <- NULL
 #' \emph{subtree height} displays the highest order k-simplex in that subtree. Each 
 #' level in the subtree tree is a set of sibling k-simplices whose order is given  
 #' by the number of dots ('.') proceeding the print level.
+NULL
 setClass("Rcpp_SimplexTree")
 .print_simplex_tree <- setMethod("show", "Rcpp_SimplexTree", function (object) {
   max_k <- length(object$n_simplices)
@@ -89,13 +96,14 @@ setClass("Rcpp_SimplexTree")
   }
 })
 
+# ---- as_XPtr ----
 #' @name as_XPtr
 #' @title Convert to external pointer
 #' @description Exports the simplex tree as an \code{externalptr} (i.e. \code{Rcpp::Xptr}) for passing to and from C++ and R. 
 #' This method does not register a finalizer. An example is given below using the Rcpp \emph{depends} attribute.
 #' @examples 
 #' 
-#' ## Below is an example 
+#' ## Below is an example of casting an XPtr created in R to a SimplexTree type in C++. 
 #' \dontrun{
 #' // my_source.cpp
 #' #include "Rcpp.h"
@@ -110,25 +118,60 @@ setClass("Rcpp_SimplexTree")
 #' }
 #' ## Pass to Rcpp as follows
 #' st <- simplextree::simplex_tree()
-#' print_tree(stree$as_XPtr())
+#' print(st$as_XPtr())
 NULL
 
+# ---- clear ----
 #' @name clear
 #' @title Clears the simplex tree
 #' @description Removes all simplices from the simplex tree, except the root node.
 #' @examples 
 #' st <- simplex_tree()
-#' st$insert_simplex(1:3)
+#' st$insert(1:3)
+#' print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
 #' st$clear()
 #' print(st) ## < empty simplex tree >
 NULL
 
-#' @name traverse.simplex_tree
-#' @aliases traverse
+# ---- generate_ids ----
+#' @name generate_ids
+#' @aliases id_policy
+#' @title Generates vertex ids.
+#' @param n the number of ids to generate. 
+#' @description Generates vertex ids representing 0-simplices not in the tree.
+#' @details This function generates new vertex ids for use in situations involving, e.g. insertions, 
+#' contractions, collapses, etc. There are two 'policies' which designate the generating mechansim  
+#' these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids sequentially, starting at 0.
+#' 'unique' tracks an incremental internal counter, which is updated on every call to \code{generate_ids}. 
+#' The new ids under the 'unique' policy generates the first sequential \code{n} ids that are strictly greater 
+#' \code{max}(\emph{counter}, \emph{max vertex id}). \cr
+#' \cr
+#' 
+#' @examples 
+#' st <- simplex_tree()
+#' st$generate_ids(3) ## 0 1 2
+#' st$insert(st$generate_ids(3))
+#' print(st$vertices) ## 0 1 2
+#' st$insert(st$generate_ids(2))
+#' st$print_tree() 
+#' st$remove(4)
+#' st$generate_ids(1) # 4
+NULL
+
+# ---- degree ----
+#' @name degree
+#' @title The vertex degree.
+#' @param ids the vertex ids to check the degree of. 
+#' @description Returns the number of edges (degree) for each given vertex id. 
+NULL
+
+# ---- traverse ----
+#' @name traverse
+#' @aliases ltraverse
 #' @title traverse
-#' @param sigma The simplex to initialize the traversal, or NULL to use the root. See details.  
+#' @param sigma The simplex to initialize the traversal, or \code{empty_face} or NULL to begin at the root. See details.  
 #' @param f An arbitrary function which accepts as input a simplex. See details. 
-#' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton"
+#' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".
 #' @description Traverses subsets of a simplicial complex.
 #' @details \code{\link{traverse}} allows for traversing subsets of the simplex tree. 
 #' A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
@@ -138,11 +181,11 @@ NULL
 #' @examples
 #' ## Starter example complex 
 #' st <- simplex_tree()
-#' st$insert(c(1, 2, 3))
-#' st$insert(c(2, 3, 4, 5))
+#' st$insert(list(1:3, 2:5))
 #' 
-#' ## Print out complex using depth-first traversal. NULL implies that the DFS will start at the root. 
-#' st$traverse(NULL, print, "dfs")
+#' ## Print out complex using depth-first traversal. 'empty_face' implies that the DFS will start at the root. 
+#' st$traverse(empty_face, print, "dfs")
+#' st$traverse(print, "dfs") ## overload available that assumes empty_face 
 #' 
 #' ## Print of subtree rooted at vertex 1 using depth-first traversal. 
 #' st$traverse(1L, print, "dfs")
@@ -154,55 +197,68 @@ NULL
 #' st$traverse(function(simplex){
 #'   if (length(simplex) == 1){
 #'     print(sprintf("Link of %d:", simplex))    
-#'     stree$traverse(simplex, print, "link")
+#'     st$traverse(simplex, print, "link")
 #'   }
 #' }, "bfs")
 #' 
 #' ## To see the cofaces of a given simplex 
-#' stree <- simplex_tree()
-#' stree$insert_simplex(c(1, 2, 3))
-#' stree$traverse(1L, print, "cofaces")
-#' stree$traverse(2L, print, "cofaces")
-#' stree$traverse(3L, print, "cofaces")
+#' st <- simplex_tree()
+#' st$insert(c(1, 2, 3))
+#' st$traverse(1L, print, "cofaces")
+#' 
+#' ## Alternatively, collect results into a list 
+#' three_cofaces <- st$ltraverse(3L, identity, "cofaces")
 NULL
 
-
-
-#' @name adjacent_vertices
+# ---- adjacent ----
+#' @name adjacent
 #' @title Adjacent vertices.
 #' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
+#' @examples
+#' st <- simplex_tree()
+#' st$insert(1:3)
+#' st$adjacent(2) ## 1 3
 NULL
 
-#' @name insert_simplex
-#' @title Insert simplex
-#' @description Inserts a simplex. 
-#' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
+# ---- insert ----
+#' @name insert
+#' @title Insert simplices
+#' @description Inserts simplices into the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices. 
+#' @param simplex either a k-length vector of vertex ids representing a (k-1)-simplex, or a list of simplices. 
 #' @usage $insert(simplex)
 #' @details This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
 #' no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
-#' Lower order simplices are inserted as needed if they do not already exist.
+#' Faces of \code{simplex} not in the simplex tree are inserted as needed.
+#' @seealso find remove
+#' @examples 
+#' st <- simplex_tree()
+#' st$insert(1:3) ## inserts the 2-simplex { 1, 2, 3 }
+#' st$insert(list(4:5, 6)) ## inserts a 1-simplex { 4, 5 } and a 0-simplex { 6 }.
 NULL
 
-#' @name remove_simplex
-#' @title Remove simplex
-#' @description Removes a simplex. 
+# ---- remove ----
+#' @name remove
+#' @title Remove simplices
+#' @description Removes simplices from the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices. 
 #' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
 #' @usage $remove(simplex)
 #' @details This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
 #' it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
-#' Higher order simplices which are cofaces of \code{simplex} are also removed.
+#' Cofaces of \code{simplex} are also removed.
 NULL
 
-#' @name find_simplex
-#' @title Remove simplex
-#' @description Removes a simplex. 
+# ---- find ----
+#' @name find
+#' @title Find simplices
+#' @description Finds whether simplices exist the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices. 
 #' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
-#' @usage $find_simplex(simplex)
+#' @usage $find(simplex)
 #' @details Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists. 
 #' \code{simplex} is sorted before traversing the trie.
 #' @return boolean indicating whether or not \code{simplex} exists in the tree. 
 NULL
 
+# ---- is_face ----
 #' @name is_face
 #' @title Is face 
 #' @description Checks whether a simplex is a face of another simplex.
@@ -215,37 +271,51 @@ NULL
 #' @return boolean indicating whether \code{tau} is a face of \code{sigma}. 
 NULL
 
+# ---- collapse ----
 #' @name collapse
 #' @title Elementary collapse
 #' @description Performs an elementary collapse. 
-#' @param tau a k-length vector of vertex ids representing a (k-1)-simplex. 
-#' @param sigma a l-length vector of vertex ids representing a (l-1)-simplex. 
-#' @usage $collapse(tau, sigma)
-#' @details This function performs an \emph{elementary collapse} in the sense described by (1), which is 
+#' @param tau a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.
+#' @param sigma a n-length vector of vertex ids representing a (n-1)-simplex. Must be the only coface of \code{tau}.
+#' @param u a vertex id representing one of the vertices in the free pair.
+#' @param v a vertex id representing one of the vertices in the free pair. 
+#' @param w a vertex id representing the target of the collapse.
+#' @usage \code{$collapse(tau, sigma)} or \code{$collapse(u, v, w)}
+#' @details This function provides two types of \emph{elementary collapses}. \cr 
+#' \cr 
+#' The first type of collapse is in the sense described by (1), which is 
 #' summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if 
 #' \eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
 #' (if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed. 
 #' \code{tau} and \code{sigma} are sorted before comparison.
-#' @return boolean indicating whether \code{tau} is a coface of \code{sigma}, and the two were removed. 
-#' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' To perform this kind of elementary collapse, call \code{collapse} with two simplices as arguments, i.e. \code{tau} before \code{sigma}.
+#' 
+#' Alternatively, this method supports another type of elementary collapse, also called a \emph{vertex collapse}, as described 
+#' in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first 
+#' two representing the free pair, and the last representing the target vertex to collapse to. 
+#' 
+#' @return boolean indicating whether the collapse was performed. 
+#' @references 
+#' 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' 2. Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
 #' @examples 
-#' stree <- simplextree::simplex_tree()
-#' stree$insert_simplex(c(1, 2, 3))
-#' stree$collapse(c(1, 2), c(1, 2, 3))
-#' stree$print_tree()
+#' st <- simplextree::simplex_tree()
+#' st$insert(1:3)
+#' st$collapse(1:2, 1:3)
+#' st$print_tree()
 #' # 1 (h = 1): .( 3 )
 #' # 2 (h = 1): .( 3 )
 #' # 3 (h = 0):
 #' 
-#' stree$insert_simplex(1:3)
-#' stree$insert_simplex(2:5)
-#' stree$print_tree()
+#' st$insert(list(1:3, 2:5))
+#' st$print_tree()
 #' # 1 (h = 2): .( 2 3 )..( 3 )
 #' # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
 #' # 3 (h = 2): .( 4 5 )..( 5 )
 #' # 4 (h = 1): .( 5 )
 #' # 5 (h = 0): 
-#' stree$collapse(2:4, 2:5)
+#' st$collapse(2:4, 2:5)
+#' st$print_tree()
 #' # 1 (h = 2): .( 2 3 )..( 3 )
 #' # 2 (h = 2): .( 3 4 5 )..( 5 5 )
 #' # 3 (h = 2): .( 4 5 )..( 5 )
@@ -253,6 +323,7 @@ NULL
 #' # 5 (h = 0): 
 NULL
 
+# ---- contract ----
 #' @name contract
 #' @title Edge contraction
 #' @description Performs an edge contraction. 
@@ -269,58 +340,64 @@ NULL
 #' Note that edge contraction is not symmetric.
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples 
-#' stree <- simplextree::simplex_tree()
-#' stree$insert_simplex(1:3)
-#' stree$print_tree()
+#' st <- simplextree::simplex_tree()
+#' st$insert(1:3)
+#' st$print_tree()
 #' # 1 (h = 2): .( 2 3 )..( 3 )
 #' # 2 (h = 1): .( 3 )
 #' # 3 (h = 0): 
-#' stree$contract(c(1, 3))
-#' stree$print_tree()
+#' st$contract(c(1, 3))
+#' st$print_tree()
 #' # 1 (h = 1): .( 2 )
 #' # 2 (h = 0): 
 NULL
 
 
+# ---- serialize / deserialize ----
 #' @name serialize
-#' @title Serializes the simplex tree. 
-#' @description Provides basic serialization of the simplex tree with the help of \code{\link{saveRDS}}. 
-#' @param filename The file to write the simplex tree too (path). 
-#' @usage $serialize(filename)
+#' @aliases deserialize
+#' @title Serializes/Deserializes the simplex tree. 
+#' @description Provides basic deserialization interface for the simplex tree.
+#' @param x a list of simplices to insert into the tree.
 #' @details Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
 #' simplices which have themselves as a unique coface are saved. 
-#' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples 
-#' stree <- simplex_tree()
-#' stree$insert_simplex(c(1, 2, 3))
-#' stree$serialize("test.rds")
-#' readRDS("test.rds")
+#' st <- simplex_tree()
+#' st$insert(c(1, 2, 3))
+#' tmp <- st$serialize()
+#' print(tmp)
 #' # [[1]]
 #' # [1] 1 2 3
+#' st$clear()
+#' st$deserialize(tmp)
+#' st$print_tree()
 NULL
 
-#' @name unserialize
-#' @title Unserializes a simplex tree. 
-#' @description Provides basic unserialization of the simplex tree with the help of \code{\link{readRDS}}. 
-#' @param filename The file to read the simplex tree from (path). 
-#' @usage $unserialize(filename)
-#' @details Reads the simplex tree stored in the compressed RDS file given by \code{filename} with \code{\link{readRDS}}, 
-#' successively reinserting the simplices into the current tree. 
-#' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+# ---- save ----
+#' @name save 
+#' @aliases load
+#' @title Saves/loads the simplex tree to a file
+#' @param filename the filename to save/load the simplex tree to/from. 
+#' @description Allows saving/loading the simplex tree with the help of \code{\link{readRDS}}. 
+#' @details Both saving and loading requires a filename to save the tree to. Loading 
+#' @seealso serialize deserialize
 #' @examples 
-#' stree <- simplex_tree()
-#' stree$insert_simplex(c(1, 2, 3))
-#' stree$serialize("test.rds")
-#' stree <- simplex_tree()
-#' print(stree)
-#' # < empty simplex tree >
-#' stree$unserialize("test.rds")
-#' print(stree)
-#' # Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
+#' st <- simplex_tree()
+#' st$insert(1:3)
+#' tf <- tempfile()
+#' st$print_tree()
+#' st$save(tf)
+#' st$clear()
+#' print(st)
+#' < empty simplex tree >
+#' st$load(tf)
+#' st$print_tree()
+#' # 1 (h = 2): .( 2 3 )..( 3 )
+#' # 2 (h = 1): .( 3 )
+#' # 3 (h = 0):
 NULL
 
-
-
+# ---- plot.simplex ----
 #' @export
 plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL) {
   if (!missing(coords)){ stopifnot(is.matrix(coords) && all(dim(coords) == c(x$n_simplices[1], 2))) }
@@ -329,7 +406,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     g <- igraph::graph_from_adjacency_matrix(x$as_adjacency_matrix())
     coords <- igraph::layout_with_fr(g)
   }
-  if (missing(color_pal) || is.null(color_pal)){ color_pal <- heat.colors(x$dimension, alpha = 0.20) }
+  if (missing(color_pal) || is.null(color_pal)){ color_pal <- heat.colors(x$dimension+1, alpha = 0.20) }
   col_n <- length(color_pal)
   plot.new()
   plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
@@ -358,9 +435,4 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     do.call(text, modifyList(list(x=coords,labels=as.character(x$vertices), cex=0.75), as.list(text_opt))) 
   }
 }
-
-#   g <- igraph::graph_from_edgelist(x$as_edgelist(), directed = FALSE)
-#   coords <- igraph::layout.auto(g, dim = 2L)
-# }
-# rev(viridis::viridis(100, alpha = 0.8, begin = 2/6, end = 1))
 # .default_st_colors <- c("#FDE725CC","#F9E621CC","#F5E61FCC","#F1E51DCC","#ECE51BCC","#E8E419CC","#E4E419CC","#DFE318CC","#DBE319CC","#D7E219CC","#D2E21BCC","#CDE11DCC","#C9E020CC","#C4E022CC","#C0DF25CC","#BBDE28CC","#B7DE2ACC","#B2DD2DCC","#ADDC30CC","#A9DB33CC","#A4DB36CC","#A0DA39CC","#9BD93CCC","#96D83FCC","#92D741CC","#8ED645CC","#8AD547CC","#85D54ACC","#81D34DCC","#7DD250CC","#78D152CC","#75D054CC","#70CF57CC","#6DCD59CC","#68CD5BCC","#65CB5ECC","#61CA60CC","#5DC863CC","#59C864CC","#56C667CC","#53C569CC","#4FC46ACC","#4CC26CCC","#48C16ECC","#45BF70CC","#41BE71CC","#3FBC73CC","#3BBB75CC","#39BA76CC","#37B878CC","#34B679CC","#31B67BCC","#2FB47CCC","#2DB27DCC","#2BB07FCC","#29AF7FCC","#27AD81CC","#25AC82CC","#24AA83CC","#23A983CC","#22A785CC","#21A585CC","#20A486CC","#1FA287CC","#1FA188CC","#1F9F88CC","#1F9E89CC","#1E9C89CC","#1F9A8ACC","#1F998ACC","#1F978BCC","#1F958BCC","#20938CCC","#20928CCC","#21918CCC","#218F8DCC","#228D8DCC","#228C8DCC","#238A8DCC","#23888ECC","#24878ECC","#25858ECC","#25838ECC","#26828ECC","#26818ECC","#277F8ECC","#287D8ECC","#287C8ECC","#297A8ECC","#2A788ECC","#2A768ECC","#2B758ECC","#2C738ECC","#2C718ECC","#2D718ECC","#2E6F8ECC","#2E6D8ECC","#2F6B8ECC","#306A8ECC","#31688ECC")

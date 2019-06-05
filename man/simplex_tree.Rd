@@ -21,14 +21,14 @@ simplicial complexes. Here is figure of a simplex tree, taken from the original 
 \if{html}{\figure{simplextree.png}{options: width="80\%" alt="Figure: simplextree.png"}}
 \if{latex}{\figure{simplextree.pdf}{options: width=12cm}}
 \cr 
-The current implementation provides a limited API and a subset of the functionality described in the paper.
+The current implementation provides a subset of the functionality described in the paper.
 }
 \section{Fields}{
 
 \describe{
 \item{\code{n_simplices}}{A vector, where each index k denotes the number (k-1)-simplices.}
 
-\item{\code{dimension}}{The maximum height of the tree. The root of the tree has height 0, vertices have height 1, etc.}
+\item{\code{dimension}}{The dimension of the simplicial complex.}
 }}
 
 \section{Properties}{
@@ -36,28 +36,31 @@ The current implementation provides a limited API and a subset of the functional
 Properties are actively bound shortcuts to various methods of the simplex tree that may be thought of as fields. 
 Unlike fields, however, properties are not explicitly stored: they are generated on access. 
 \describe{
-    \item{$\code{\link{id_policy}}}{ The policy used to generate new vertex ids. }
-    \item{$\code{\link{vertices}}}{ The 0-simplices of the simplicial complex. }
-    \item{$\code{\link{edges}}}{ The 1-simplices of the simplicial complex. }
-    \item{$\code{\link{triangles}}}{ The 2-simplices of the simplicial complex. }
-    \item{$\code{\link{quads}}}{ The 3-simplices of the simplicial complex. }
+    \item{$\code{id_policy}}{ The policy used to generate new vertex ids. May be assigned "compressed" or "unique". See \code{\link{generate_ids}}. }
+    \item{$\code{vertices}}{ The 0-simplices of the simplicial complex, as a matrix. }
+    \item{$\code{edges}}{ The 1-simplices of the simplicial complex, as a matrix. }
+    \item{$\code{triangles}}{ The 2-simplices of the simplicial complex, as a matrix. }
+    \item{$\code{quads}}{ The 3-simplices of the simplicial complex, as a matrix. }
+    \item{$\code{connected_components}}{ The connected components of the simplicial complex. }
 }
 }
 
 \section{Methods}{
  
 \describe{
-    \item{$\code{\link{print.simplextree}}}{ Prints the simplex tree. }
+    \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
+    \item{$\code{\link{print_tree}}}{ Prints the simplex tree structure. }
     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
     \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
     \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
-    \item{$\code{\link{insert_simplex}}}{ Inserts a simplex into the trie. }
-    \item{$\code{\link{remove_simplex}}}{ Removes a simplex from the trie. }
-    \item{$\code{\link{find_simplex}}}{ Returns whether a simplex exists in the trie. }
+    \item{$\code{\link{insert}}}{ Inserts a simplex into the trie. }
+    \item{$\code{\link{remove}}}{ Removes a simplex from the trie. }
+    \item{$\code{\link{find}}}{ Returns whether a simplex exists in the trie. }
     \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
+    \item{$\code{\link{expand}}}{ Performs an k-expansion. }
     \item{$\code{\link[simplextree:traverse.simplex_tree]{traverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
     \item{$\code{\link[simplextree:traverse.simplex_tree]{ltraverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
     \item{$\code{\link{is_face}}}{ Checks for faces. }
@@ -75,12 +78,12 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 
 \examples{
 ## Recreating simplex tree from figure. 
-stree <- simplex_tree()
-stree$insert_simplex(c(1, 2, 3))
-stree$insert_simplex(c(2, 3, 4, 5))
-stree$insert_simplex(c(5, 6, 9))
-stree$insert_simplex(c(7, 8))
-stree$insert_simplex(10)
+st <- simplex_tree()
+st$insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
+plot(st)
+
+## Example insertion
+st$insert(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
 }
 \references{
 Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

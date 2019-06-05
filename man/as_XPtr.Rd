@@ -9,7 +9,7 @@ This method does not register a finalizer. An example is given below using the R
 }
 \examples{
 
-## Below is an example 
+## Below is an example of casting an XPtr created in R to a SimplexTree type in C++. 
 \dontrun{
 // my_source.cpp
 #include "Rcpp.h"
@@ -24,5 +24,5 @@ void print_tree(SEXP stree){
 }
 ## Pass to Rcpp as follows
 st <- simplextree::simplex_tree()
-print_tree(stree$as_XPtr())
+print(st$as_XPtr())
 }

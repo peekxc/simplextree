@@ -2,28 +2,26 @@
 % Please edit documentation in R/simplex_tree.R
 \name{serialize}
 \alias{serialize}
-\title{Serializes the simplex tree.}
-\usage{
-$serialize(filename)
-}
+\alias{deserialize}
+\title{Serializes/Deserializes the simplex tree.}
 \arguments{
-\item{filename}{The file to write the simplex tree too (path).}
+\item{x}{a list of simplices to insert into the tree.}
 }
 \description{
-Provides basic serialization of the simplex tree with the help of \code{\link{saveRDS}}.
+Provides basic deserialization interface for the simplex tree.
 }
 \details{
 Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
 simplices which have themselves as a unique coface are saved.
 }
 \examples{
-stree <- simplex_tree()
-stree$insert_simplex(c(1, 2, 3))
-stree$serialize("test.rds")
-readRDS("test.rds")
+st <- simplex_tree()
+st$insert(c(1, 2, 3))
+tmp <- st$serialize()
+print(tmp)
 # [[1]]
 # [1] 1 2 3
-}
-\references{
-1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+st$clear()
+st$deserialize(tmp)
+st$print_tree()
 }

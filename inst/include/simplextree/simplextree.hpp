@@ -62,22 +62,23 @@ inline vector< idx_t > SimplexTree::generate_ids(size_t n){
 }
 
 // Returns the degree of a node with a given id
-inline size_t SimplexTree::degree(idx_t id){
-  node_ptr cn = find_by_id(root->children, id);
-  if (cn == nullptr) { return 0; }
-  else {
-    size_t res_deg = 0;
-    
-    // Labels with id > v 
-    auto it = level_map.find(std::to_string(id) + "-2");
-    if (it != level_map.end()){ res_deg += (*it).second.size(); }
-    
-    // Labels with id < v 
-    res_deg += cn->children.size();
-    return res_deg;
+inline vector< size_t > SimplexTree::degree(vector< idx_t > vids){
+  vector< size_t > res = vector< size_t >();
+  for (auto id: vids){
+    node_ptr cn = find_by_id(root->children, id);
+    if (cn == nullptr) { res.push_back(0); }
+    else {
+      size_t res_deg = 0;
+      auto it = level_map.find(std::to_string(id) + "-2"); // Labels with id > v 
+      if (it != level_map.end()){ res_deg += (*it).second.size(); }
+      res_deg += cn->children.size(); // Labels with id < v 
+      res.push_back(res_deg);
+    }
   }
+  return(res);
 }
-// 
+
+
 // // Returns an integer vector of the 0-simplices IDs
 // inline vector< idx_t > SimplexTree::get_vertices(){
 //   if (n_simplexes.size() == 0){ return vector< idx_t >(); }
@@ -317,14 +318,22 @@ constexpr bool return_void(R(Args ...)) { return false; }
 
 template <typename Lambda>
 void vector_handler(SEXP sigma, Lambda&& f){
-  const unsigned int s_type = TYPEOF(sigma); 
+  const unsigned int s_type = TYPEOF(sigma);
+  const auto check_valid = [](SEXP v) -> bool { 
+    IntegerVector iv = v;
+    return std::any_of(begin(iv), end(iv), [](int el) -> bool { 
+      return(el < 0 || el > std::numeric_limits< idx_t >::max()); 
+    });
+  };
   if (s_type == INTSXP || s_type == REALSXP){
+    if (check_valid(sigma)){ stop("Only unsigned integer simplices are supported."); }
     vector< idx_t > simplex = as< vector< idx_t > >(sigma);
     f(simplex);
   } else if (s_type == LISTSXP || s_type == VECSXP){
     List simplices = List(sigma);
     const size_t n = simplices.size(); 
     for (size_t i = 0; i < n; ++i){
+      if (check_valid(simplices.at(i))){ stop("Only unsigned integer simplices are supported."); }
       vector< idx_t > simplex = as< vector< idx_t > >(simplices.at(i));
       f(simplex);
     }
@@ -504,12 +513,14 @@ inline void SimplexTree::print_level(node_ptr cn, idx_t level){
 }
 
 // Given a set of nodes (e.g. node children) and an offset, retrieves the labels past the offset
-inline vector< idx_t> SimplexTree::get_labels(const node_set_t& level, const idx_t offset){
-  simplex_t labels;
+inline vector< idx_t > SimplexTree::get_labels(const node_set_t& level, idx_t offset){
+  if (level.size() == 0){ return(vector< idx_t >()); }
+  if (offset >= level.size()){ return(vector< idx_t >()); }
+  vector< idx_t > labels = vector< idx_t >();
   labels.reserve(level.size() - offset);
   auto it = begin(level);
   std::advance(it, offset);
-  std::transform(begin(level), end(level), back_inserter(labels), [&](const node_ptr cn) { return cn->label; });
+  std::transform(it, end(level), back_inserter(labels), [&](const node_ptr cn) { return cn->label; });
   return(labels);
 }
 
@@ -527,48 +538,47 @@ inline vector< idx_t> SimplexTree::get_labels(const node_set_t& level, const idx
 // }
 
 // Experimental k-expansion algorithm.
-// Performs an expansion of order k, thus reconstructing a k-skeleton from the 1-skeleton alone.
-// inline void SimplexTree::expansion(const idx_t k){
-//   std::for_each(root->children.begin(), root->children.end(), [&](const std::pair<idx_t, node_ptr>& c_node){
-//     //idx_t simplex[k];
-//     //expand(c_node.second->children, k, 0, simplex);
-//   });
-// }
+// Performs an expansion of order k, reconstructing the k-skeleton flag complex via an in-depth expansion of the 1-skeleton.
+inline void SimplexTree::expansion(const idx_t k){
+  if ((tree_max_depth-1) >= 2){ stop("Can only perform k-expansion on the 1-skeleton."); }
+  for (node_ptr cn: root->children){ 
+    if (!cn->children.empty()){ expand(cn->children, k-1); }
+  }
+}
 
-// Expand operation compares a given 'head' nodes children to its siblings. 
+// Expand operation checks A \cap N^+(vj) \neq \emptyset
 // If they have a non-empty intersection, then the intersection is added as a child to the head node. 
-// inline void SimplexTree::expand(auto& v, const idx_t k, idx_t depth, idx_t* simplex){
-//   
-//   // if (v.size() <= 1){ return; } // Current level only has one node; intersection will be empty
-//   // 
-//   // // For each child node
-//   // std::map<idx_t, node_ptr>::const_iterator v_it = v.begin(); 
-//   // for (v_it = v.begin(); v_it != v.end(); ++v_it){
-//   //   
-//   //   // Get the 'head' nodes 
-//   //   node_ptr rel_head = v_it->second; // *relative* head
-//   //   node_ptr root_head = find(v_it->first); // *root* head
-//   //   
-//   //   // If the root/0-simplex of the head doesn't have children, we're done
-//   //   if (root_head->children.size() == 0){ return; }
-//   //   
-//   //   // Get the (1-offset) siblings of the relative head, and the labels of the children of root head
-//   //   vector<idx_t> siblings = get_labels(v, 1);
-//   //   vector<idx_t> children = get_labels(root_head->children, 0);
-//   //   vector<idx_t> sc_int = intersection(children, siblings);
-//   //   
-//   //   IntegerVector sib1 = wrap(siblings);
-//   //   IntegerVector children1 = wrap(children);
-//   //   IntegerVector sc_int1 = wrap(sc_int);
-//   //   Rcout << sib1 << std::endl; 
-//   //   Rcout << sc_int1 << std::endl; 
-//   //   if (sc_int.size() > 0){
-//   //     // Rcout << "Adding children " << sc_int1 << " to node " << v_it->first << " (son of " << v_it->second->parent->label << ")" << std::endl; 
-//   //     add_children(rel_head, sc_int, depth + 2);
-//   //     expand(rel_head->children, k, depth + 1, simplex);
-//   //   }
-//   // }
-// }
+inline void SimplexTree::expand(set< node_ptr, ptr_comp< node > >& c_set, const idx_t k){
+  if (k == 0){ return; }
+  
+  // Traverse the children
+  auto siblings = begin(c_set);
+  std::advance(siblings, 1);
+  for (node_ptr cn: c_set){
+    node_ptr top_v = find_vertex(cn->label);
+    if (top_v != nullptr && (!top_v->children.empty())){
+      vector< idx_t > sibling_labels = get_labels(c_set, std::distance(begin(c_set), siblings)); // A 
+      vector< idx_t > top_children_labels = get_labels(top_v->children, 0); // N^+(top_v)
+      
+      // Get the intersection
+      vector< idx_t > intersection;
+      std::set_intersection(begin(sibling_labels), end(sibling_labels), 
+                            begin(top_children_labels), end(top_children_labels), 
+                            std::back_inserter(intersection));
+    
+      // Insert and recursively expand 
+      if (intersection.size() > 0){
+        for (idx_t new_label: intersection){
+          vector< idx_t > sigma = full_simplex(cn);
+          sigma.push_back(new_label);
+          insert_simplex(sigma);
+          expand(cn->children, k-1); // recurse
+        }
+      }
+    }
+    if (siblings != end(c_set)){ ++siblings; }
+  }
+}
 
 // Exports the 1-skeleton as an adjacency matrix 
 inline IntegerMatrix SimplexTree::as_adjacency_matrix(){
@@ -727,9 +737,6 @@ inline vector< node_ptr > SimplexTree::expand_subtrees(vector< node_ptr > roots)
   return(faces);
 }
 
-// vector<node_ptr> SimplexTree::cofaces(vector<idx_t> simplex){
-//   
-// }
 inline bool SimplexTree::vertex_collapseR(idx_t v1, idx_t v2, idx_t v3){
   node_ptr vp1 = find_vertex(v1), vp2 = find_vertex(v2), vt = find_vertex(v3);
   if (vp1 == nullptr || vp2 == nullptr || vt == nullptr){ stop("Invalid vertices specified. Not found."); }
@@ -807,6 +814,27 @@ inline bool SimplexTree::collapseR(vector< idx_t > tau, vector< idx_t > sigma){
   node_ptr t = find_node(tau), s = find_node(sigma);
   if (t != nullptr && s != nullptr){ return collapse(t, s); }
   return false; 
+}
+
+// Returns the connected components given by the simplicial complex
+inline vector< idx_t > SimplexTree::connected_components(){
+  
+  // Provide means of mapping vertex ids to index values
+  vector< idx_t > v = get_vertices(); // vertices are ordered, so lower_bound is valid
+  const auto idx_of = [&v](const idx_t val) { return(std::distance(begin(v), std::lower_bound(begin(v), end(v), val))); };
+  
+  // Traverse the edges, unioning vertices 
+  UnionFind uf = UnionFind(root->children.size());
+  traverse_max_skeleton(root, [&idx_of, &uf](const node_ptr cn, const size_t d){
+    const idx_t a = idx_of(cn->label), b = idx_of(cn->parent->label);
+    uf.Union(a, b);
+  }, 1);
+  
+  // Create the connected components
+  size_t i = 0; 
+  vector< idx_t > cc = vector< idx_t >(v.size());
+  for (idx_t cv: v){ cc[i++] = uf.Find(idx_of(cv)); }
+  return(cc);
 }
 
 // Alternative way to specify collapse
@@ -913,10 +941,10 @@ inline vector< node_ptr > SimplexTree::link(node_ptr sigma){
   std::for_each(begin_dfs(root), end_dfs(), [this, &links, &s](node_ptr tau){
     vector< idx_t > t = full_simplex(tau); 
     if (t.size() > 0 && empty_intersection(t, s)){
-      vector< idx_t > v;
-      std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(v)); 
-      node_ptr v_node = find_node(v); 
-      if (v_node != nullptr){ links.insert(tau); }
+      vector< idx_t > potential_link;
+      std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(potential_link)); 
+      node_ptr link_node = find_node(potential_link); 
+      if (link_node != nullptr){ links.insert(tau); }
     }
   });
   vector< node_ptr > link_res(links.begin(), links.end()); 
@@ -994,17 +1022,16 @@ inline void SimplexTree::traverse_link(node_ptr s, Lambda f){
 // Applies the lambda function 'f' to every simplex in the k-skeleton given by 'k'
 template <typename Lambda> 
 inline void SimplexTree::traverse_skeleton(node_ptr s, Lambda f, size_t k){
-  // using t_node = std::pair< node_ptr, idx_t >; // traversal node
-  auto valid_eval = [k](const node_ptr cn, const size_t d){ return d <= k + 1; };
-  auto valid_children = [k](const node_ptr cn, const size_t d){ return d < k + 1; };
+  const auto valid_eval = [k](const node_ptr cn, const size_t d){ return d <= k + 1; };
+  const auto valid_children = [k](const node_ptr cn, const size_t d){ return d < k + 1; };
   traverse_dfs_if(s, f, valid_eval, valid_children);
 }
 
 // Applies the lambda function 'f' to the maximal faces of the k-skeleton given by 'k'
 template <typename Lambda> 
 inline void SimplexTree::traverse_max_skeleton(node_ptr s, Lambda f, size_t k){
-  auto valid_eval = [k](const node_ptr cn, const size_t d){ return d == k + 1; };
-  auto valid_children = [k](const node_ptr cn, const size_t d){ return d < k + 1; };
+  const auto valid_eval = [k](const node_ptr cn, const size_t d){ return d == k + 1; };
+  const auto valid_children = [k](const node_ptr cn, const size_t d){ return d < k + 1; };
   traverse_dfs_if(s, f, valid_eval, valid_children);
 }
 
@@ -1086,7 +1113,7 @@ inline void SimplexTree::print_simplex(node_ptr cn){
   Rcout << "}" << std::endl; 
 }
 
-// Returns whether the graph is acyclic. A non-fully connected. . 
+// Returns whether the graph is acyclic.
 inline bool SimplexTree::is_tree(){
   UnionFind ds = UnionFind(n_simplexes.at(0));
 
@@ -1106,6 +1133,27 @@ inline bool SimplexTree::is_tree(){
   }, valid_eval, valid_children);
   return !has_cycle;
 }
+
+// inline bool SimplexTree::is_cycle(vector< idx_t > v){
+//   UnionFind ds = UnionFind(vertices.size());
+//   
+//   // Traverse the 1-skeleton, unioning all edges. If any of them are part of the same CC, there is a cycle. 
+//   bool is_cycle = false; 
+//   auto valid_eval = [&has_cycle](const node_ptr cn, const size_t d){ return (!is_cycle && d == 2); };
+//   auto valid_children = [&has_cycle](const node_ptr cn, const size_t d){ return (!is_cycle && d < 2); };
+//   const auto index_of = [&v](const idx_t vid) -> size_t{ return std::distance(begin(v), std::find(begin(v), end(v), vid)); };
+//   
+//   // Apply DFS w/ UnionFind. If a cycle is detected, no more recursive evaluations are performed. 
+//   const size_t n_vertex = vertices.size(); 
+//   traverse_dfs_if(root, [this, &ds, &is_cycle, &index_of, &n_vertex](const node_ptr sigma, const size_t d){
+//     vector< idx_t > si = full_simplex(sigma);
+//     idx_t i1 = index_of(si.at(0)), i2 = index_of(si.at(1)); 
+//     if (i1 >= n_vertex || i2 >= n_vertex){ return(); }
+//     if (ds.Find(i1) == ds.Find(i2)){ is_cycle = true; }
+//     ds.Union(i1, i2);
+//   }, valid_eval, valid_children);
+//   return !is_cycle;
+// }
 
 inline IntegerMatrix SimplexTree::get_k_simplices(const size_t k){
   if (n_simplexes.size() <= k){ return IntegerMatrix(0, k+1); }

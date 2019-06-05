@@ -4,21 +4,21 @@ library("testthat")
 testthat::context("Testing Simplex Tree")
 
 test_that("Can construct and deconstruct a Simplex Tree object", {
-  stree <- simplextree::simplex_tree()
-  expect_is(stree, "Rcpp_SimplexTree")
-  expect_equal(stree$n_simplexes, numeric(0))
-  expect_silent({ rm(stree); invisible(gc(verbose = FALSE)) })
+  st <- simplextree::simplex_tree()
+  expect_is(st, "Rcpp_SimplexTree")
+  expect_is(st$as_XPtr(), "externalptr")
+  expect_equal(st$n_simplices, numeric(0))
+  expect_silent({ rm(st); invisible(gc(verbose = FALSE)) })
 })
 
 test_that("Can add and remove vertices", {
-  stree <- simplextree::simplex_tree()
-  invisible(sapply(seq(5L), function(i) stree$insert_simplex(i)))
-  expect_equal(head(stree$n_simplexes, 1), 5L)
-  invisible(sapply(seq(5L), function(i) stree$remove_simplex(i)))
-  expect_equal(head(stree$n_simplexes, 1), numeric(0))
-  rm(stree)
+  st <- simplextree::simplex_tree()
+  invisible(sapply(seq(5L), function(i) st$insert(i)))
+  expect_equal(head(st$n_simplices, 1), 5L)
+  invisible(sapply(seq(5L), function(i) st$remove(i)))
+  expect_equal(head(st$n_simplices, 1), numeric(0))
+  rm(st)
 })
-
 
 test_that("Can add and remove edges", {
   stree <- simplextree::simplex_tree()
@@ -27,20 +27,20 @@ test_that("Can add and remove edges", {
   
   ## Insert vertices
   expect_silent(invisible(sapply(seq(n_vertices), function(v){
-    stree$insert_simplex(as.integer(v))
+    stree$insert(as.integer(v))
   })))
   ## Insert edges
   expect_silent(invisible(apply(edges, 1, function(e){
-    stree$insert_simplex(as.integer(e))
+    stree$insert(as.integer(e))
   })))
-  expect_equal(stree$n_simplexes, c(n_vertices, choose(n_vertices, 2L)))
+  expect_equal(stree$n_simplices, c(n_vertices, choose(n_vertices, 2L)))
   
   ## Remove edges, check each time
   cc <- choose(n_vertices, 2L)
   expect_silent(invisible(apply(edges, 1, function(e){
-    stree$remove_simplex(as.integer(e))
+    stree$remove(as.integer(e))
   })))
-  expect_equal(stree$n_simplexes, c(n_vertices, numeric(0L)))
+  expect_equal(stree$n_simplices, c(n_vertices, numeric(0L)))
   rm(stree)
 })
 
@@ -49,7 +49,7 @@ test_that("Export types work", {
   n_vertices <- sample(2:25, size = 1)
   edges <- t(combn(n_vertices, 2L))
   invisible(apply(edges, 1, function(e){
-    stree$insert_simplex(as.integer(e))
+    stree$insert(as.integer(e))
   }))
   
   ## Test can export to adjacency matrix 
@@ -70,49 +70,62 @@ test_that("Export types work", {
   expect_equal(dim(el), c(choose(n_vertices, 2), 2L))
 })
 
-
+test_that("serialization/deserialization works", {
+  st <- simplex_tree()
+  testthat::expect_silent(st$insert(list(1:3, 4:5, 6)))
+  testthat::expect_equal(list(1:3, 4:5, 6), st$serialize())
+  st2 <- simplex_tree()
+  testthat::expect_silent(st2$deserialize(st$serialize()))
+  testthat::expect_equal(st, st2)
+})
 
 ## Example from simplicial maps paper (after converting letters to numbers)
 test_that("vertex collapse works", {
   st <- simplex_tree()
-  st$insert_simplex(c(1,5))
-  st$insert_simplex(c(4,5))
-  st$insert_simplex(c(2,3,4))
+  st$insert(list(c(1,5), c(4,5), 2:4))
   st$collapse(1, 2, 1)
   
-  testthat::expect_true(st$find_simplex(c(1, 3, 4)))
-  testthat::expect_true(st$find_simplex(c(1, 5)))
-  testthat::expect_true(st$find_simplex(c(4, 5)))
-  testthat::expect_false(st$find_simplex(2))
-  testthat::expect_equal(st$n_simplexes, c(4, 5, 1))
+  testthat::expect_true(st$find(c(1, 3, 4)))
+  testthat::expect_true(st$find(c(1, 5)))
+  testthat::expect_true(st$find(c(4, 5)))
+  testthat::expect_false(st$find(2))
+  testthat::expect_equal(st$n_simplices, c(4, 5, 1))
   
   ## Test that {u,v} -> {w} is the same as {u,w} -> {w}, {v,w} -> {w}
-  
   st1 <- simplex_tree()
-  st1$insert_simplex(1:2)
-  st1$insert_simplex(2:3)
-  st1$insert_simplex(3:5)
-  st1$insert_simplex(c(3,5,6))
+  st1$insert(list(1:2, 2:3, 3:5, c(3,5,6)))
   
   st2 <- simplex_tree()
-  st2$insert_simplex(1:2)
-  st2$insert_simplex(2:3)
-  st2$insert_simplex(3:5)
-  st2$insert_simplex(c(3,5,6))
+  st2$insert(list(1:2, 2:3, 3:5, c(3,5,6)))
   
   st1$collapse(1, 5, 5) # {u,w} -> {w}
   st1$collapse(6, 5, 5) # {v,w} -> {w}
   st2$collapse(1, 6, 5) # {u,v} -> {w}
   all.equal(st1$as_list(), st2$as_list())
-  
-  
 })
 
 
-# st <- simplex_tree()
-# st$insert_simplex(1:3)
-# st$ltraverse(1, identity, "cofaces")
-# st$ltraverse(2, identity, "cofaces")
-# st$ltraverse(3, identity, "cofaces")
+## Testing k-expansion 
+testthat::test_that("K-expansion works", {
+  base_complex <- function(){
+    st <- simplex_tree()
+    sigma1 <- apply(combn(3, 2), 2, function(idx){ (1:3)[idx] })
+    sigma2 <- apply(combn(4, 2), 2, function(idx){ (4:7)[idx] })
+    apply(cbind(sigma1, sigma2), 2, st$insert) 
+    return(st)
+  }
+  st <- base_complex()
+  testthat::expect_true(methods::is(st, "Rcpp_SimplexTree"))
+  testthat::expect_equal(st$dimension, 1)
+  testthat::expect_silent(st$expand(2))
+  testthat::expect_equal(st$dimension, 2)
+  testthat::expect_true(all(st$find(list(1:3, 4:6, c(4, 5, 7), c(4, 6, 7)))))
+  testthat::expect_false(st$find(4:7))
+  testthat::expect_error(st$expand(3))
+  st <- base_complex()
+  testthat::expect_silent(st$expand(3))
+  testthat::expect_equal(st$dimension, 3)
+  testthat::expect_true(st$find(4:7))
+})
 
 

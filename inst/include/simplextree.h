@@ -105,7 +105,7 @@ struct SimplexTree {
   IntegerMatrix get_quads();
   
   size_t vertex_index(const idx_t);
-  size_t degree(const idx_t);
+  vector< size_t > degree(vector< idx_t >);
   simplex_t adjacent_vertices(const idx_t);
   
   // Simplex utilities
@@ -171,18 +171,22 @@ struct SimplexTree {
   template <typename Lambda> void traverse_max_skeleton(node_ptr, Lambda f, size_t k);
   
   // Utility 
-  simplex_t get_labels(const node_set_t& level, const idx_t offset = 0);
+  simplex_t get_labels(const node_set_t& level, idx_t offset = 0);
   size_t depth(node_ptr cn);
   size_t max_depth(node_ptr cn);
   void remove_subtree(node_ptr parent);
+  vector< idx_t > connected_components();
   
   bool is_tree(); // tests if is fully connected and is a tree
+  // bool is_cycle(vector< idx_t > v); // Tests if vertex sequence has a cycle.
     
   bool collapse(node_ptr, node_ptr);
   bool collapseR(simplex_t, simplex_t);
   bool vertex_collapseR(idx_t, idx_t, idx_t);
   bool vertex_collapse(node_ptr, node_ptr, node_ptr);
   void contract(simplex_t);
+  void expansion(const idx_t k);
+  void expand(set< node_ptr, ptr_comp< node > >&, const idx_t);
   
   void get_cousins();
 

@@ -4,44 +4,57 @@
 \alias{collapse}
 \title{Elementary collapse}
 \usage{
-$collapse(tau, sigma)
+\code{$collapse(tau, sigma)} or \code{$collapse(u, v, w)}
 }
 \arguments{
-\item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+\item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.}
 
-\item{sigma}{a l-length vector of vertex ids representing a (l-1)-simplex.}
+\item{sigma}{a n-length vector of vertex ids representing a (n-1)-simplex. Must be the only coface of \code{tau}.}
+
+\item{u}{a vertex id representing one of the vertices in the free pair.}
+
+\item{v}{a vertex id representing one of the vertices in the free pair.}
+
+\item{w}{a vertex id representing the target of the collapse.}
 }
 \value{
-boolean indicating whether \code{tau} is a coface of \code{sigma}, and the two were removed.
+boolean indicating whether the collapse was performed.
 }
 \description{
 Performs an elementary collapse.
 }
 \details{
-This function performs an \emph{elementary collapse} in the sense described by (1), which is 
+This function provides two types of \emph{elementary collapses}. \cr 
+\cr 
+The first type of collapse is in the sense described by (1), which is 
 summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if 
 \eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
 (if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed. 
 \code{tau} and \code{sigma} are sorted before comparison.
+To perform this kind of elementary collapse, call \code{collapse} with two simplices as arguments, i.e. \code{tau} before \code{sigma}.
+
+Alternatively, this method supports another type of elementary collapse, also called a \emph{vertex collapse}, as described 
+in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first 
+two representing the free pair, and the last representing the target vertex to collapse to.
 }
 \examples{
-stree <- simplextree::simplex_tree()
-stree$insert_simplex(c(1, 2, 3))
-stree$collapse(c(1, 2), c(1, 2, 3))
-stree$print_tree()
+st <- simplextree::simplex_tree()
+st$insert(1:3)
+st$collapse(1:2, 1:3)
+st$print_tree()
 # 1 (h = 1): .( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
 
-stree$insert_simplex(1:3)
-stree$insert_simplex(2:5)
-stree$print_tree()
+st$insert(list(1:3, 2:5))
+st$print_tree()
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
 # 3 (h = 2): .( 4 5 )..( 5 )
 # 4 (h = 1): .( 5 )
 # 5 (h = 0): 
-stree$collapse(2:4, 2:5)
+st$collapse(2:4, 2:5)
+st$print_tree()
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 2): .( 3 4 5 )..( 5 5 )
 # 3 (h = 2): .( 4 5 )..( 5 )
@@ -50,4 +63,5 @@ stree$collapse(2:4, 2:5)
 }
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+2. Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
 }

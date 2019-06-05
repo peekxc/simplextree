@@ -24,14 +24,14 @@ and identity otherwise, to all simplices in the complex. \cr
 Note that edge contraction is not symmetric.
 }
 \examples{
-stree <- simplextree::simplex_tree()
-stree$insert_simplex(1:3)
-stree$print_tree()
+st <- simplextree::simplex_tree()
+st$insert(1:3)
+st$print_tree()
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
-stree$contract(c(1, 3))
-stree$print_tree()
+st$contract(c(1, 3))
+st$print_tree()
 # 1 (h = 1): .( 2 )
 # 2 (h = 0): 
 }

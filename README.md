@@ -1,5 +1,5 @@
 # simplextree
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using [modern C++](https://herbsutter.com/elements-of-modern-c-style/) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
 
 The Simplex Tree was originally introduced in the following paper: 
 
@@ -19,16 +19,25 @@ devtools::install_gitub("peekxc/simplextree")
 
 A stable CRAN release is planned for the future. 
 
-## Getting Started
+## Quickstart
 
 ```R
 library(simplextree)
-st <- simplex_tree()
-st$insert_simplex(c(1, 2, 3))
+st <- simplex_tree() ## instantiation wrapper
+st$insert(list(1:3, 4:5, 6)) ## Inserts { 1, 2, 3 }, { 4, 5 }, and { 6 }
+
+## Summary of complex
+print(st) 
+# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+
+## More detailed look at structure
 st$print_tree()
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
+# 4 (h = 1): .( 5 )
+# 5 (h = 0): 
+# 6 (h = 0): 
 
 ## Print the set of simplices making up the star of the simplex '2'
 st$traverse(2, function(simplex){ print(simplex) }, "star")
@@ -36,6 +45,27 @@ st$traverse(2, function(simplex){ print(simplex) }, "star")
 # [1] 1 2 3
 # [1] 2
 # [1] 2 3
+
+## Retrieves list of all simplices in DFS order, starting with the empty face 
+dfs_list <- st$ltraverse(empty_face, identity, "dfs")
+
+## Get connected components 
+print(st$connected_components)
+# [1] 1 1 1 4 4 5
+
+## Serialization/persistent storage options available
+print(st$serialize())
+# [[1]]
+# [1] 1 2 3
+# [[2]]
+# [1] 4 5
+# [[3]]
+# [1] 6
+
+## As are various export options
+list_of_simplices <- st$as_list()
+adj_matrix <- st$as_adjacency_matrix()
+# ... see also as_adjacency_list(), as_edge_list
 ```
 
 ## API Reference 

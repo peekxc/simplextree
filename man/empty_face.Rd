@@ -11,4 +11,7 @@ empty_face
 \description{
 Simple alias to the NULL value, used to indicate the empty face.
 }
+\seealso{
+traverse
+}
 \keyword{datasets}

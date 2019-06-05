@@ -8,7 +8,8 @@ Removes all simplices from the simplex tree, except the root node.
 }
 \examples{
 st <- simplex_tree()
-st$insert_simplex(1:3)
+st$insert(1:3)
+print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
 st$clear()
 print(st) ## < empty simplex tree >
 }
