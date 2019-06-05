@@ -1,5 +1,5 @@
 # simplextree
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using [modern C++](https://herbsutter.com/elements-of-modern-c-style/) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
 
 The Simplex Tree was originally introduced in the following paper: 
 
@@ -7,7 +7,7 @@ The Simplex Tree was originally introduced in the following paper:
 
 A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure. Here's a picture of a simplicial complex (left) and its corresponding _Simplex Tree_ (right):
 
-![simplex tree picture](man/figures/simplextree.pdf)
+![simplex tree picture](./man/figures/simplextree.png)
  
 ## Installation 
 The current development version can be installed with the [devtools](https://github.com/r-lib/devtools) package: 
