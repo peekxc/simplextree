@@ -176,6 +176,8 @@ struct SimplexTree {
   size_t max_depth(node_ptr cn);
   void remove_subtree(node_ptr parent);
   vector< idx_t > connected_components();
+  void reindex(SEXP);
+  void reindex(vector< idx_t >);
   
   bool is_tree(); // tests if is fully connected and is a tree
   // bool is_cycle(vector< idx_t > v); // Tests if vertex sequence has a cycle.

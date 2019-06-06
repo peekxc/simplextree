@@ -27,6 +27,8 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "collapse", &SimplexTree::collapseR)
     .method( "collapse", &SimplexTree::vertex_collapseR)
     .method( "contract", &SimplexTree::contract)
+    .method( "reindex", (void (SimplexTree::*)(SEXP))(&SimplexTree::reindex))
+    .method( "traverse", (void (SimplexTree::*)(Function, std::string))(&SimplexTree::traverse))
     .method( "is_face", &SimplexTree::is_face)
     .method( "is_tree", &SimplexTree::is_tree)
     .method( "traverse", (void (SimplexTree::*)(Function, std::string))(&SimplexTree::traverse))

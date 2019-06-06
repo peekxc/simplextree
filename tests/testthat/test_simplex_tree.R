@@ -105,6 +105,16 @@ test_that("vertex collapse works", {
 })
 
 
+testthat::test_that("reindexing work", {
+  st <- simplex_tree()
+  st$insert(list(c(1,2), c(2,3), c(1,3), c(1,4), c(2,5), c(2,6), c(3,7), c(3,8), c(3,9)))
+  st2 <- simplex_tree()
+  st2$deserialize(st$serialize())
+  st$reindex(c(3,1,2,4:9))  
+  st2$reindex(list("1"=3, "2"=1, "3"=2))
+  expect_equal(st$serialize(), st2$serialize())
+})
+
 ## Testing k-expansion 
 testthat::test_that("K-expansion works", {
   base_complex <- function(){

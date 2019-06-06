@@ -933,6 +933,43 @@ inline void SimplexTree::load(std::string filename){
   }
 }
 
+inline void SimplexTree::reindex(SEXP target_ids){
+  const unsigned int s_type = TYPEOF(target_ids);
+  if (s_type == INTSXP || s_type == REALSXP){
+    vector< idx_t > t_ids = as< vector< idx_t > >(target_ids);
+    reindex(t_ids);
+  } else if (s_type == LISTSXP || s_type == VECSXP){
+    List t_ids_lst = as< List >(target_ids); 
+    CharacterVector nm = t_ids_lst.names();
+    if (Rf_isNull(nm) || Rf_length(nm) == 0){ stop("target ids must be named if given as a list."); }
+    
+    // Do the mapping, then send to regular reindexing function
+    const vector< idx_t > base_vids = get_vertices();
+    vector< idx_t > new_vids = vector< idx_t >(begin(base_vids), end(base_vids));
+    for (size_t i = 0; i < nm.size(); ++i){
+      idx_t src_id = std::stoi(as< std::string >(nm.at(i)));
+      idx_t tgt_id = as< idx_t >(t_ids_lst.at(i));
+      const size_t idx = std::distance(begin(base_vids), std::lower_bound(begin(base_vids), end(base_vids), src_id));
+      new_vids.at(idx) = tgt_id;
+    }
+    reindex(new_vids);
+  }
+}
+
+inline void SimplexTree::reindex(vector< idx_t > target_ids){
+  if (n_simplexes.at(0) != target_ids.size()){ stop("target id vector must match the size of the number of 0-simplices."); }
+  vector< vector< idx_t > > minimal = serialize();
+  vector< idx_t > vids = get_vertices();
+  clear(); // clear the tree now that it's been serialized
+  for (simplex_t sigma: minimal){
+    const size_t n = sigma.size(); 
+    for (size_t i = 0; i < n; ++i){
+      const size_t idx = std::distance(begin(vids), std::lower_bound(begin(vids), end(vids), sigma.at(i)));
+      sigma.at(i) = target_ids.at(idx);
+    }
+    insert_simplex(sigma);
+  }
+}
 
 // Link of a simplex
 inline vector< node_ptr > SimplexTree::link(node_ptr sigma){

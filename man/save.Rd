@@ -21,7 +21,7 @@ st$print_tree()
 st$save(tf)
 st$clear()
 print(st)
-< empty simplex tree >
+# < empty simplex tree >
 st$load(tf)
 st$print_tree()
 # 1 (h = 2): .( 2 3 )..( 3 )

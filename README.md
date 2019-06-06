@@ -72,6 +72,8 @@ adj_matrix <- st$as_adjacency_matrix()
 
 Below is the API reference for the R-bindings of the _SimplexTree_ class. A _SimplexTree_ object can also be passed, manipulated, and modified via C++ in another R package as well. See [Usage with Rcpp](#Usage with Rcpp). 
 
+In what follows, each _simplex_ is specified as an integer vector. Some methods accept multiple _simplices_ as well, which can be specified as a list of integer vectors. 
+
 ### SimplexTree
 
 [#](#simplex_tree) __simplex\_tree__()
@@ -82,29 +84,23 @@ Trivial wrapper for constructing a _SimplexTree_ instance. See below.
 
 Exposed binding for an internal _SimplexTree_ C++ class. The binding is exposed as an [Rcpp Module](). Instantiation returns an object of type _Rcpp\_SimplexTree_. Instantiate with either `simplex_tree()` or `new(SimplexTree)`.
 
-[#](#n_simplexes) _SimplexTree_ $ **n\_simplices**
+[#](#n_simplices) _SimplexTree_ $ **n\_simplices**
 
 An integer vector, where each index *k* denotes the number of (*k-1*)-simplices. Read-only. 
 
-[#](#max_depth) _SimplexTree_ $ **dimension**
+[#](#dimension) _SimplexTree_ $ **dimension**
 
 The dimension of a simplicial complex *K* is the highest dimension of any of *K*'s simplices. Equivalently, this is the maximum depth of any subtree in the _SimplexTree_, where the _depth_ of a *k*-simplex is *k+1*. The root node has depth 0.  
 
 #### Modifying the tree 
 
-[#](#insert_simplex) _SimplexTree_ $ **insert_simplex**(\[*simplex*\])
+[#](#insert) _SimplexTree_ $ **insert**(\[*simplices*\])
 
-Inserts the specified _simplex_ into the simplex tree, if it doesn't already exist. The _simplex_ is ordered prior to insertion. If the _simplex_ already exists, the tree is not modified. 
+Inserts simplices into the simplex tree. Each _simplex_ is ordered prior to insertion. If the _simplex_ specified already exists in the tree, the tree is not modified. 
 
-Any proper faces of _simplex_ not in the tree already are also inserted.  
+Note that to keep the property of being a simplex tree, any proper faces of _simplex_ not in the tree are added in the insertion procedure. The _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
 
-Note that the _SimplexTree_ does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
-
-[#](#insert_simplex) _SimplexTree_ $ **insert_simplices**(\[*simplices*\]))
-
-[Inserts](#insert_simplex) every simplex in the list _simplices_ into the simplex tree.
-
-[#](#remove_simplex) _SimplexTree_ $ **remove_simplex**(\[*simplex*\])
+[#](#remove) _SimplexTree_ $ **remove**(\[*simplices*\])
 
 Removes the specified _simplex_ from the simplex tree, if it exists. If the _simplex_ doesn't exist, the tree is not modified. 
 
@@ -123,13 +119,13 @@ Performs an _elementary collapse_. There are multiple simplifying operations tha
 
 (1) elementary collapse ( from [1](#simplex-tree-paper) ) 
 
-Collapses _tau_ through its coface _sigma_ if _sigma_ is the only coface of _tau_. 
+Collapses _tau_ through its coface _sigma_ if _sigma_ is the only coface of _tau_, where _tau_ and _sigma_ are both _simplexes_. 
 
 (2) vertex collapse ( from [2](#simplex-tree-paper))
 
-Collapses a free pair (_u_, _v_) -> (_w_), mapping a pair of vertices to a single vertex. 
+Collapses a free pair (_u_, _v_) -> (_w_), mapping a pair of vertices to a single vertex, where _u_, _v_, and _w_ are all _vertices_. 
 
-Technically, if you want to do an _elementary_ collapse, it's required that either _u_ = _w_, such that (_u_, _v_) -> (_u_), or _v_ = _w_, such that (_u_, _v_) -> (_v_). However, if (_u_, _v_) -> (_w_) is specified, where _u_ != _w_ and _v_ != _w_ , the collapse is decomposed into two elementary collapses: (_u_, _w_) -> (_w_) and (_v_, _w_) -> (_w_). 
+Technically, an _elementary_ collapse in the vertex collapse sense requires that either _u_ = _w_, such that (_u_, _v_) -> (_u_), or _v_ = _w_, such that (_u_, _v_) -> (_v_). However, if (_u_, _v_) -> (_w_) is specified, where _u_ != _w_ and _v_ != _w_ , the collapse is decomposed into two elementary collapses: (_u_, _w_) -> (_w_) and (_v_, _w_) -> (_w_). 
 
 [#](#as_XPtr) _SimplexTree_ $ **as_XPtr**()
 
@@ -147,15 +143,17 @@ Prints the simplicial complex to _standard out_. By default, this is set to R's 
 
 Where each line corresponds to a *vertex* and its corresponding subtree. The *subtree depth* represents the set of _sibling_ *k*-simplices at that level in tree. represented by a sequence of dots ('**.**').  
 
-[#](#find_simplex) _SimplexTree_ $ **find_simplex**(\[*simplex*\])
+[#](#find) _SimplexTree_ $ **find**(\[*simplices*\])
 
-Traverses the simplex tree downard starting at the root by successively using each of the ordered labels in _simplex_ as keys. Returns a logical indicating whether _simplex_ was found. _simplex_ is sorted prior to traversing. 
+Traverses the simplex tree downard starting at the root by successively using each of the ordered labels in _simplex_ as keys. Returns a logical indicating whether _simplex_ was found, for each _simplex_ in _simplices_. Each _simplex_ is sorted prior to traversing. 
 
-[#](#degree) _SimplexTree_ $ **degree**(_[vertices]_)
+[#](#degree) _SimplexTree_ $ **degree**(\[*vertices*\])
 
 Returns the degree of a given vertex or set of vertices, i.e. the number of 1-simplices each vertex is a face of. Higher order simplices are not counted, for that see #cofaces.
 
-[#](#adjacent_vertices) _SimplexTree_ $ **adjacent_vertices**()
+[#](#adjacent) _SimplexTree_ $ **adjacent**(_vertex_)
+
+Returns the set of vertices adjacent to a given _vertex_. 
 
 [#](#is_face) _SimplexTree_ $ **is_face**(_[tau]_, _[sigma]_)
 
@@ -164,8 +162,6 @@ Returns a logical indicating whether tau is a face of sigma.
 [#](#is_face) _SimplexTree_ $ **is_tree**()
 
 Returns a logical indicating whether the simplex tree is fully connected and acyclic. 
-
-Note that although the simplex tree is an ordered structure, in this implementation, simplex orientation (or direction, in the graph sense) is not maintained. 
 
 #### Traversals
 
@@ -244,11 +240,21 @@ Traverses all of simplices in the the _maximal k-skeleton_ of the _SimplexTree_,
 
 [#](#serialize) _SimplexTree_ $ **serialize**()
 
-[#](#unserialize) _SimplexTree_ $ **deserialize**()
+Serializes the simplex tree _K_ into a minimal set of maximal faces of _K_ needed to recover the simplex tree. Returns
+the set as list of simplices.
 
-[#](#save) _SimplexTree_ $ **save**()
+[#](#deserialize) _SimplexTree_ $ **deserialize**()
 
-[#](#load) _SimplexTree_ $ **load**()
+Deserializes a list of simplices by successively inserting them into the simplex tree.
+
+[#](#save) _SimplexTree_ $ **save**(_filename_)
+
+Saves a serialized version the simplex tree to _filename_ in the [RDS](https://www.rdocumentation.org/packages/base/versions/3.6.0/topics/readRDS) file.
+
+[#](#load) _SimplexTree_ $ **load**(_filename_)
+
+Loads a [RDS](https://www.rdocumentation.org/packages/base/versions/3.6.0/topics/readRDS) file saved to _filename_ into 
+the simplex tree.
 
 #### Conversions
 
