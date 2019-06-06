@@ -1,4 +1,8 @@
 # simplextree
+[![Appveyor Windows Build status](https://img.shields.io/appveyor/ci/peekxc/simplextree/master.svg?logo=windows&logoColor=DDDDDD)](https://ci.appveyor.com/project/peekxc/simplextree)
+[![Travis OS X Build status](https://img.shields.io/travis/com/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.com/peekxc/simplextree)
+[![Travis Linux X Build status](https://img.shields.io/travis/com/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.com/peekxc/simplextree)
+
 `simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
 
 The Simplex Tree was originally introduced in the following paper: 

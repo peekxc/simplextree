@@ -104,7 +104,6 @@ test_that("vertex collapse works", {
   all.equal(st1$as_list(), st2$as_list())
 })
 
-
 testthat::test_that("reindexing work", {
   st <- simplex_tree()
   st$insert(list(c(1,2), c(2,3), c(1,3), c(1,4), c(2,5), c(2,6), c(3,7), c(3,8), c(3,9)))

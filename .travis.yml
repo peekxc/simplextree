@@ -1,0 +1,35 @@
+# R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
+
+language: r
+sudo: false
+cache: packages
+warnings_are_errors: false 
+r_check_args: #--as-cran
+
+addons:
+  apt:
+    packages:
+      - libxml2-dev
+      - gfortran
+  homebrew:
+    packages:
+      - libxml2
+      - gcc
+    update: true
+
+# Run on both linux and OS X
+os:
+  - linux
+  - osx
+
+env:
+  - BADGE=linux
+  - BADGE=osx
+
+# hack to get some OS-specific badges
+matrix:
+  exclude:
+    - os: linux
+      env: BADGE=osx
+    - os: osx
+      env: BADGE=linux
