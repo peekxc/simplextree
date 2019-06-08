@@ -61,17 +61,17 @@ Unlike fields, however, properties are not explicitly stored: they are generated
     \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
     \item{$\code{\link{expand}}}{ Performs an k-expansion. }
-    \item{$\code{\link[simplextree:traverse.simplex_tree]{traverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
-    \item{$\code{\link[simplextree:traverse.simplex_tree]{ltraverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
+    \item{$\code{\link{traverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
+    \item{$\code{\link{ltraverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
     \item{$\code{\link{is_face}}}{ Checks for faces. }
     \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
     \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
     \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
     \item{$\code{\link{save}}}{ Saves the simplex tree to a file. }
     \item{$\code{\link{load}}}{ Loads a simplex tree from a file. }
-    \item{$\code{\link{as_list}}}{ Converts the simplicial complex to a list. }
+    \item{$\code{as_list}}{ Converts the simplicial complex to a list. }
     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
-    \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacenecy list. }
+    \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacency list. }
     \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
 }
 }

@@ -116,7 +116,7 @@ Returns an integer vector yielding the connected components of the simplicial co
 
 [#](#vertices) _SimplexTree_ $ **vertices**
 
-Returns the 0-simplices in the simplicial complex as an _( n x 1 )_ matrix, where _n_ is the number of 0-simplices.
+Returns the 0-simplices in the simplicial complex as an _n_-length vector, where _n_ is the number of 0-simplices.
 
 [#](#edges) _SimplexTree_ $ **edges**
  
@@ -207,6 +207,10 @@ Returns a logical indicating whether tau is a face of sigma.
 [#](#is_face) _SimplexTree_ $ **is_tree**()
 
 Returns a logical indicating whether the simplex tree is fully connected and acyclic. 
+
+[#](#generate_ids) _SimplexTree_ $ **generate_ids**(_n_)
+
+Generates _n_ new vertex ids which do not exist in the tree according to the current _id\_policy_. 
 
 #### Traversals
 

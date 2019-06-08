@@ -37,17 +37,17 @@
 #'     \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
 #'     \item{$\code{\link{contract}}}{ Performs an edge contraction. }
 #'     \item{$\code{\link{expand}}}{ Performs an k-expansion. }
-#'     \item{$\code{\link[simplextree:traverse.simplex_tree]{traverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
-#'     \item{$\code{\link[simplextree:traverse.simplex_tree]{ltraverse}}()}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
+#'     \item{$\code{\link{traverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
+#'     \item{$\code{\link{ltraverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
 #'     \item{$\code{\link{is_face}}}{ Checks for faces. }
 #'     \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
 #'     \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
 #'     \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
 #'     \item{$\code{\link{save}}}{ Saves the simplex tree to a file. }
 #'     \item{$\code{\link{load}}}{ Loads a simplex tree from a file. }
-#'     \item{$\code{\link{as_list}}}{ Converts the simplicial complex to a list. }
+#'     \item{$\code{as_list}}{ Converts the simplicial complex to a list. }
 #'     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
-#'     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacenecy list. }
+#'     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacency list. }
 #'     \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
 #' }
 #' @author Matt Piekenbrock
@@ -172,14 +172,16 @@ NULL
 #' @name traverse
 #' @aliases ltraverse
 #' @title traverse
-#' @param sigma The simplex to initialize the traversal, or \code{empty_face} or NULL to begin at the root. See details.  
+#' @param sigma The simplex to initialize the traversal. See details.  
 #' @param f An arbitrary function which accepts as input a simplex. See details. 
 #' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".
 #' @description Traverses subsets of a simplicial complex.
 #' @details \code{\link{traverse}} allows for traversing subsets of the simplex tree. 
 #' A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
 #' two aspects: the traversal \code{type} and the initial simplex \code{sigma}. Given a simplex \code{sigma}, a subset of 
-#' the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}.
+#' the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}. \cr
+#' \cr
+#' \code{sigma} can either be omitted, a simplex, or explicitly the \code{empty_face} or NULL.
 #' See examples for use-cases. 
 #' @examples
 #' ## Starter example complex 
@@ -226,9 +228,10 @@ NULL
 # ---- insert ----
 #' @name insert
 #' @title Insert simplices
-#' @description Inserts simplices into the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices. 
-#' @param simplex either a k-length vector of vertex ids representing a (k-1)-simplex, or a list of simplices. 
-#' @usage $insert(simplex)
+#' @description Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
+#' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
+#' @param simplices a list of simplices.
+#' @usage insert(simplex), insert(simplices)
 #' @details This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
 #' no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
 #' Faces of \code{simplex} not in the simplex tree are inserted as needed.
@@ -242,23 +245,28 @@ NULL
 # ---- remove ----
 #' @name remove
 #' @title Remove simplices
-#' @description Removes simplices from the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices. 
-#' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
-#' @usage $remove(simplex)
+#' @description Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
+#' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex.
+#' @param simplices a list of simplices. 
+#' @usage remove(simplex)
 #' @details This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
 #' it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
 #' Cofaces of \code{simplex} are also removed.
+#' @seealso find remove
 NULL
 
 # ---- find ----
 #' @name find
 #' @title Find simplices
-#' @description Finds whether simplices exist the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices. 
-#' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
-#' @usage $find(simplex)
-#' @details Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists. 
+#' @description Finds whether simplices exist the simplex tree.  
+#' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
+#' @param simplices a list of simplices. 
+#' @usage find(simplex), find(simplices)
+#' @details Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists.
+#' \code{simplex} can be specified as vector to represent a single simplex, and a list to represent a set of simplices. 
 #' \code{simplex} is sorted before traversing the trie.
 #' @return boolean indicating whether or not \code{simplex} exists in the tree. 
+#' @seealso find remove
 NULL
 
 # ---- is_face ----
@@ -267,11 +275,15 @@ NULL
 #' @description Checks whether a simplex is a face of another simplex.
 #' @param tau a k-length vector of vertex ids representing a (k-1)-simplex. 
 #' @param sigma a l-length vector of vertex ids representing a (l-1)-simplex. 
-#' @usage $is_face(tau, sigma)
 #' @details A simplex \eqn{\tau} is a face of \eqn{\sigma} if \eqn{\tau \subset \sigma}. This function 
 #' checks whether that is true. \code{tau} and \code{sigma} are sorted before comparison.
 #' @seealso \href{https://en.cppreference.com/w/cpp/algorithm/includes}{std::includes}
 #' @return boolean indicating whether \code{tau} is a face of \code{sigma}. 
+#' @examples 
+#' st <- simplex_tree()
+#' st$insert(1:3)
+#' st$is_face(2:3, 1:3)
+#' st$is_face(1:3, 2:3)
 NULL
 
 # ---- collapse ----
@@ -283,7 +295,7 @@ NULL
 #' @param u a vertex id representing one of the vertices in the free pair.
 #' @param v a vertex id representing one of the vertices in the free pair. 
 #' @param w a vertex id representing the target of the collapse.
-#' @usage \code{$collapse(tau, sigma)} or \code{$collapse(u, v, w)}
+#' @usage collapse(tau, sigma), collapse(u, v, w)
 #' @details This function provides two types of \emph{elementary collapses}. \cr 
 #' \cr 
 #' The first type of collapse is in the sense described by (1), which is 
@@ -331,7 +343,7 @@ NULL
 #' @title Edge contraction
 #' @description Performs an edge contraction. 
 #' @param edge an edge to contract, as a 2-length vector. 
-#' @usage $contract(edge)
+#' @usage contract(edge)
 #' @details This function performs an \emph{edge contraction} in the sense described by (1), which is 
 #' summarized here. Given an edge \eqn{ {va, vb}}, \eqn{vb} is contracted to \eqn{va} if \eqn{vb} is 
 #' removed from the complex and the link of \eqn{va} is augmented with the link of \eqn{vb}. This may be thought as 
@@ -429,9 +441,21 @@ NULL
 NULL
 
 
-# ---- plot.simplex ----
+# ---- is_tree ----
+#' @name is_tree 
+#' @title Checks if the simplicial complex is a tree.
+#' @description This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.
+#' @examples 
+#' st <- simplex_tree()
+#' st$insert(list(1:2, 2:3))
+#' st$is_tree() # true
+#' st$insert(c(1, 3))
+#' st$is_tree() # false
+NULL
+
+# ---- plot.Rcpp_SimplexTree ----
 #' @export
-plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL) {
+plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, ...) {
   if (!missing(coords)){ stopifnot(is.matrix(coords) && all(dim(coords) == c(x$n_simplices[1], 2))) }
   else {
     requireNamespace("igraph", quietly = TRUE)

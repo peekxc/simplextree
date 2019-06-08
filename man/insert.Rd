@@ -4,13 +4,15 @@
 \alias{insert}
 \title{Insert simplices}
 \usage{
-$insert(simplex)
+insert(simplex), insert(simplices)
 }
 \arguments{
-\item{simplex}{either a k-length vector of vertex ids representing a (k-1)-simplex, or a list of simplices.}
+\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+
+\item{simplices}{a list of simplices.}
 }
 \description{
-Inserts simplices into the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices.
+Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
 }
 \details{
 This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 

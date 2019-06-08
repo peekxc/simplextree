@@ -4,16 +4,21 @@
 \alias{remove}
 \title{Remove simplices}
 \usage{
-$remove(simplex)
+remove(simplex)
 }
 \arguments{
 \item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+
+\item{simplices}{a list of simplices.}
 }
 \description{
-Removes simplices from the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices.
+Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
 }
 \details{
 This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
 it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
 Cofaces of \code{simplex} are also removed.
+}
+\seealso{
+find remove
 }

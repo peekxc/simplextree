@@ -5,7 +5,7 @@
 \alias{ltraverse}
 \title{traverse}
 \arguments{
-\item{sigma}{The simplex to initialize the traversal, or \code{empty_face} or NULL to begin at the root. See details.}
+\item{sigma}{The simplex to initialize the traversal. See details.}
 
 \item{f}{An arbitrary function which accepts as input a simplex. See details.}
 
@@ -18,7 +18,9 @@ Traverses subsets of a simplicial complex.
 \code{\link{traverse}} allows for traversing subsets of the simplex tree. 
 A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
 two aspects: the traversal \code{type} and the initial simplex \code{sigma}. Given a simplex \code{sigma}, a subset of 
-the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}.
+the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}. \cr
+\cr
+\code{sigma} can either be omitted, a simplex, or explicitly the \code{empty_face} or NULL.
 See examples for use-cases.
 }
 \examples{

@@ -3,9 +3,6 @@
 \name{is_face}
 \alias{is_face}
 \title{Is face}
-\usage{
-$is_face(tau, sigma)
-}
 \arguments{
 \item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex.}
 
@@ -20,6 +17,12 @@ Checks whether a simplex is a face of another simplex.
 \details{
 A simplex \eqn{\tau} is a face of \eqn{\sigma} if \eqn{\tau \subset \sigma}. This function 
 checks whether that is true. \code{tau} and \code{sigma} are sorted before comparison.
+}
+\examples{
+st <- simplex_tree()
+st$insert(1:3)
+st$is_face(2:3, 1:3)
+st$is_face(1:3, 2:3)
 }
 \seealso{
 \href{https://en.cppreference.com/w/cpp/algorithm/includes}{std::includes}

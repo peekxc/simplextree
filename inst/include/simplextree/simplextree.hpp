@@ -962,8 +962,9 @@ inline void SimplexTree::reindex(vector< idx_t > target_ids){
   vector< idx_t > vids = get_vertices();
   
   // Check the target ids are unique 
-  vector< idx_t > v_check(vids.size());
-  auto it = std::unique_copy(begin(target_ids), end(target_ids), begin(v_check));
+  vector< idx_t > v_check(begin(target_ids), end(target_ids));
+  std::sort(begin(v_check), end(v_check));
+  auto it = std::unique(begin(v_check), end(v_check));
   if (std::distance(begin(v_check), it) != vids.size()){
     stop("target ids must all unique.");
   }

@@ -4,7 +4,7 @@
 \alias{collapse}
 \title{Elementary collapse}
 \usage{
-\code{$collapse(tau, sigma)} or \code{$collapse(u, v, w)}
+collapse(tau, sigma), collapse(u, v, w)
 }
 \arguments{
 \item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.}

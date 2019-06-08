@@ -4,18 +4,24 @@
 \alias{find}
 \title{Find simplices}
 \usage{
-$find(simplex)
+find(simplex), find(simplices)
 }
 \arguments{
-\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.}
+
+\item{simplices}{a list of simplices.}
 }
 \value{
 boolean indicating whether or not \code{simplex} exists in the tree.
 }
 \description{
-Finds whether simplices exist the simplex tree. Use a vector to represent a simplex, and a list to represent a set of simplices.
+Finds whether simplices exist the simplex tree.
 }
 \details{
-Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists. 
+Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists.
+\code{simplex} can be specified as vector to represent a single simplex, and a list to represent a set of simplices. 
 \code{simplex} is sorted before traversing the trie.
+}
+\seealso{
+find remove
 }

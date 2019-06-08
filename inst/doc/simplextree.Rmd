@@ -8,7 +8,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using modern [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using modern [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
 
 The Simplex Tree data structure was originally introduced in the following paper: 
 
@@ -93,7 +93,7 @@ st$traverse(empty_face, function(simplex){
 }, "maximal-skeleton", list(k = 0))
 ```
 
-A variety of topological operations, such as elementary collapses and edge contractions, are supported.
+A variety of topological operations, such as elementary collapses and edge contractions, k-expansions, etc. are supported.
 ```{r}
 ## Collapse the free pair ({ 3 }, { 6 }) -> { 6 }
 st$collapse(3, 6, 6)
