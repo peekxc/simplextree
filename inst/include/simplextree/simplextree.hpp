@@ -960,6 +960,14 @@ inline void SimplexTree::reindex(vector< idx_t > target_ids){
   if (n_simplexes.at(0) != target_ids.size()){ stop("target id vector must match the size of the number of 0-simplices."); }
   vector< vector< idx_t > > minimal = serialize();
   vector< idx_t > vids = get_vertices();
+  
+  // Check the target ids are unique 
+  vector< idx_t > v_check(vids.size());
+  auto it = std::unique_copy(begin(target_ids), end(target_ids), begin(v_check));
+  if (std::distance(begin(v_check), it) != vids.size()){
+    stop("target ids must all unique.");
+  }
+  
   clear(); // clear the tree now that it's been serialized
   for (simplex_t sigma: minimal){
     const size_t n = sigma.size(); 
@@ -1088,7 +1096,7 @@ inline void SimplexTree::trav_switch(node_ptr sigma, Lambda f, std::string type,
     size_t k = args["k"];
     if (type == "skeleton"){ traverse_skeleton(sigma, f, k); }
     if (type == "maximal-skeleton"){ traverse_max_skeleton(sigma, f, k); }
-  } else { stop("Iteration 'type' is invalid. Please use one of: dfs, bfs, cofaces, star, link"); }
+  } else { stop("Iteration 'type' is invalid. Please use one of: dfs, bfs, cofaces, star, link, skeleton, or maximal-skeleton"); }
 }
 
 // Generic way to apply function to various types of simplices. 
