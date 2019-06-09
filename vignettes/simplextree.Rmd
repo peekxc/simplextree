@@ -18,7 +18,9 @@ The Simplex Tree data structure was originally introduced in the following paper
 A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure. Here's a picture of a simplicial complex (left) and its corresponding _Simplex Tree_ (right):
 
 ```{r, echo=FALSE, fig.width=2}
-fig_path <- file.path("simplextree_fig.pdf")
+st_path <- system.file(package="simplextree")
+fig_inst_path <- file.path(st_path, "doc", "simplextree_fig.pdf")
+fig_path <- ifelse(file.exists(fig_inst_path), fig_inst_path, file.path("simplextree_fig.pdf"))
 knitr::include_graphics(path = fig_path, auto_pdf = TRUE, dpi = 330)
 ```
 
