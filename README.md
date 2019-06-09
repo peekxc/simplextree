@@ -231,7 +231,7 @@ The **traverse** method has three overloads, based on the traversal _type_ and i
 (3)  applies _f_ to each simplex in the traversal path _type_, starting at the specified _simplex_ in the tree, and supplying the necessary parameters to the traversal _type_ as a list _params_. The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias. 
 
 <details>
-	<summary>Traversal Example</summary>
+	<summary> Traversal Examples </summary>
 
 	Traverse using first overload (performs depth-first traversal on simplex tree): 
 		

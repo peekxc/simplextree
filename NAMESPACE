@@ -3,7 +3,6 @@
 S3method(plot,Rcpp_SimplexTree)
 export(empty_face)
 export(simplex_tree)
-export(traverse)
 import(Rcpp)
 import(methods)
 useDynLib(simplextree, .registration = TRUE)

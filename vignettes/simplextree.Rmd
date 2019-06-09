@@ -1,5 +1,6 @@
 ---
 title: "Simplextree"
+author: "Matt Piekenbrock"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -8,7 +9,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using modern [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation with general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension by providing R-bindings to a _Simplex Tree_ data structure. These bindings are exported to the user in the form of an [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf), which interfaces modern [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) that allows efficient manipulation of the data structure. 
 
 The Simplex Tree data structure was originally introduced in the following paper: 
 
@@ -17,21 +18,12 @@ The Simplex Tree data structure was originally introduced in the following paper
 A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure. Here's a picture of a simplicial complex (left) and its corresponding _Simplex Tree_ (right):
 
 ```{r, echo=FALSE, fig.width=2}
-fig_path <- file.path(system.file(package = "simplextree"), "help", "figures", "simplextree.png")
+fig_path <- file.path("simplextree_fig.pdf")
 knitr::include_graphics(path = fig_path, auto_pdf = TRUE, dpi = 330)
 ```
 
-## Installation 
-The current development version can be installed with the [devtools](https://github.com/r-lib/devtools) package: 
+## Quick tour of the package 
 
-```R
-require("devtools")
-devtools::install_gitub("peekxc/simplextree")
-```
-
-A stable CRAN release is planned for the future. 
-
-## Quickstart 
 Create a simplex tree by calling `simplex_tree()`
 ```{r}
 library("simplextree")

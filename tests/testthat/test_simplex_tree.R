@@ -22,7 +22,7 @@ test_that("Can add and remove vertices", {
 
 test_that("Can add and remove edges", {
   stree <- simplextree::simplex_tree()
-  n_vertices <- sample(1:25, size = 1)
+  n_vertices <- sample(5L:25L, size = 1)
   edges <- t(combn(n_vertices, 2L))
   
   ## Insert vertices
