@@ -28,7 +28,8 @@ See examples for use-cases.
 st <- simplex_tree()
 st$insert(list(1:3, 2:5))
 
-## Print out complex using depth-first traversal. 'empty_face' implies that the DFS will start at the root. 
+## Print out complex using depth-first traversal. 
+## 'empty_face' implies that the DFS will start at the root. 
 st$traverse(empty_face, print, "dfs")
 st$traverse(print, "dfs") ## overload available that assumes empty_face 
 

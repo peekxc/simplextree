@@ -1,6 +1,14 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
+#include <memory>   // smart ptrs
+#include <vector>   // vector
+#include <cstddef>  // size_t
+#include <iterator> // begin, end
+#include <cstdlib>  // alloca
+#include <type_traits> // is_integral, is_unsigned
+#include <functional> // transform
+
 // Aliases
 using std::vector;
 using std::size_t;
@@ -10,7 +18,6 @@ template <typename T> using s_ptr = std::shared_ptr<T>; // Shared pointer
 template <typename T> using u_ptr = std::unique_ptr<T>; // Unique pointer
 
 // To use alloca portably
-#include <cstdlib> // alloca
 #ifdef __GNUC__
 /* Includes GCC, clang and Intel compilers */
 # undef alloca

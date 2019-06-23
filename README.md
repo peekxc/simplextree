@@ -3,13 +3,13 @@
 [![Travis OS X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.org/peekxc/simplextree)
 [![Travis Linux X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.org/peekxc/simplextree)
 
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex). This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
 
 The Simplex Tree was originally introduced in the following paper: 
 
 > Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 
-A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure. Here's a picture of a simplicial complex (left) and its corresponding _Simplex Tree_ (right):
+A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure whose nodes are in bijection with the faces of the complex. Here's a picture (taken from the paper) of a simplicial 3-complex (left) and its corresponding _Simplex Tree_ (right):
 
 ![simplex tree picture](./man/figures/simplextree.png)
  
@@ -112,7 +112,9 @@ Properties are aliases to methods that act as data fields, but on access dynamic
 
 [#](#connected_components) _SimplexTree_ $ **connected_components**
 
-Returns an integer vector yielding the connected components of the simplicial complex. Each connected component is associated with an integer, and the resulting vector represents the mapping between the (ordered) set vertices and the their corresponding connected components.
+Returns the connected components of the simplicial complex. 
+
+Each connected component is associated with an integer; the result of this function is an integer vector mapping the (ordered) set vertices to their corresponding connected component.  
 
 [#](#vertices) _SimplexTree_ $ **vertices**
 
@@ -135,15 +137,13 @@ Returns the 3-simplices in the simplicial complex as an _( n x 4 )_ matrix, wher
 
 [#](#insert) _SimplexTree_ $ **insert**(\[*simplices*\])
 
-Inserts simplices into the simplex tree. Each _simplex_ is ordered prior to insertion. If the _simplex_ specified already exists in the tree, the tree is not modified. 
+Inserts simplices into the simplex tree. Each _simplex_ is ordered prior to insertion. If the _simplex_ specified already exists in the tree, the tree is not modified. To keep the property of being a simplex tree, proper faces of _simplex_ not in the tree are added during the insertion procedure. 
 
-Note that to keep the property of being a simplex tree, any proper faces of _simplex_ not in the tree are added in the insertion procedure. The _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
+Note that the _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
 
 [#](#remove) _SimplexTree_ $ **remove**(\[*simplices*\])
 
-Removes the specified _simplex_ from the simplex tree, if it exists. If the _simplex_ doesn't exist, the tree is not modified. 
-
-Removing a simplex will also remove all its cofaces as well. 
+Removes simplices from the simplex tree. Each _simplex_ is ordered prior to checking for their existence. If the _simplex_ doesn't exist, the tree is not modified. To keep the property of being a simplex tree, cofaces of _simplex_ are removed in during the removal procedure. 
 
 [#](#contract) _SimplexTree_ $ **contract**(\[*a, b*\])
 
@@ -162,15 +162,15 @@ Collapses _tau_ through its coface _sigma_ if _sigma_ is the only coface of _tau
 
 (2) vertex collapse ( from [2](#simplicial-map-paper) )
 
-Collapses a free pair (_u_, _v_) -> (_w_), mapping a pair of vertices to a single vertex, where _u_, _v_, and _w_ are all _vertices_. 
+Collapses a free pair (_u_, _v_) -> (_w_), where _u_, _v_, and _w_ are all _vertices_. 
 
-Technically, an _elementary_ collapse in the vertex collapse sense requires that either _u_ = _w_, such that (_u_, _v_) -> (_u_), or _v_ = _w_, such that (_u_, _v_) -> (_v_). However, if (_u_, _v_) -> (_w_) is specified, where _u_ != _w_ and _v_ != _w_ , the collapse is decomposed into two elementary collapses: (_u_, _w_) -> (_w_) and (_v_, _w_) -> (_w_). 
+Note that an _elementary_ collapse in this sense has an injectivity requirement that either _u_ = _w_, such that (_u_, _v_) -> (_u_), or _v_ = _w_, such that (_u_, _v_) -> (_v_). If (_u_, _v_) -> (_w_) is specified, where _u_ != _w_ and _v_ != _w_ , the collapse is decomposed into two elementary collapses, (_u_, _w_) -> (_w_) and (_v_, _w_) -> (_w_), and both are performed. 
 
 [#](#expand) _SimplexTree_ $ **expand**(_k_)
 
-Performs a _k-expansion_, or an expansion of the order _k_, constructing the _k_-skeleton as a flag complex from the 1-skeleton. The expansion is performed by successively inserting all the simplices of _k_-skeleton into the tree. 
+Performs a _k-expansion_, constructing the _k_-skeleton as a flag complex. The expansion is performed by successively inserting all the simplices of _k_-skeleton into the tree. 
 
-This method assumes the maximum dimension of the simplicial complex before expansion is 1. 
+This method assumes the dimension of the simplicial complex before expansion is 1. 
 
 [#](#as_XPtr) _SimplexTree_ $ **as_XPtr**()
 
@@ -194,7 +194,7 @@ Traverses the simplex tree downard starting at the root by successively using ea
 
 [#](#degree) _SimplexTree_ $ **degree**(\[*vertices*\])
 
-Returns the degree of a given vertex or set of vertices, i.e. the number of 1-simplices each vertex is a face of. Higher order simplices are not counted, for that see #cofaces.
+Returns the degree of a given vertex or set of vertices.
 
 [#](#adjacent) _SimplexTree_ $ **adjacent**(_vertex_)
 
