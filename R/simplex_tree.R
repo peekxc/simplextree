@@ -468,6 +468,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
   graphics::plot.new()
   graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
   v <- x$vertices
+  # plot polygons for simplices of dimension 2+; omit edges and vertices
   if (length(x$n_simplices) >= 3){
     x$traverse(function(simplex){
       d <- length(simplex)
@@ -476,19 +477,22 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
         ids <- apply(utils::combn(d, 3), 2, function(i){ simplex[i] })
         apply(ids, 2, function(c_id){
           idx <- match(c_id, v)
-          do.call(graphics::polygon, utils::modifyList(list(x=coords[idx,,drop=FALSE], col=p_color), as.list(polygon_opt)))
+          do.call(graphics::polygon, utils::modifyList(list(x=coords[idx,,drop=FALSE], border=NA, col=p_color), as.list(polygon_opt)))
         })
       }
     }, "dfs")
   }
+  # plot segments for edges
   if (length(x$n_simplices) >= 2){
     line_coords <- apply(x$edges, 1, function(e){ t(coords[match(e, x$vertices),,drop=FALSE]) })
+    p_color <- color_pal[2]
     apply(line_coords, 2, function(s){ 
-      do.call(graphics::segments, utils::modifyList(list(x0=s[1], y0=s[2], x1=s[3], y1=s[4]), as.list(edge_opt))) 
+      do.call(graphics::segments, utils::modifyList(list(x0=s[1], y0=s[2], x1=s[3], y1=s[4], col=p_color), as.list(edge_opt))) 
     })
   }
+  # plot vertices
   if (length(x$n_simplices) >= 1){
-    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg="white", cex=2), as.list(vertex_opt)))
+    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg=color_pal[1], cex=2), as.list(vertex_opt)))
     do.call(graphics::text, utils::modifyList(list(x=coords,labels=as.character(x$vertices), cex=0.75), as.list(text_opt))) 
   }
 }
