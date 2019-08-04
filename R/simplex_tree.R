@@ -25,6 +25,7 @@
 #' @section Methods: 
 #' \describe{
 #'     \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
+#'     \item{$\code{\link{plot.simplextree}}}{ S3 method to plot the simplicial complex. }
 #'     \item{$\code{\link{print_tree}}}{ Prints the simplex tree structure. }
 #'     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
 #'     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
@@ -455,16 +456,35 @@ NULL
 NULL
 
 # ---- plot.Rcpp_SimplexTree ----
+#' @name plot.simplextree
+#' @title Plots the simplex tree
+#' @param x a simplex tree.
+#' @param coords Optional (n x 2) matrix of coordinates, where n is the number of 0-simplices. 
+#' @param vertex_opt Optional parameters to modify default vertex plotting options. Passed to \code{\link[graphics]{points}}.
+#' @param text_opt Optional parameters to modify default vertex text plotting options. Passed to \code{\link[graphics]{text}}.
+#' @param edge_opt Optional parameters to modify default edge plotting options. Passed to \code{\link[graphics]{segments}}.
+#' @param polygon_opt Optional parameters to modify default k-simplex plotting options for k > 1. Passed to \code{\link[graphics]{polygon}}.
+#' @param color_pal Optional colors for each dimension of the simplicial complex.
 #' @export
-plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, ...) {
+plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL) {
+  stopifnot(methods::is(x, "Rcpp_SimplexTree"))
+  if (!missing(color_pal)){
+    stopifnot(is.character(color_pal))
+    if (length(color_pal) == 1){ color_pal <- rep(color_pal, x$dimension+1L) }
+    stopifnot(length(color_pal) == x$dimension+1L)
+  }
   if (!missing(coords)){ stopifnot(is.matrix(coords) && all(dim(coords) == c(x$n_simplices[1], 2))) }
   else {
     requireNamespace("igraph", quietly = TRUE)
     g <- igraph::graph_from_adjacency_matrix(x$as_adjacency_matrix())
     coords <- igraph::layout_with_fr(g)
   }
-  if (missing(color_pal) || is.null(color_pal)){ color_pal <- grDevices::heat.colors(x$dimension+1, alpha = 0.20) }
-  color_pal <- alpha4sc(color_pal)
+  if (missing(color_pal) || is.null(color_pal)){ 
+    color_pal <- substr(grDevices::heat.colors(stree$dimension+1), start = 1, stop = 7)
+  }
+  if (any(nchar(color_pal) == 7)){
+    color_pal[nchar(color_pal) == 7] <-  alpha4sc(color_pal)[nchar(color_pal) == 7]
+  }
   col_n <- length(color_pal)
   graphics::plot.new()
   graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
@@ -493,27 +513,16 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
   }
   # plot vertices
   if (length(x$n_simplices) >= 1){
-    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg=color_pal[1], cex=2), as.list(vertex_opt)))
+    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg=color_pal[1], col=color_pal[1], cex=2), as.list(vertex_opt)))
     do.call(graphics::text, utils::modifyList(list(x=coords,labels=as.character(x$vertices), col="white", cex=0.75), as.list(text_opt))) 
   }
 }
 # .default_st_colors <- c("#FDE725CC","#F9E621CC","#F5E61FCC","#F1E51DCC","#ECE51BCC","#E8E419CC","#E4E419CC","#DFE318CC","#DBE319CC","#D7E219CC","#D2E21BCC","#CDE11DCC","#C9E020CC","#C4E022CC","#C0DF25CC","#BBDE28CC","#B7DE2ACC","#B2DD2DCC","#ADDC30CC","#A9DB33CC","#A4DB36CC","#A0DA39CC","#9BD93CCC","#96D83FCC","#92D741CC","#8ED645CC","#8AD547CC","#85D54ACC","#81D34DCC","#7DD250CC","#78D152CC","#75D054CC","#70CF57CC","#6DCD59CC","#68CD5BCC","#65CB5ECC","#61CA60CC","#5DC863CC","#59C864CC","#56C667CC","#53C569CC","#4FC46ACC","#4CC26CCC","#48C16ECC","#45BF70CC","#41BE71CC","#3FBC73CC","#3BBB75CC","#39BA76CC","#37B878CC","#34B679CC","#31B67BCC","#2FB47CCC","#2DB27DCC","#2BB07FCC","#29AF7FCC","#27AD81CC","#25AC82CC","#24AA83CC","#23A983CC","#22A785CC","#21A585CC","#20A486CC","#1FA287CC","#1FA188CC","#1F9F88CC","#1F9E89CC","#1E9C89CC","#1F9A8ACC","#1F998ACC","#1F978BCC","#1F958BCC","#20938CCC","#20928CCC","#21918CCC","#218F8DCC","#228D8DCC","#228C8DCC","#238A8DCC","#23888ECC","#24878ECC","#25858ECC","#25838ECC","#26828ECC","#26818ECC","#277F8ECC","#287D8ECC","#287C8ECC","#297A8ECC","#2A788ECC","#2A768ECC","#2B758ECC","#2C738ECC","#2C718ECC","#2D718ECC","#2E6F8ECC","#2E6D8ECC","#2F6B8ECC","#306A8ECC","#31688ECC")
 
+# Adjusts the simplex alphas for each dimension
 alpha4sc <- function(col) {
   nc <- length(col)
-  if (nc == 0) return(col)
-  apply(
-    rbind(
-      # RGB colors
-      col2rgb(col, alpha = FALSE) / 255,
-      # alphas for each dimension
-      c(
-        if (nc > 0) .9,
-        if (nc > 1) 1,
-        if (nc > 2) rep(.2, nc - 2)
-      )
-    ),
-    2,
-    function(i) rgb(i[1], i[2], i[3], i[4])
-  )
+  if (nc == 0) { return(col) }
+  si_alpha <- c(1, 1, rep(0.2, ifelse(nc-2L < 0, 0, nc-2L))) 
+  sapply(seq_along(col), function(i){ grDevices::adjustcolor(col[i], alpha.f = si_alpha[i]) })
 }
