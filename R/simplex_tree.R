@@ -464,10 +464,12 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     coords <- igraph::layout_with_fr(g)
   }
   if (missing(color_pal) || is.null(color_pal)){ color_pal <- grDevices::heat.colors(x$dimension+1, alpha = 0.20) }
+  color_pal <- alpha4sc(color_pal)
   col_n <- length(color_pal)
   graphics::plot.new()
   graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
   v <- x$vertices
+  # plot polygons for simplices of dimension 2+; omit edges and vertices
   if (length(x$n_simplices) >= 3){
     x$traverse(function(simplex){
       d <- length(simplex)
@@ -476,20 +478,42 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
         ids <- apply(utils::combn(d, 3), 2, function(i){ simplex[i] })
         apply(ids, 2, function(c_id){
           idx <- match(c_id, v)
-          do.call(graphics::polygon, utils::modifyList(list(x=coords[idx,,drop=FALSE], col=p_color), as.list(polygon_opt)))
+          do.call(graphics::polygon, utils::modifyList(list(x=coords[idx,,drop=FALSE], border=NA, col=p_color), as.list(polygon_opt)))
         })
       }
     }, "dfs")
   }
+  # plot segments for edges
   if (length(x$n_simplices) >= 2){
     line_coords <- apply(x$edges, 1, function(e){ t(coords[match(e, x$vertices),,drop=FALSE]) })
+    p_color <- color_pal[2]
     apply(line_coords, 2, function(s){ 
-      do.call(graphics::segments, utils::modifyList(list(x0=s[1], y0=s[2], x1=s[3], y1=s[4]), as.list(edge_opt))) 
+      do.call(graphics::segments, utils::modifyList(list(x0=s[1], y0=s[2], x1=s[3], y1=s[4], lwd=2, col=p_color), as.list(edge_opt))) 
     })
   }
+  # plot vertices
   if (length(x$n_simplices) >= 1){
-    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg="white", cex=2), as.list(vertex_opt)))
-    do.call(graphics::text, utils::modifyList(list(x=coords,labels=as.character(x$vertices), cex=0.75), as.list(text_opt))) 
+    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg=color_pal[1], cex=2), as.list(vertex_opt)))
+    do.call(graphics::text, utils::modifyList(list(x=coords,labels=as.character(x$vertices), col="white", cex=0.75), as.list(text_opt))) 
   }
 }
 # .default_st_colors <- c("#FDE725CC","#F9E621CC","#F5E61FCC","#F1E51DCC","#ECE51BCC","#E8E419CC","#E4E419CC","#DFE318CC","#DBE319CC","#D7E219CC","#D2E21BCC","#CDE11DCC","#C9E020CC","#C4E022CC","#C0DF25CC","#BBDE28CC","#B7DE2ACC","#B2DD2DCC","#ADDC30CC","#A9DB33CC","#A4DB36CC","#A0DA39CC","#9BD93CCC","#96D83FCC","#92D741CC","#8ED645CC","#8AD547CC","#85D54ACC","#81D34DCC","#7DD250CC","#78D152CC","#75D054CC","#70CF57CC","#6DCD59CC","#68CD5BCC","#65CB5ECC","#61CA60CC","#5DC863CC","#59C864CC","#56C667CC","#53C569CC","#4FC46ACC","#4CC26CCC","#48C16ECC","#45BF70CC","#41BE71CC","#3FBC73CC","#3BBB75CC","#39BA76CC","#37B878CC","#34B679CC","#31B67BCC","#2FB47CCC","#2DB27DCC","#2BB07FCC","#29AF7FCC","#27AD81CC","#25AC82CC","#24AA83CC","#23A983CC","#22A785CC","#21A585CC","#20A486CC","#1FA287CC","#1FA188CC","#1F9F88CC","#1F9E89CC","#1E9C89CC","#1F9A8ACC","#1F998ACC","#1F978BCC","#1F958BCC","#20938CCC","#20928CCC","#21918CCC","#218F8DCC","#228D8DCC","#228C8DCC","#238A8DCC","#23888ECC","#24878ECC","#25858ECC","#25838ECC","#26828ECC","#26818ECC","#277F8ECC","#287D8ECC","#287C8ECC","#297A8ECC","#2A788ECC","#2A768ECC","#2B758ECC","#2C738ECC","#2C718ECC","#2D718ECC","#2E6F8ECC","#2E6D8ECC","#2F6B8ECC","#306A8ECC","#31688ECC")
+
+alpha4sc <- function(col) {
+  nc <- length(col)
+  if (nc == 0) return(col)
+  apply(
+    rbind(
+      # RGB colors
+      col2rgb(col, alpha = FALSE) / 255,
+      # alphas for each dimension
+      c(
+        if (nc > 0) .9,
+        if (nc > 1) 1,
+        if (nc > 2) rep(.2, nc - 2)
+      )
+    ),
+    2,
+    function(i) rgb(i[1], i[2], i[3], i[4])
+  )
+}
