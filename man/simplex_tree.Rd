@@ -49,6 +49,7 @@ Unlike fields, however, properties are not explicitly stored: they are generated
  
 \describe{
     \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
+    \item{$\code{\link{plot.simplextree}}}{ S3 method to plot the simplicial complex. }
     \item{$\code{\link{print_tree}}}{ Prints the simplex tree structure. }
     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
