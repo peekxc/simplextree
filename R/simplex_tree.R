@@ -480,7 +480,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     coords <- igraph::layout_with_fr(g)
   }
   if (missing(color_pal) || is.null(color_pal)){ 
-    color_pal <- substr(grDevices::heat.colors(stree$dimension+1), start = 1, stop = 7)
+    color_pal <- substr(grDevices::heat.colors(x$dimension+1), start = 1, stop = 7)
   }
   if (any(nchar(color_pal) == 7)){
     color_pal[nchar(color_pal) == 7] <-  alpha4sc(color_pal)[nchar(color_pal) == 7]
