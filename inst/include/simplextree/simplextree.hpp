@@ -62,6 +62,19 @@ inline vector< idx_t > SimplexTree::generate_ids(size_t n){
 }
 
 // Returns the degree of a node with a given id
+inline size_t SimplexTree::degree(idx_t vid){
+  node_ptr cn = find_by_id(root->children, vid);
+  if (cn == nullptr) { return(0); }
+  else {
+    size_t res_deg = 0;
+    auto it = level_map.find(std::to_string(vid) + "-2"); // Labels with id > v 
+    if (it != level_map.end()){ res_deg += (*it).second.size(); }
+    res_deg += cn->children.size(); // Labels with id < v 
+    return(res_deg);
+  }
+}
+
+// Returns the degree of a node with a given id
 inline vector< size_t > SimplexTree::degree(vector< idx_t > vids){
   vector< size_t > res = vector< size_t >();
   for (auto id: vids){
@@ -94,7 +107,7 @@ inline vector< size_t > SimplexTree::degree(vector< idx_t > vids){
 
 // Search the level map (cousins) to quickly get the adjacency relations. 
 // The set of adjacency relations are the 0-simplexes connected to a given vertex v. 
-inline vector< idx_t > SimplexTree::adjacent_vertices(const size_t v){
+inline vector< idx_t > SimplexTree::adjacent_vertices(const size_t v) {
   
   // Resulting vector to return
   vector< idx_t > res = vector< idx_t >(); 
@@ -334,16 +347,18 @@ void vector_handler(SEXP sigma, Lambda&& f){
     const size_t n = simplices.size(); 
     for (size_t i = 0; i < n; ++i){
       if (check_valid(simplices.at(i))){ stop("Only unsigned integer simplices are supported."); }
-      vector< idx_t > simplex = as< vector< idx_t > >(simplices.at(i));
-      f(simplex);
+      f(as< vector< idx_t > >(simplices.at(i)));
     }
   } else { stop("Unknown type passed, must be list type or vector type."); }
 }
 
 // R-facing insert wrapper
 inline void SimplexTree::insert(SEXP sigma){
+  // RProgress::RProgress pb("Inserting [:bar] ETA: :eta", List(sigma).size());
+  // pb.tick(0);
   vector_handler(sigma, [this](vector< idx_t > simplex){
     insert_simplex(simplex);
+    // pb.tick();
   });
 }
 // R-facing remove wrapper

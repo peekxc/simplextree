@@ -3,7 +3,7 @@
 [![Travis OS X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.org/peekxc/simplextree)
 [![Travis Linux X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.org/peekxc/simplextree)
 
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing an R-bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing R bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
 
 The Simplex Tree was originally introduced in the following paper: 
 
@@ -226,9 +226,10 @@ The **traverse** method has three overloads, based on the traversal _type_ and i
 
 (1) applies _f_ to each simplex in the traversal path _type_, starting at the root of the tree. 
 
-(2) applies _f_ to each simplex in the traversal path _type_ , starting at the specified _simplex_ in the tree. The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias.. 
+(2) applies _f_ to each simplex in the traversal path _type_ , starting at the specified _simplex_ in the tree. The root simplex (empty face) may be specified using the _empty\_face_ alias or the _NULL_ keyword. 
 
-(3)  applies _f_ to each simplex in the traversal path _type_, starting at the specified _simplex_ in the tree, and supplying the necessary parameters to the traversal _type_ as a list _params_. The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias. 
+(3) applies _f_ to each simplex in the traversal path _type_, starting at the specified _simplex_ in the tree.
+The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias. Additional parameters may be supplied to the traversal _type_ as via _params_ as a list. 
 
 <details>
 	<summary> Traversal Examples </summary>
@@ -327,7 +328,7 @@ The full simplicial complex can always be converted to a list of matrices, and t
 
 [#](#as_list) _SimplexTree_ $ **as\_list**()
 
-Converts the simplex tree to list of _(n x k)_ matrices, where each matrix represents the set of _k-1_ simplices. 
+Converts the simplex tree to list of _(n x k)_ matrices, where each matrix represents the set of _k-1_ simplices.
 
 [#](#as_edge_list) _SimplexTree_ $ **as\_edge_list**()
 

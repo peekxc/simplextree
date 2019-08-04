@@ -345,6 +345,4 @@ size_t choose(T n, T k) {
   }
   return result;
 }
-
-
 #endif 

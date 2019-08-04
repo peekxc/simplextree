@@ -18,7 +18,7 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "as_XPtr", &SimplexTree::as_XPtr)
     .method( "clear", &SimplexTree::clear)
     .method( "generate_ids", &SimplexTree::generate_ids)
-    .method( "degree", &SimplexTree::degree)
+    .method( "degree",  (std::vector< std::size_t > (SimplexTree::*)(std::vector< idx_t >))(&SimplexTree::degree))
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert",  (void (SimplexTree::*)(SEXP))(&SimplexTree::insert))
     .method( "remove",  (void (SimplexTree::*)(SEXP))(&SimplexTree::remove))

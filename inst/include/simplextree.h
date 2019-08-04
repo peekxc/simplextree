@@ -11,6 +11,9 @@
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
+// // Progress bar
+// #include <RProgress.h>
+
 #include <unordered_map>
 #include <queue>
 #include <vector>
@@ -106,6 +109,7 @@ struct SimplexTree {
   
   size_t vertex_index(const idx_t);
   vector< size_t > degree(vector< idx_t >);
+  size_t degree(idx_t);
   simplex_t adjacent_vertices(const idx_t);
   
   // Simplex utilities
