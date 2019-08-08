@@ -467,10 +467,15 @@ NULL
 #' @param color_pal Optional vector of colors. See details.
 #' @param add Whether to add to the plot or redraw. Defaults to false. See details.
 #' @param maximal Whether to draw only the maximal faces of the complex. Defaults to true. 
-#' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.
+#' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
+#' \cr
 #' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
 #' override default parameters and are passed to \code{\link[graphics]{points}}, \code{\link[graphics]{text}}, \code{\link[graphics]{segments}}, 
 #' and \code{\link[graphics]{polygon}}, respectively.\cr
+#' \cr
+#' If \code{add} is true, the plot is not redrawn. \cr
+#' \cr
+#' If \code{maximal} is true, only the maximal simplices are drawn. \cr
 #' \cr
 #' The \code{color_pal} argument controls how the simplicial complex is colored. It can be specified in multiple ways.
 #' \enumerate{
@@ -479,18 +484,83 @@ NULL
 #'   \item A named list of colors
 #' }
 #' Option (1) assigns every simplex a color based on its dimension. \cr
+#' \cr
 #' Option (2) assigns each individual simplex a color. The vector must be specified in level-order 
 #' (see \code{\link{ltraverse}} or examples below). \cr
+#' \cr
 #' Option (3) allows specifying individual simplices to draw. It expects a named list, where the names
 #' must correspond to simplices in \code{x} as comma-separated strings and whose values are colors. If 
-#' option (3) is specified, this method will \emph{only} draw the simplices given in \code{color_pal}. 
-#' If \code{length(color_pal)} does not match the dimension or the number of simplices in the complex, 
-#' the color palette is recyled and simplices are as such. \cr
-#' \cr 
-#' If \code{add} is true, the plot is not redrawn. \cr
+#' option (3) is specified, this method will \emph{only} draw the simplices given in \code{color_pal}.\cr
 #' \cr
-#' If \code{maximal} is true, only the maximal simplices are drawn. 
+#' If \code{length(color_pal)} does not match the dimension or the number of simplices in the complex, 
+#' the color palette is recyled and simplices are as such. 
 #' @importFrom utils modifyList
+#' @examples 
+#' ## Simple 3-simplex 
+#' st <- simplex_tree()
+#' st$insert(list(1:4))
+#' 
+#' ## Default is categorical colors w/ diminishing opacity
+#' plot(st)
+#' 
+#' ## If supplied colors have alpha defined, use that 
+#' vpal <- viridis::viridis(st$dimension + 1)
+#' plot(st, color_pal = vpal)
+#' 
+#' ## If alpha not supplied, decreasing opacity applied
+#' plot(st, color_pal = substring(vpal, first=1, last=7))
+#' 
+#' ## Bigger example; observe only maximal faces (+vertices and edges) are drawn
+#' st <- simplex_tree()
+#' st$insert(list(1:3, 2:5, 5:9, 7:8, 10))
+#' plot(st, color_pal = viridis::viridis(st$dimension + 1))
+#' 
+#' ## If maximal == FALSE, every simplex is drawn (even on top of each other)
+#' vpal <- viridis::viridis(st$dimension + 1)[c(1,2,5,4,3)]
+#' pal_alpha <- c(1, 1, 0.2, 0.35, 0.35)
+#' vpal <- sapply(seq_along(vpal), function(i) adjustcolor(vpal[i], alpha.f = pal_alpha[i]))
+#' plot(st, color_pal = vpal, maximal = FALSE)
+#' 
+#' ## You can also color each simplex individually by supplying a vector 
+#' ## of the same length as the number of simplices. 
+#' plot(st, color_pal = sample(rainbow(sum(st$n_simplices))))
+#' 
+#' ## The order is assumed to follow the level order traversal (first 0-simplices, 1-, etc.)
+#' ## This example colors simplices on a rainbow gradient based on the sum of their labels
+#' si_sum <- unlist(st$ltraverse(sum, "bfs"))[-1] # -1 to remove empty_face
+#' rbw_pal <- rev(rainbow(50, start=0,end=4/6))
+#' plot(st, color_pal=rbw_pal[cut(si_sum, breaks=50, labels = FALSE)])
+#' 
+#' ## This also makes highlighting simplicial operations fairly trivial 
+#' four_cofaces <- st$ltraverse(4, identity, "cofaces")
+#' coface_pal <- st$ltraverse(function(simplex){
+#'   ifelse(list(simplex) %in% four_cofaces, "orange", "blue")
+#' }, "bfs")
+#' plot(st, color_pal=unlist(coface_pal)[-1])
+#' 
+#' ## You can also give a named list to draw individual simplices. 
+#' ## **Only the maximal simplices in the list are drawn** 
+#' blue_vertices <- structure(as.list(rep("blue", 5)), names=as.character(seq(5, 9)))
+#' plot(st, color_pal=append(blue_vertices, list("5,6,7,8,9"="red")))
+#' 
+#' ## You can specify add=TRUE to add to the current plot
+#' ## This makes e.g. animations easier. 
+#' \dontrun{
+#'   ## Fix coordinates
+#'   g <- igraph::graph_from_adjacency_matrix(st$as_adjacency_matrix())
+#'   coords <- igraph::layout.auto(g)
+#'   
+#'   ## Create rainbow colors 
+#'   si_names <- sapply(st$ltraverse(identity, "bfs"), function(simplex){ paste0(simplex, collapse=",") })[-1]
+#'   si_colors <- structure(as.list(rainbow(sum(st$n_simplices))), names=si_names)
+#'   
+#'   ## Make animation
+#'   animation::saveGIF({
+#'     for (i in seq(sum(st$n_simplices))){
+#'       plot(st, coords=coords, color_pal=si_colors[1L:i])
+#'     }
+#'   }, movie.name = "si_animation.gif", interval=0.2)
+#' }
 #' @export
 plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, add=FALSE, maximal=TRUE) {
   stopifnot(methods::is(x, "Rcpp_SimplexTree"))
