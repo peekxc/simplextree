@@ -552,7 +552,8 @@ NULL
 #'   coords <- igraph::layout.auto(g)
 #'   
 #'   ## Create rainbow colors 
-#'   si_names <- sapply(st$ltraverse(identity, "bfs"), function(simplex){ paste0(simplex, collapse=",") })[-1]
+#'   si_to_str <- function(simplex) { paste0(simplex, collapse=",") }
+#'   si_names <- sapply(st$ltraverse(identity, "bfs"), si_to_str)[-1]
 #'   si_colors <- structure(as.list(rainbow(sum(st$n_simplices))), names=si_names)
 #'   
 #'   ## Make animation
@@ -573,7 +574,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     if (n_colors <= 9){
       color_pal <- .default_st_colors[seq(n_colors)]
     } else {
-      color_pal <- substr(rev(rainbow(n_colors, start=0, end=4/6)), start=1,stop=7)
+      color_pal <- substr(rev(grDevices::rainbow(n_colors, start=0, end=4/6)), start=1,stop=7)
     }
   }
   
@@ -615,7 +616,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     is_hex <- substring(color_pal, first=1,last=1) == "#"
     is_rgb <- nchar(color_pal) == 7
     is_col <- (!is_hex | (is_hex && is_rgb))
-    color_pal[is_col] <- apply(col2rgb(color_pal[is_col]), 2, function(col){ do.call(rgb, as.list(col/255)) })
+    color_pal[is_col] <- apply(grDevices::col2rgb(color_pal[is_col]), 2, function(col){ do.call(grDevices::rgb, as.list(col/255)) })
     color_pal[is_col] <- alpha4sc(color_pal)[is_col]
     simplex_colors <- color_pal[dim_idx+1L]
   } else {
@@ -645,7 +646,7 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
         polys <- x$ltraverse(empty_face, function(simplex){ 
           # idx <- match(simplex[combn(d+1L, 3L)], v)
           poly <- coords[match(simplex, v),] 
-          rbind(poly[chull(poly),], c(NA, NA))
+          rbind(poly[grDevices::chull(poly),], c(NA, NA))
         }, "maximal-skeleton", list(k=d))
         subset <- (draw_simplex & (dim_idx==d))
         d_subset <- subset[dim_idx==d]

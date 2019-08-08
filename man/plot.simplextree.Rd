@@ -118,7 +118,8 @@ plot(st, color_pal=append(blue_vertices, list("5,6,7,8,9"="red")))
   coords <- igraph::layout.auto(g)
   
   ## Create rainbow colors 
-  si_names <- sapply(st$ltraverse(identity, "bfs"), function(simplex){ paste0(simplex, collapse=",") })[-1]
+  si_to_str <- function(simplex) { paste0(simplex, collapse=",") }
+  si_names <- sapply(st$ltraverse(identity, "bfs"), si_to_str)[-1]
   si_colors <- structure(as.list(rainbow(sum(st$n_simplices))), names=si_names)
   
   ## Make animation

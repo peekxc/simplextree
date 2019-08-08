@@ -18,4 +18,5 @@ Suggests:
     testthat, 
     igraph, 
     knitr, 
-    rmarkdown
+    rmarkdown, 
+    viridis
