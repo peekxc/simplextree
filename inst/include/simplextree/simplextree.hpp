@@ -1060,10 +1060,12 @@ inline void SimplexTree::traverse_dfs(node_ptr s, Lambda f){
     }
   }
 }
+
 template <typename Lambda> 
 inline void SimplexTree::traverse_bfs(node_ptr s, Lambda f){
   std::for_each(begin_bfs(s), end_bfs(), f);
 }
+
 template <typename Lambda> 
 inline void SimplexTree::traverse_cofaces(node_ptr s, Lambda f){
   if (s != nullptr){

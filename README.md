@@ -18,7 +18,7 @@ The current development version can be installed with the [devtools](https://git
 
 ```R
 require("devtools")
-devtools::install_gitub("peekxc/simplextree")
+devtools::install_github("peekxc/simplextree")
 ```
 
 A stable CRAN release is planned for the future. 

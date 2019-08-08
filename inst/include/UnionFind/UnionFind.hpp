@@ -3,7 +3,7 @@
 
 inline UnionFind::UnionFind(const size_t _size) : size(_size), parent(_size), rank(_size){
   if (_size <= 0){ stop("size must be positive."); }
-  for (int i = 0; i < size; ++i)
+  for (size_t i = 0; i < size; ++i)
   { parent[i] = i, rank[i] = 0; }
 }
 
@@ -17,8 +17,8 @@ inline SEXP UnionFind::as_XPtr(){
 
 // Union operation 
 inline void UnionFind::Union(const size_t x, const size_t y) {
-  if (x < 0 || x >= size){ stop("x out of range"); }
-  if (y < 0 || y >= size){ stop("y out of range"); }
+  if (x >= size){ stop("x out of range"); }
+  if (y >= size){ stop("y out of range"); }
   const size_t xRoot = Find(x);
   const size_t yRoot = Find(y);
   if (xRoot == yRoot)
@@ -42,8 +42,8 @@ inline void UnionFind::Union(const size_t x, const size_t y) {
 // }
 inline void UnionFind::UnionAll(const vector< size_t >& idx){
   if (idx.size() <= 1){ return; }
-  const int n_pairs = idx.size()-1;
-  for (int i = 0; i < n_pairs; ++i){ Union(idx[i], idx[i+1]); }
+  const size_t n_pairs = idx.size()-1;
+  for (size_t i = 0; i < n_pairs; ++i){ Union(idx[i], idx[i+1]); }
 }
 
 // IntegerVector UnionFind::FindAll(const IntegerVector idx){
@@ -59,7 +59,7 @@ inline void UnionFind::UnionAll(const vector< size_t >& idx){
 inline vector< size_t > UnionFind::FindAll(const vector< size_t >& idx){
   using idx_v = vector< size_t >;
   if (idx.size() == 0){ return idx_v(); }
-  const int n = idx.size();
+  const size_t n = idx.size();
   idx_v cc = idx_v(n);
   std::transform(idx.begin(), idx.end(), cc.begin(), [this](const size_t i){
     return(Find(i));
@@ -69,7 +69,7 @@ inline vector< size_t > UnionFind::FindAll(const vector< size_t >& idx){
 
 // Find operation
 inline const size_t UnionFind::Find(const size_t x) {
-  if (x < 0 || x >= size){ return(-1); }
+  if (x >= size){ stop("x is beyond the size of the set."); }
   if (parent[x] == x){ return x; } else {
     parent[x] = Find(parent[x]);
     return parent[x];

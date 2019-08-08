@@ -464,65 +464,163 @@ NULL
 #' @param text_opt Optional parameters to modify default vertex text plotting options. Passed to \code{\link[graphics]{text}}.
 #' @param edge_opt Optional parameters to modify default edge plotting options. Passed to \code{\link[graphics]{segments}}.
 #' @param polygon_opt Optional parameters to modify default k-simplex plotting options for k > 1. Passed to \code{\link[graphics]{polygon}}.
-#' @param color_pal Optional colors for each dimension of the simplicial complex.
+#' @param color_pal Optional vector of colors. See details.
+#' @param add Whether to add to the plot or redraw. Defaults to false. See details.
+#' @param maximal Whether to draw only the maximal faces of the complex. Defaults to true. 
+#' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.
+#' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
+#' override default parameters and are passed to \code{\link[graphics]{points}}, \code{\link[graphics]{text}}, \code{\link[graphics]{segments}}, 
+#' and \code{\link[graphics]{polygon}}, respectively.\cr
+#' \cr
+#' The \code{color_pal} argument controls how the simplicial complex is colored. It can be specified in multiple ways.
+#' \enumerate{
+#'   \item A vector of colors of length \emph{dim+1}, where \emph{dim}=\code{x$dimension}
+#'   \item A vector of colors of length \emph{n}, where \emph{n}=\code{sum(x$n_simplices)}
+#'   \item A named list of colors
+#' }
+#' Option (1) assigns every simplex a color based on its dimension. \cr
+#' Option (2) assigns each individual simplex a color. The vector must be specified in level-order 
+#' (see \code{\link{ltraverse}} or examples below). \cr
+#' Option (3) allows specifying individual simplices to draw. It expects a named list, where the names
+#' must correspond to simplices in \code{x} as comma-separated strings and whose values are colors. If 
+#' option (3) is specified, this method will \emph{only} draw the simplices given in \code{color_pal}. 
+#' If \code{length(color_pal)} does not match the dimension or the number of simplices in the complex, 
+#' the color palette is recyled and simplices are as such. \cr
+#' \cr 
+#' If \code{add} is true, the plot is not redrawn. \cr
+#' \cr
+#' If \code{maximal} is true, only the maximal simplices are drawn. 
+#' @importFrom utils modifyList
 #' @export
-plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL) {
+plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, add=FALSE, maximal=TRUE) {
   stopifnot(methods::is(x, "Rcpp_SimplexTree"))
-  if (!missing(color_pal)){
-    stopifnot(is.character(color_pal))
-    if (length(color_pal) == 1){ color_pal <- rep(color_pal, x$dimension+1L) }
-    stopifnot(length(color_pal) == x$dimension+1L)
+  if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
+
+  ## Default color palette; categorical diverging if dimension <= 9, o/w rainbow
+  if (missing(color_pal) || is.null(color_pal)){  
+    if (x$dimension <= 8){
+      color_pal <- .default_st_colors[seq(x$dimension+1L)]
+    } else {
+      color_pal <- substr(rev(rainbow(x$dimension+1L, start=0, end=4/6)), start=1,stop=7)
+    }
   }
+  
+  ## Regardless of type of palette given, the result is parsed into a vector of hexadecimal colors 
+  ## or length (# simplices) in breadth-first order, not including the empty face. 
+  simplex_colors <- NULL # placeholder
+  draw_simplex <- rep(TRUE, sum(x$n_simplices))
+  dim_idx <- (unlist(x$ltraverse(length, "bfs"))[-1]-1L)
+  is_char_vec <- all(is.character(color_pal))
+  
+  ## If the maximal faces are requested, set non-maximal `draw_simplex` indices to FALSE 
+  if (maximal){
+    maximal_faces <- x$serialize()
+    si_in <- function(simplex){ any(sapply(maximal_faces, function(si){ isTRUE(all.equal(si, simplex)) })) }
+    draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
+    draw_simplex[dim_idx %in% c(0L, 1L)] <- TRUE ## always draw points and edges
+  }
+  
+  ## Case 1: color_pal is a named list where each name is a comma-separated simplex 
+  if (is.list(color_pal)){
+    stopifnot(is.character(names(color_pal)))
+    
+    ## Extract simplices in names. Check named labels are ordered + simplices exist.
+    simplices <- lapply(lapply(strsplit(names(color_pal), ","), as.integer), sort)
+    names(color_pal) <- sapply(simplices, function(simplex){ paste0(simplex, collapse=",") })
+    stopifnot(all(x$find(simplices)))
+    
+    ## Color named simplex w/ color if given, otherwise use default
+    si_in <- function(simplex){ Position(function(x) identical(x, as.integer(simplex)), simplices, nomatch = 0) > 0 }
+    si_color <- function(simplex){ ifelse(!is.null(simplex) && si_in(simplex), color_pal[[paste0(simplex, collapse=",")]], NA) }
+    draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
+    simplex_colors <- unlist(x$ltraverse(si_color, "bfs"))[-1]
+  } else if (is_char_vec && length(color_pal) == sum(x$n_simplices)){
+    ## Case 2: color_pal is character vector of length == (# simplices)
+    simplex_colors <- color_pal
+  } else if (is_char_vec && length(color_pal) == (x$dimension+1L)){
+    ## Case 3: color_pal is character vector of length == (# dimensions)
+    is_hex <- substring(color_pal, first=1,last=1) == "#"
+    is_rgb <- nchar(color_pal) == 7
+    is_col <- (!is_hex | (is_hex && is_rgb))
+    color_pal[is_col] <- apply(col2rgb(color_pal[is_col]), 2, function(col){ do.call(rgb, as.list(col/255)) })
+    color_pal[is_col] <- alpha4sc(color_pal)[is_col]
+    simplex_colors <- color_pal[dim_idx+1L]
+  } else if (is_char_vec){
+    ## Recycle if given length doesn't match predefined options
+    simplex_colors <- rep(color_pal, length.out = sum(x$n_simplices))
+  } else {
+    stop("Invalid color palette given. Must be either a character vector or named list. See `?plot.simplextree`.")
+  }
+  
+  ## Get coordinates of vertices
   if (!missing(coords)){ stopifnot(is.matrix(coords) && all(dim(coords) == c(x$n_simplices[1], 2))) }
   else {
     requireNamespace("igraph", quietly = TRUE)
     g <- igraph::graph_from_adjacency_matrix(x$as_adjacency_matrix())
     coords <- igraph::layout_with_fr(g)
   }
-  if (missing(color_pal) || is.null(color_pal)){ 
-    color_pal <- substr(grDevices::heat.colors(x$dimension+1), start = 1, stop = 7)
+  
+  ## Create a new plot by default unless specified otherwise 
+  if (!add){
+    graphics::plot.new()
+    graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
   }
-  if (any(nchar(color_pal) == 7)){
-    color_pal[nchar(color_pal) == 7] <-  alpha4sc(color_pal)[nchar(color_pal) == 7]
-  }
-  col_n <- length(color_pal)
-  graphics::plot.new()
-  graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
-  v <- x$vertices
-  # plot polygons for simplices of dimension 2+; omit edges and vertices
-  if (length(x$n_simplices) >= 3){
-    x$traverse(function(simplex){
-      d <- length(simplex)
-      if (d >= 3){
-        p_color <- color_pal[d]
-        ids <- apply(utils::combn(d, 3), 2, function(i){ simplex[i] })
-        apply(ids, 2, function(c_id){
-          idx <- match(c_id, v)
-          do.call(graphics::polygon, utils::modifyList(list(x=coords[idx,,drop=FALSE], border=NA, col=p_color), as.list(polygon_opt)))
-        })
+  
+  # plot polygons for simplices of dimension 2+; omits edges and vertices
+  # this just plots the triangles
+  v <- x$vertices # cache vertices
+  if (x$dimension >= 2L){
+    for (d in seq(x$dimension, 2)){
+      if (any(draw_simplex[dim_idx == d])){
+        polys <- x$ltraverse(empty_face, function(simplex){ 
+          # idx <- match(simplex[combn(d+1L, 3L)], v)
+          poly <- coords[match(simplex, v),] 
+          rbind(poly[chull(poly),], c(NA, NA))
+        }, "maximal-skeleton", list(k=d))
+        subset <- (draw_simplex & (dim_idx==d))
+        d_subset <- subset[dim_idx==d]
+        params <- list(x=do.call(rbind, polys[d_subset]), border=NA, col=simplex_colors[subset])
+        do.call(graphics::polygon, modifyList(params, as.list(polygon_opt)))
       }
-    }, "dfs")
+    }
   }
   # plot segments for edges
-  if (length(x$n_simplices) >= 2){
-    line_coords <- apply(x$edges, 1, function(e){ t(coords[match(e, x$vertices),,drop=FALSE]) })
-    p_color <- color_pal[2]
-    apply(line_coords, 2, function(s){ 
-      do.call(graphics::segments, utils::modifyList(list(x0=s[1], y0=s[2], x1=s[3], y1=s[4], lwd=2, col=p_color), as.list(edge_opt))) 
-    })
+  if (length(x$n_simplices) >= 2 && any(draw_simplex[dim_idx == 1L])){
+    lc <- apply(x$edges, 1, function(e){ t(coords[match(e, x$vertices),,drop=FALSE]) })
+    subset <- (draw_simplex & (dim_idx==1L))
+    e_subset <- subset[dim_idx==1L]
+    params <- list(x0=lc[1,e_subset], y0=lc[2,e_subset], x1=lc[3,e_subset], y1=lc[4,e_subset], lwd=2, col=simplex_colors[subset])
+    do.call(graphics::segments, modifyList(params, as.list(edge_opt)))
   }
   # plot vertices
-  if (length(x$n_simplices) >= 1){
-    do.call(graphics::points, utils::modifyList(list(x=coords, pch=21, bg=color_pal[1], col=color_pal[1], cex=2), as.list(vertex_opt)))
-    do.call(graphics::text, utils::modifyList(list(x=coords,labels=as.character(x$vertices), col="white", cex=0.75), as.list(text_opt))) 
+  if (length(x$n_simplices) >= 1 && any(draw_simplex[dim_idx == 0L])){
+    subset <- (draw_simplex & (dim_idx==0L))
+    v_subset <- subset[dim_idx==0L]
+    do.call(graphics::points, modifyList(list(x=coords[v_subset,,drop=FALSE], pch=21, bg=simplex_colors[subset], col=simplex_colors[subset], cex=2), as.list(vertex_opt)))
+    do.call(graphics::text, modifyList(list(x=coords[v_subset,,drop=FALSE], labels=as.character(x$vertices)[v_subset], col="white", cex=0.75), as.list(text_opt))) 
   }
 }
-# .default_st_colors <- c("#FDE725CC","#F9E621CC","#F5E61FCC","#F1E51DCC","#ECE51BCC","#E8E419CC","#E4E419CC","#DFE318CC","#DBE319CC","#D7E219CC","#D2E21BCC","#CDE11DCC","#C9E020CC","#C4E022CC","#C0DF25CC","#BBDE28CC","#B7DE2ACC","#B2DD2DCC","#ADDC30CC","#A9DB33CC","#A4DB36CC","#A0DA39CC","#9BD93CCC","#96D83FCC","#92D741CC","#8ED645CC","#8AD547CC","#85D54ACC","#81D34DCC","#7DD250CC","#78D152CC","#75D054CC","#70CF57CC","#6DCD59CC","#68CD5BCC","#65CB5ECC","#61CA60CC","#5DC863CC","#59C864CC","#56C667CC","#53C569CC","#4FC46ACC","#4CC26CCC","#48C16ECC","#45BF70CC","#41BE71CC","#3FBC73CC","#3BBB75CC","#39BA76CC","#37B878CC","#34B679CC","#31B67BCC","#2FB47CCC","#2DB27DCC","#2BB07FCC","#29AF7FCC","#27AD81CC","#25AC82CC","#24AA83CC","#23A983CC","#22A785CC","#21A585CC","#20A486CC","#1FA287CC","#1FA188CC","#1F9F88CC","#1F9E89CC","#1E9C89CC","#1F9A8ACC","#1F998ACC","#1F978BCC","#1F958BCC","#20938CCC","#20928CCC","#21918CCC","#218F8DCC","#228D8DCC","#228C8DCC","#238A8DCC","#23888ECC","#24878ECC","#25858ECC","#25838ECC","#26828ECC","#26818ECC","#277F8ECC","#287D8ECC","#287C8ECC","#297A8ECC","#2A788ECC","#2A768ECC","#2B758ECC","#2C738ECC","#2C718ECC","#2D718ECC","#2E6F8ECC","#2E6D8ECC","#2F6B8ECC","#306A8ECC","#31688ECC")
 
-# Adjusts the simplex alphas for each dimension
-alpha4sc <- function(col) {
-  nc <- length(col)
-  if (nc == 0) { return(col) }
-  si_alpha <- c(1, 1, rep(0.2, ifelse(nc-2L < 0, 0, nc-2L))) 
-  sapply(seq_along(col), function(i){ grDevices::adjustcolor(col[i], alpha.f = si_alpha[i]) })
+.default_st_colors <- c("#e41a1c", "#377eb8", "#ffff33", "#984ea3", "#ff7f00", "#4daf4a", "#a65628", "#f781bf", "#999999")
+
+# Adjusts the simplex alphas for each dimension; expects hexadecimal
+alpha4sc <- function(col_pal) {
+  nc <- length(col_pal)
+  if (nc == 0) { return(col_pal) }
+  ext <- if (nc > 2){ seq(0.80, 0.45, length.out = nc-2) } else { NULL }
+  si_alpha <- c(1, 1, ext) 
+  sapply(seq_along(col_pal), function(i){ grDevices::adjustcolor(col_pal[i], alpha.f = si_alpha[i]) })
 }
+
+# ids <- apply(utils::combn(d+1L, 2), 2, function(i){ simplex[i] })
+# apply(ids, 2, function(c_id){
+#   idx <- match(c_id, v)
+#   coords[idx,,drop=FALSE]
+#   
+# })
+# #st$ltraverse(empty_face, identity, "bfs")
+# stopifnot(is.character(color_pal))
+# if (length(color_pal) == 1){ color_pal <- rep(color_pal, x$dimension+1L) }
+# 
+# ## Final check:
+# stopifnot(length(color_pal) == x$dimension+1L)
