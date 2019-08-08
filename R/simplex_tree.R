@@ -465,8 +465,9 @@ NULL
 #' @param edge_opt Optional parameters to modify default edge plotting options. Passed to \code{\link[graphics]{segments}}.
 #' @param polygon_opt Optional parameters to modify default k-simplex plotting options for k > 1. Passed to \code{\link[graphics]{polygon}}.
 #' @param color_pal Optional vector of colors. See details.
-#' @param add Whether to add to the plot or redraw. Defaults to false. See details.
 #' @param maximal Whether to draw only the maximal faces of the complex. Defaults to true. 
+#' @param by_dim Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.
+#' @param add Whether to add to the plot or redraw. Defaults to false. See details.
 #' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
 #' \cr
 #' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
@@ -562,16 +563,17 @@ NULL
 #'   }, movie.name = "si_animation.gif", interval=0.2)
 #' }
 #' @export
-plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, add=FALSE, maximal=TRUE) {
+plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE) {
   stopifnot(methods::is(x, "Rcpp_SimplexTree"))
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
-  ## Default color palette; categorical diverging if dimension <= 9, o/w rainbow
+  ## Default color palette; categorical diverging if (# colors) <= 9, o/w rainbow
   if (missing(color_pal) || is.null(color_pal)){  
-    if (x$dimension <= 8){
-      color_pal <- .default_st_colors[seq(x$dimension+1L)]
+    n_colors <- if (by_dim) x$dimension+1 else sum(x$n_simplices)
+    if (n_colors <= 9){
+      color_pal <- .default_st_colors[seq(n_colors)]
     } else {
-      color_pal <- substr(rev(rainbow(x$dimension+1L, start=0, end=4/6)), start=1,stop=7)
+      color_pal <- substr(rev(rainbow(n_colors, start=0, end=4/6)), start=1,stop=7)
     }
   }
   
@@ -604,20 +606,18 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     si_color <- function(simplex){ ifelse(!is.null(simplex) && si_in(simplex), color_pal[[paste0(simplex, collapse=",")]], NA) }
     draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
     simplex_colors <- unlist(x$ltraverse(si_color, "bfs"))[-1]
-  } else if (is_char_vec && length(color_pal) == sum(x$n_simplices)){
-    ## Case 2: color_pal is character vector of length == (# simplices)
-    simplex_colors <- color_pal
-  } else if (is_char_vec && length(color_pal) == (x$dimension+1L)){
-    ## Case 3: color_pal is character vector of length == (# dimensions)
+  } else if (is_char_vec && ! by_dim){
+    ## Case 2: color_pal is character vector, recycled to simplices
+    simplex_colors <- rep(color_pal, length.out = sum(x$n_simplices))
+  } else if (is_char_vec && by_dim){
+    ## Case 3: color_pal is character vector, recycled to dimensions
+    color_pal <- rep(color_pal, length.out = x$dimension+1L)
     is_hex <- substring(color_pal, first=1,last=1) == "#"
     is_rgb <- nchar(color_pal) == 7
     is_col <- (!is_hex | (is_hex && is_rgb))
     color_pal[is_col] <- apply(col2rgb(color_pal[is_col]), 2, function(col){ do.call(rgb, as.list(col/255)) })
     color_pal[is_col] <- alpha4sc(color_pal)[is_col]
     simplex_colors <- color_pal[dim_idx+1L]
-  } else if (is_char_vec){
-    ## Recycle if given length doesn't match predefined options
-    simplex_colors <- rep(color_pal, length.out = sum(x$n_simplices))
   } else {
     stop("Invalid color palette given. Must be either a character vector or named list. See `?plot.simplextree`.")
   }

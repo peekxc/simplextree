@@ -7,7 +7,7 @@
 \usage{
 \method{plot}{Rcpp_SimplexTree}(x, coords = NULL, vertex_opt = NULL,
   text_opt = NULL, edge_opt = NULL, polygon_opt = NULL,
-  color_pal = NULL, add = FALSE, maximal = TRUE)
+  color_pal = NULL, maximal = TRUE, by_dim = TRUE, add = FALSE)
 }
 \arguments{
 \item{x}{a simplex tree.}
@@ -24,9 +24,11 @@
 
 \item{color_pal}{Optional vector of colors. See details.}
 
-\item{add}{Whether to add to the plot or redraw. Defaults to false. See details.}
-
 \item{maximal}{Whether to draw only the maximal faces of the complex. Defaults to true.}
+
+\item{by_dim}{Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.}
+
+\item{add}{Whether to add to the plot or redraw. Defaults to false. See details.}
 }
 \description{
 Plots the simplex tree
