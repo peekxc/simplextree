@@ -233,7 +233,9 @@ NULL
 #' @description Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. 
 #' @param simplices a list of simplices.
-#' @usage insert(simplex), insert(simplices)
+#' @section Usage:
+#' st$insert(simplex)
+#' st$insert(simplices)
 #' @details This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
 #' no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
 #' Faces of \code{simplex} not in the simplex tree are inserted as needed.
@@ -249,8 +251,8 @@ NULL
 #' @title Remove simplices
 #' @description Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex.
-#' @param simplices a list of simplices. 
-#' @usage remove(simplex)
+#' @section Usage: 
+#' st$remove(simplex)
 #' @details This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
 #' it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
 #' Cofaces of \code{simplex} are also removed.
@@ -263,7 +265,9 @@ NULL
 #' @description Finds whether simplices exist the simplex tree.  
 #' @param simplex a k-length vector of vertex ids representing a (k-1)-simplex. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param simplices a list of simplices. 
-#' @usage find(simplex), find(simplices)
+#' @section Usage:
+#' st$find(simplex)
+#' st$find(simplices)
 #' @details Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists.
 #' \code{simplex} can be specified as vector to represent a single simplex, and a list to represent a set of simplices. 
 #' \code{simplex} is sorted before traversing the trie.
@@ -297,7 +301,9 @@ NULL
 #' @param u a vertex id representing one of the vertices in the free pair.
 #' @param v a vertex id representing one of the vertices in the free pair. 
 #' @param w a vertex id representing the target of the collapse.
-#' @usage collapse(tau, sigma), collapse(u, v, w)
+#' @section Usage:
+#' st$collapse(tau, sigma)
+#' st$collapse(u, v, w)
 #' @details This function provides two types of \emph{elementary collapses}. \cr 
 #' \cr 
 #' The first type of collapse is in the sense described by (1), which is 
@@ -345,7 +351,8 @@ NULL
 #' @title Edge contraction
 #' @description Performs an edge contraction. 
 #' @param edge an edge to contract, as a 2-length vector. 
-#' @usage contract(edge)
+#' @section Usage: 
+#' st$contract(edge)
 #' @details This function performs an \emph{edge contraction} in the sense described by (1), which is 
 #' summarized here. Given an edge \eqn{ {va, vb}}, \eqn{vb} is contracted to \eqn{va} if \eqn{vb} is 
 #' removed from the complex and the link of \eqn{va} is augmented with the link of \eqn{vb}. This may be thought as 
@@ -468,6 +475,7 @@ NULL
 #' @param maximal Whether to draw only the maximal faces of the complex. Defaults to true. 
 #' @param by_dim Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.
 #' @param add Whether to add to the plot or redraw. Defaults to false. See details.
+#' @param ... unused
 #' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
 #' \cr
 #' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
@@ -564,7 +572,7 @@ NULL
 #'   }, movie.name = "si_animation.gif", interval=0.2)
 #' }
 #' @export
-plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE) {
+plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE, ...) {
   stopifnot(methods::is(x, "Rcpp_SimplexTree"))
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
@@ -584,12 +592,14 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
   draw_simplex <- rep(TRUE, sum(x$n_simplices))
   dim_idx <- (unlist(x$ltraverse(length, "bfs"))[-1]-1L)
   is_char_vec <- all(is.character(color_pal))
+  is_in <- function(lst){ 
+    return(function(element) { !is.null(element) && (list(as.integer(element)) %in% lst) })
+  }
   
   ## If the maximal faces are requested, set non-maximal `draw_simplex` indices to FALSE 
   if (maximal){
-    maximal_faces <- x$serialize()
-    si_in <- function(simplex){ any(sapply(maximal_faces, function(si){ isTRUE(all.equal(si, simplex)) })) }
-    draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
+    maximal_faces <- lapply(x$serialize(), as.integer)
+    draw_simplex <- unlist(x$ltraverse(is_in(maximal_faces), "bfs"))[-1]
     draw_simplex[dim_idx %in% c(0L, 1L)] <- TRUE ## always draw points and edges
   }
   
@@ -603,14 +613,14 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     stopifnot(all(x$find(simplices)))
     
     ## Color named simplex w/ color if given, otherwise use default
-    si_in <- function(simplex){ Position(function(x) identical(x, as.integer(simplex)), simplices, nomatch = 0) > 0 }
+    si_in <- is_in(simplices)
     si_color <- function(simplex){ ifelse(!is.null(simplex) && si_in(simplex), color_pal[[paste0(simplex, collapse=",")]], NA) }
     draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
     simplex_colors <- unlist(x$ltraverse(si_color, "bfs"))[-1]
-  } else if (is_char_vec && ! by_dim){
+  } else if (is_char_vec && (length(color_pal) == sum(x$n_simplices))){
     ## Case 2: color_pal is character vector, recycled to simplices
-    simplex_colors <- rep(color_pal, length.out = sum(x$n_simplices))
-  } else if (is_char_vec && by_dim){
+    simplex_colors <- color_pal
+  } else if (is_char_vec && ((length(color_pal) == x$dimension+1L) || by_dim)){
     ## Case 3: color_pal is character vector, recycled to dimensions
     color_pal <- rep(color_pal, length.out = x$dimension+1L)
     is_hex <- substring(color_pal, first=1,last=1) == "#"
@@ -619,6 +629,8 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     color_pal[is_col] <- apply(grDevices::col2rgb(color_pal[is_col]), 2, function(col){ do.call(grDevices::rgb, as.list(col/255)) })
     color_pal[is_col] <- alpha4sc(color_pal)[is_col]
     simplex_colors <- color_pal[dim_idx+1L]
+  } else if (is_char_vec){
+    simplex_colors <- rep(color_pal, length.out=sum(x$n_simplices))
   } else {
     stop("Invalid color palette given. Must be either a character vector or named list. See `?plot.simplextree`.")
   }

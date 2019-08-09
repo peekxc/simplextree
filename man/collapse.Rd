@@ -3,9 +3,6 @@
 \name{collapse}
 \alias{collapse}
 \title{Elementary collapse}
-\usage{
-collapse(tau, sigma), collapse(u, v, w)
-}
 \arguments{
 \item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.}
 
@@ -37,6 +34,12 @@ Alternatively, this method supports another type of elementary collapse, also ca
 in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first 
 two representing the free pair, and the last representing the target vertex to collapse to.
 }
+\section{Usage}{
+
+st$collapse(tau, sigma)
+st$collapse(u, v, w)
+}
+
 \examples{
 st <- simplextree::simplex_tree()
 st$insert(1:3)

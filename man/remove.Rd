@@ -3,13 +3,8 @@
 \name{remove}
 \alias{remove}
 \title{Remove simplices}
-\usage{
-remove(simplex)
-}
 \arguments{
 \item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
-
-\item{simplices}{a list of simplices.}
 }
 \description{
 Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
@@ -19,6 +14,11 @@ This function allows removal of a arbitrary order simplices. If \code{simplex} a
 it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
 Cofaces of \code{simplex} are also removed.
 }
+\section{Usage}{
+ 
+st$remove(simplex)
+}
+
 \seealso{
 find remove
 }

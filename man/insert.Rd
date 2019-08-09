@@ -3,9 +3,6 @@
 \name{insert}
 \alias{insert}
 \title{Insert simplices}
-\usage{
-insert(simplex), insert(simplices)
-}
 \arguments{
 \item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
 
@@ -19,6 +16,12 @@ This function allows insertion of arbitrary order simplices. If the simplex alre
 no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
 Faces of \code{simplex} not in the simplex tree are inserted as needed.
 }
+\section{Usage}{
+
+st$insert(simplex)
+st$insert(simplices)
+}
+
 \examples{
 st <- simplex_tree()
 st$insert(1:3) ## inserts the 2-simplex { 1, 2, 3 }

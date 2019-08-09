@@ -3,9 +3,6 @@
 \name{contract}
 \alias{contract}
 \title{Edge contraction}
-\usage{
-contract(edge)
-}
 \arguments{
 \item{edge}{an edge to contract, as a 2-length vector.}
 }
@@ -23,6 +20,11 @@ and identity otherwise, to all simplices in the complex. \cr
 \code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
 Note that edge contraction is not symmetric.
 }
+\section{Usage}{
+ 
+st$contract(edge)
+}
+
 \examples{
 st <- simplextree::simplex_tree()
 st$insert(1:3)
