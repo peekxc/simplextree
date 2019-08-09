@@ -623,9 +623,9 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
   } else if (is_char_vec && ((length(color_pal) == x$dimension+1L) || by_dim)){
     ## Case 3: color_pal is character vector, recycled to dimensions
     color_pal <- rep(color_pal, length.out = x$dimension+1L)
-    is_hex <- substring(color_pal, first=1,last=1) == "#"
-    is_rgb <- nchar(color_pal) == 7
-    is_col <- (!is_hex | (is_hex && is_rgb))
+    is_hex <- (substring(color_pal, first=1,last=1) == "#")
+    is_rgb <- (nchar(color_pal) == 7)
+    is_col <- (!is_hex | (is_hex & is_rgb))
     color_pal[is_col] <- apply(grDevices::col2rgb(color_pal[is_col]), 2, function(col){ do.call(grDevices::rgb, as.list(col/255)) })
     color_pal[is_col] <- alpha4sc(color_pal)[is_col]
     simplex_colors <- color_pal[dim_idx+1L]
