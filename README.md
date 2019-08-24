@@ -191,8 +191,8 @@ Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is e
 <details>
 	<summary> Contraction example </summary>
 	
-  ```R
-  st <- simplex_tree()
+	```R
+	st <- simplex_tree()
   st$insert(1:3)
   st$print_tree()
   # 1 (h = 2): .( 2 3 )..( 3 )
@@ -201,7 +201,8 @@ Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is e
   st$contract(c(1, 3))
   st$print_tree()
   # 1 (h = 1): .( 2 )
-  # 2 (h = 0):
+  # 2 (h = 0): 
+	
 	```
 
 </details>
