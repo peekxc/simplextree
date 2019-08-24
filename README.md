@@ -153,15 +153,16 @@ Inserts *simplices* into the simplex tree. Each _simplex_ is ordered prior to in
 Note that the _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
 
 <details>
-	<summary> Insertion examples </summary>
+
+<summary> Insertion examples </summary>
 	
-	```R
-	st <- simplex_tree()
-	st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
-	st$insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
-	print(st)
-	# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
-	```
+```R
+st <- simplex_tree()
+st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
+st$insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
+print(st)
+# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+```
 	
 </details>
 
@@ -171,16 +172,16 @@ _SimplexTree_ $ **remove**(\[*simplices*\])
 Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to removal. If a _simplex_ doesn't exist, the tree is not modified. To keep the property of being a simplex tree, the cofaces of _simplex_ are also removed. 
 
 <details>
-	<summary> Removal examples </summary>
+
+<summary> Removal examples </summary>
 	
-	```R
-	st <- simplex_tree()
-	st$insert(list(c(1, 2, 3), c(4, 5), 6))
-	st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
-	print(st)
-	# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
-	```
-	
+```R
+st <- simplex_tree()
+st$insert(list(c(1, 2, 3), c(4, 5), 6))
+st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
+print(st)
+# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+```
 </details>
 
 <a href='#contract' id='contract' class='anchor' aria-hidden='true'>#</a>
@@ -189,22 +190,21 @@ _SimplexTree_ $ **contract**(\[*a, b*\])
 Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is equivalent to removing vertex *b* from the simplex tree and augmenting the link of vertex *a* with the link of vertex *b*. If the edge does not exist in the tree, the tree is not modified.
 
 <details>
-	<summary> Contraction example </summary>
-	
-	```R
-	st <- simplex_tree()
-  st$insert(1:3)
-  st$print_tree()
-  # 1 (h = 2): .( 2 3 )..( 3 )
-  # 2 (h = 1): .( 3 )
-  # 3 (h = 0): 
-  st$contract(c(1, 3))
-  st$print_tree()
-  # 1 (h = 1): .( 2 )
-  # 2 (h = 0): 
-	
-	```
 
+<summary> Contraction example </summary>
+	
+```R
+st <- simplex_tree()
+st$insert(1:3)
+st$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0): 
+st$contract(c(1, 3))
+st$print_tree()
+# 1 (h = 1): .( 2 )
+# 2 (h = 0): 
+```
 </details>
 
 <a href='#collapse' id='collapse' class='anchor' aria-hidden='true'>#</a>
@@ -226,34 +226,35 @@ Collapses a free pair (_u_, _v_) -> (_w_), where _u_, _v_, and _w_ are all _vert
 Note that an _elementary_ collapse in this sense has an injectivity requirement that either _u_ = _w_, such that (_u_, _v_) -> (_u_), or _v_ = _w_, such that (_u_, _v_) -> (_v_). If (_u_, _v_) -> (_w_) is specified, where _u_ != _w_ and _v_ != _w_ , the collapse is decomposed into two elementary collapses, (_u_, _w_) -> (_w_) and (_v_, _w_) -> (_w_), and both are performed. 
 
 <details>
-	<summary> Collapse example </summary>
+
+<summary> Collapse example </summary>
 	
-  ```R
-  st <- simplex_tree()
-  st$insert(1:3)
-  st$print_tree()
-  # 1 (h = 2): .( 2 3 )..( 3 )
-  # 2 (h = 1): .( 3 )
-  # 3 (h = 0): 
-  st$collapse(1:2, 1:3) ## collapse in the sense of (1)
-  st$print_tree()
-  # 1 (h = 1): .( 3 )
-  # 2 (h = 1): .( 3 )
-  # 3 (h = 0):
+```R
+st <- simplex_tree()
+st$insert(1:3)
+st$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0): 
+st$collapse(1:2, 1:3) ## collapse in the sense of (1)
+st$print_tree()
+# 1 (h = 1): .( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0):
   
-  st$insert(list(1:3, 2:5))
-  st$print_tree()
-  # 1 (h = 2): .( 2 3 )..( 3 )
-  # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
-  # 3 (h = 2): .( 4 5 )..( 5 )
-  # 4 (h = 1): .( 5 )
-  # 5 (h = 0): 
-  st$collapse(3, 4, 5) ## collapse in the sense of (2)
-  st$print_tree()
-  # 1 (h = 2): .( 2 5 )..( 5 )
-  # 2 (h = 2): .( 5 )..( 5 )
-  # 5 (h = 1): .( 5 )
-	```
+st$insert(list(1:3, 2:5))
+st$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
+# 3 (h = 2): .( 4 5 )..( 5 )
+# 4 (h = 1): .( 5 )
+# 5 (h = 0): 
+st$collapse(3, 4, 5) ## collapse in the sense of (2)
+st$print_tree()
+# 1 (h = 2): .( 2 5 )..( 5 )
+# 2 (h = 2): .( 5 )..( 5 )
+# 5 (h = 1): .( 5 )
+```
 	
 </details>
 
@@ -265,22 +266,23 @@ Performs a _k-expansion_, constructing the _k_-skeleton as a flag complex. The e
 This method assumes the dimension of the simplicial complex before expansion is 1. 
 
 <details>
-	<summary> Expansion example </summary>
+	
+<summary> Expansion example </summary>
   
-  ```R
-  st <- simplex_tree()
-  st$insert(list(c(1, 2), c(2, 3), c(1, 3)))
-  st$print_tree()
-  # 1 (h = 1): .( 2 3 )
-  # 2 (h = 1): .( 3 )
-  # 3 (h = 0):
+```R
+st <- simplex_tree()
+st$insert(list(c(1, 2), c(2, 3), c(1, 3)))
+st$print_tree()
+# 1 (h = 1): .( 2 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0):
   
-  st$expand(k=2) ## expand to simplicial 2-complex
-  st$print_tree()
-  # 1 (h = 2): .( 2 3 )..( 3 )
-  # 2 (h = 1): .( 3 )
-  # 3 (h = 0): 
-	```
+st$expand(k=2) ## expand to simplicial 2-complex
+st$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0): 
+```
 	
 </details>
 
@@ -353,43 +355,44 @@ The **traverse** method has three overloads, based on the traversal _type_ and i
 The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias. Additional parameters may be supplied to the traversal _type_ as via _params_ as a list. 
 
 <details>
-	<summary> Traversal Examples </summary>
+	
+<summary> Traversal Examples </summary>
 
-	Traverse using first overload (performs depth-first traversal on simplex tree): 
+Traverse using first overload (performs depth-first traversal on simplex tree): 
 		
-	```R
-	st <- simplex_tree()
-	st$insert(1:3)
-	st$traverse(message, "dfs") # equivalent to 'st$traverse(NULL, message, "dfs")'
-	# (empty face)
-	# 1
-	# 12
-	# 123
-	# 13
-	# 2
-	# 23
-	# 3
-	```
+```R
+st <- simplex_tree()
+st$insert(1:3)
+st$traverse(message, "dfs") # equivalent to 'st$traverse(NULL, message, "dfs")'
+# (empty face)
+# 1
+# 12
+# 123
+# 13
+# 2
+# 23
+# 3
+```
 	
-	Traverse using second overload (prints the cofaces of the vertex with label '1'): 
-		
-	```R
-	st$traverse(1, message, "cofaces")
-	# 1
-	# 12
-	# 123
-	# 13
-	```
+Traverse using second overload (prints the cofaces of the vertex with label '1'): 
 	
-	Traverse using third overload (prints the 1-simplices): 
+```R
+st$traverse(1, message, "cofaces")
+# 1
+# 12
+# 123
+# 13
+```
 	
-	```R
-	st$traverse(1, message, "maximal-skeleton", list(k=1))
-	# 1
-	# 12
-	# 123
-	# 13
-	```
+Traverse using third overload (prints the 1-simplices): 
+	
+```R
+st$traverse(1, message, "maximal-skeleton", list(k=1))
+# 1
+# 12
+# 123
+# 13
+```
 </details>
 
 <a href='#ltraverse' id='ltraverse' class='anchor' aria-hidden='true'>#</a>
