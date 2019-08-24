@@ -91,17 +91,6 @@ inline vector< size_t > SimplexTree::degree(vector< idx_t > vids){
   return(res);
 }
 
-
-// // Returns an integer vector of the 0-simplices IDs
-// inline vector< idx_t > SimplexTree::get_vertices(){
-//   if (n_simplexes.size() == 0){ return vector< idx_t >(); }
-//   vector< idx_t > res = vector< idx_t >(n_simplexes.at(0));
-//   std::transform(root->children.begin(), root->children.end(), res.begin(), [](std::pair<idx_t, node_ptr> v){
-//     return(v.first);
-//   });
-//   return(res);
-// }
-
 // --------- Begin R API --------- 
 // These functions are exported through the Rcpp module. 
 
@@ -140,104 +129,6 @@ inline void SimplexTree::record_new_simplexes(const idx_t k, const idx_t n){
   n_simplexes.at(k) += n;
   while(n_simplexes.back() == 0 && n_simplexes.size() > 0){ n_simplexes.resize(n_simplexes.size() - 1); }
 }
-// Removes a vertex from the simplex tree, including all edges connected to it.
-// void SimplexTree::remove_vertices(vector< idx_t > vertex_ids){
-//   if (vertex_ids.size() == 0){ return; }
-//   std::map< idx_t, s_ptr<node> > top_vertices = root->children;
-//   vector< idx_t > edge_to_remove = { 0, 0 };
-//   for (vector< idx_t >::const_iterator vid = vertex_ids.begin(); vid != vertex_ids.end(); ++vid){
-//     
-//     // First remove any of its cofaces
-//     remove_vertex_cofaces(*vid);
-//     
-//     // Then remove the edges with labels > the query vertex
-//     for (auto& top_vertex: top_vertices) {
-//       if (top_vertex.first >= *vid){ continue; }
-//       edge_to_remove[0] = top_vertex.first;
-//       edge_to_remove[1] = *vid;
-//       remove_edge(edge_to_remove);
-//     }
-//     
-//     // Remove the vertex itself and its edges with label < the query vertex  
-//     if (root->children.find(*vid) != root->children.end()){
-//       node_ptr c_node = root->children.at(*vid);
-//       int n_children = c_node->children.size(); 
-//       c_node->children.clear();
-//       record_new_simplexes(1, -n_children);
-//       remove_leaf(root, *vid);
-//     }
-//     
-//     // Remove any reference in the level map
-//     std::string key = std::to_string(*vid) + "-1";
-//     level_map.erase(key);
-//   }
-// }
-
-// Removes all cofaces containing vertex v
-// void SimplexTree::remove_vertex_cofaces(const int v){
-//   using simplices = std::map< idx_t, s_ptr<node> >;
-//   simplices top_nodes = root->children;
-//   simplices::iterator it = top_nodes.find(v);
-//   if (it != top_nodes.end()){
-//     
-//     // First, find the query vertex's connected edges with label > than the vertex 
-//     simplices v_children = (*it).second->children;
-//     for (auto& child: v_children){
-//       
-//       // Then get those vertices cousins
-//       std::string key = std::to_string(child.first)+"-1";
-//       if (level_map.find(key) != level_map.end()){
-//         vector< node_ptr >& adj_vertices = level_map[key];
-//         
-//         // If the query vertex is the parent of any such vertices, remove it 
-//         vector< node_ptr >::iterator c_node; 
-//         c_node = std::find_if(adj_vertices.begin(), adj_vertices.end(), [&v](node_ptr vi){
-//           return(vi->parent->label == v);
-//         });
-//         if (c_node != adj_vertices.end()){ adj_vertices.erase(c_node); }
-//       }
-//     }
-//   }
-// }
-
-
-// void SimplexTree::remove_edge( vector<idx_t> edge ){
-//   if (edge.size() != 2){ stop("Invalid query. 'remove_edge' takes as input a vector of length 2."); }
-//   if (edge[0] > edge[1]){ int tmp = edge[0]; edge[0] = edge[1]; edge[1] = tmp; }
-//   bool edge_exists = find_simplex(edge);
-//   if (!edge_exists){ return; }
-//   else {
-//     s_ptr<node> v_ptr = root->children.at(edge[0]);
-//     remove_leaf(v_ptr, edge[1]);
-//   }
-// }
-
-// Recursive helper 
-// node_ptr remove(idx_t* labels, const size_t i, const size_t n_keys, node_ptr c_node, const idx_t depth){
-//   if (i >= n_keys || labels == nullptr || c_node == nullptr){ return nullptr; } // base case + safety checks
-//   // Base case: If arrived at the largest k-simplex to remove
-//   if (depth == n_keys){
-//     // std::string key = std::to_string(labels[j]) + "-" + std::to_string(depth);
-//     // size_t has_children = c_node->children.size();
-//     // if (!bool(j_exists)){
-//     //   // Rcout << "Creating new node " << labels[j] << ", parent: " << c_node->label << std::endl;
-//     //   node_ptr new_node = node_ptr(new node(labels[j], c_node));
-//     //   insert_child(c_node, new_node, depth);
-//     //   if (depth > 0){ // keep track of nodes which share ids at the same depth
-//     //     std::string key = std::to_string(labels[j]) + "-" + std::to_string(depth);
-//     //     if level_map[key] push_back(new_node);
-//     //   }
-//     // }
-//   }
-//   
-//   // for (int j = i; j < n_keys; ++j){
-//   //   // Rcout << "Recursing with child node: " << labels[j] <<  " of parent: " << c_node->label << " and grandparent: " << (c_node->parent == nullptr ? 0 : c_node->parent->label)  << std::endl;
-//   //   node_ptr child_node = c_node->children.at(labels[j]);
-//   //   remove(labels, j + 1, n_keys, child_node, depth + 1);
-//   // }
-// }  
-
-
 
 // Remove a child node directly from the parent, if it exists
 // This will check that the child is a leaf, and if so, then it will: 
@@ -292,10 +183,6 @@ inline void SimplexTree::remove_simplex(vector< idx_t > simplex){
     });
   }
 }
-// void SimplexTree::remove_subtree2(vector< idx_t > simplex){
-//   node_ptr cn = find(simplex);
-//   if (cn && cn != nullptr){ remove_subtree(cn); }
-// }
 
 // Inserts a child directly to the parent if the child doesn't already exist.
 // Also records the addition of the simplex if the child is indeed created. Otherwise, does nothing. 
@@ -310,19 +197,6 @@ inline node_ptr SimplexTree::insert_child(node_ptr c_parent, node_ptr new_child,
   }
   return(cn); 
 }
-
-// Creates a new set of child nodes for the given parent. createChild check for redundancy with insert. 
-// Returns all of the children of the node upon completion. 
-// void SimplexTree::add_children(node_ptr c_parent, const vector<idx_t>& new_children, idx_t depth){
-//   std::for_each(new_children.begin(), new_children.end(), [&](const idx_t& id){
-//     node_ptr new_child = node_ptr(new node(id, c_parent));
-//     insert_child(c_parent, new_child, depth);
-//   });
-// }
-// inline void SimplexTree::insert(IntegerVector simplex){
-//   vector< idx_t > sigma(begin(simplex), end(simplex));
-//   insert_simplex(sigma);
-// }
 
 template <typename ... Args>
 constexpr bool return_void(void(Args ...)) { return true; }
@@ -1166,6 +1040,25 @@ inline List SimplexTree::ltraverse(SEXP simp, Function f, std::string type){
 // List-traversal overload 3
 inline List SimplexTree::ltraverse(SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args){
   return traverse_int(simp, f, type, args, true);
+}
+
+// Vector-traversal overload 1
+inline SEXP SimplexTree::straverse(Function f, std::string type){
+  Environment base("package:base"); 
+  Function s2arr = base["simplify2array"];
+  return s2arr(traverse_int(R_NilValue, f, type, R_NilValue, true));
+}
+// Vector-traversal overload 2
+inline SEXP SimplexTree::straverse(SEXP simp, Function f, std::string type){
+  Environment base("package:base"); 
+  Function s2arr = base["simplify2array"];
+  return s2arr(traverse_int(simp, f, type, R_NilValue, true));
+}
+// Vector-traversal overload 3
+inline SEXP SimplexTree::straverse(SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args){
+  Environment base("package:base"); 
+  Function s2arr = base["simplify2array"];
+  return s2arr(traverse_int(simp, f, type, args, true));
 }
 
 // Prints a simplex

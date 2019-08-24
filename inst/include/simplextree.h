@@ -1,8 +1,9 @@
 // simplextree.h
 // Author: Matt Piekenbrock 
 // This package provides a simple implementation of the Simplex tree data structure using Rcpp + STL
-// Original Reference: Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: 
-// An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+// The simplex tree was originally introduced in the following paper: 
+// Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+// MIT licensed
 
 #ifndef SIMPLEXTREE_H_
 #define SIMPLEXTREE_H_
@@ -164,6 +165,11 @@ struct SimplexTree {
   List ltraverse(Function f, std::string);
   List ltraverse(SEXP simp, Function f, std::string);
   List ltraverse(SEXP, Function, std::string, Rcpp::Nullable<List>);
+  
+  // Overloads for vector traversals 
+  SEXP straverse(Function f, std::string);
+  SEXP straverse(SEXP simp, Function f, std::string);
+  SEXP straverse(SEXP, Function, std::string, Rcpp::Nullable<List>);
 
   // Traversal specializations
   template <typename Lambda> void traverse_dfs(node_ptr, Lambda f);

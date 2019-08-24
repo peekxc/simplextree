@@ -171,19 +171,20 @@ NULL
 
 # ---- traverse ----
 #' @name traverse
-#' @aliases ltraverse
+#' @aliases ltraverse straverse
 #' @title traverse
 #' @param sigma The simplex to initialize the traversal. See details.  
 #' @param f An arbitrary function which accepts as input a simplex. See details. 
 #' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".
 #' @description Traverses subsets of a simplicial complex.
-#' @details \code{\link{traverse}} allows for traversing subsets of the simplex tree. 
-#' A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
-#' two aspects: the traversal \code{type} and the initial simplex \code{sigma}. Given a simplex \code{sigma}, a subset of 
-#' the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}. \cr
+#' @details \code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
+#' The simplices within each subset are determined by two aspects: the initial simplex \code{sigma} 
+#' and the traversal \code{type}. Given an initial simplex \code{sigma}, \code{traverse} generates 
+#' an ordered set of simplices based on the traversal \code{type}, which are iteratively passed to 
+#' the supplied function \code{f} as the first argument to \code{f}. \cr
 #' \cr
-#' \code{sigma} can either be omitted, a simplex, or explicitly the \code{empty_face} or NULL.
-#' See examples for use-cases. 
+#' \code{sigma} can either be omitted, a simplex, or the \code{empty_face} (which is an alias to NULL).
+#' @return NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
 #' @examples
 #' ## Starter example complex 
 #' st <- simplex_tree()
@@ -192,7 +193,7 @@ NULL
 #' ## Print out complex using depth-first traversal. 
 #' ## 'empty_face' implies that the DFS will start at the root. 
 #' st$traverse(empty_face, print, "dfs")
-#' st$traverse(print, "dfs") ## overload available that assumes empty_face 
+#' st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
 #' 
 #' ## Print of subtree rooted at vertex 1 using depth-first traversal. 
 #' st$traverse(1L, print, "dfs")
@@ -320,7 +321,9 @@ NULL
 #' @return boolean indicating whether the collapse was performed. 
 #' @references 
 #' 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' 
 #' 2. Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
+#' 
 #' @examples 
 #' st <- simplextree::simplex_tree()
 #' st$insert(1:3)
@@ -603,6 +606,17 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     draw_simplex[dim_idx %in% c(0L, 1L)] <- TRUE ## always draw points and edges
   }
   
+  ## Converts non-hex colors to hex. Additionally, any 7-length hex has 
+  ## simplex dimension opacity scaling applied to it
+  col_to_hex <- function(cp){
+    is_hex <- (substring(cp,first=1,last=1) == "#")
+    is_rgb <- (nchar(cp) == 7)
+    is_col <- (!is_hex | (is_hex & is_rgb))
+    cp[is_col] <- apply(grDevices::col2rgb(cp[is_col]), 2, function(col){ do.call(grDevices::rgb, as.list(col/255)) })
+    cp[is_col] <- alpha4sc(cp)[is_col]
+    return(cp)
+  }
+  
   ## Case 1: color_pal is a named list where each name is a comma-separated simplex 
   if (is.list(color_pal)){
     stopifnot(is.character(names(color_pal)))
@@ -618,17 +632,12 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
     simplex_colors <- unlist(x$ltraverse(si_color, "bfs"))[-1]
   } else if (is_char_vec && (length(color_pal) == sum(x$n_simplices))){
-    ## Case 2: color_pal is character vector, recycled to simplices
-    simplex_colors <- color_pal
+    ## Case 2: color_pal is character vector w/ length == # simplices
+    simplex_colors <- col_to_hex(color_pal)
   } else if (is_char_vec && ((length(color_pal) == x$dimension+1L) || by_dim)){
     ## Case 3: color_pal is character vector, recycled to dimensions
     color_pal <- rep(color_pal, length.out = x$dimension+1L)
-    is_hex <- (substring(color_pal, first=1,last=1) == "#")
-    is_rgb <- (nchar(color_pal) == 7)
-    is_col <- (!is_hex | (is_hex & is_rgb))
-    color_pal[is_col] <- apply(grDevices::col2rgb(color_pal[is_col]), 2, function(col){ do.call(grDevices::rgb, as.list(col/255)) })
-    color_pal[is_col] <- alpha4sc(color_pal)[is_col]
-    simplex_colors <- color_pal[dim_idx+1L]
+    simplex_colors <- col_to_hex(color_pal)[dim_idx+1L]
   } else if (is_char_vec){
     simplex_colors <- rep(color_pal, length.out=sum(x$n_simplices))
   } else {

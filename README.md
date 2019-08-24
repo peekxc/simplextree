@@ -3,7 +3,7 @@
 [![Travis OS X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.org/peekxc/simplextree)
 [![Travis Linux X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.org/peekxc/simplextree)
 
-`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing R bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). 
+`simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing R bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). The underlying library implementation also exports a [C++ header](inst/include/simplextree.h), which can be specified as a dependency and [used in other packages](#usage-with-rcpp) via [Rcpp attributes](http://dirk.eddelbuettel.com/code/rcpp/Rcpp-attributes.pdf).
 
 The Simplex Tree was originally introduced in the following paper: 
 
@@ -74,9 +74,9 @@ adj_matrix <- st$as_adjacency_matrix()
 
 ## API Reference 
 
-Below is the API reference for the R-bindings of the _SimplexTree_ class. A _SimplexTree_ object can also be passed, manipulated, and modified via C++ in another R package as well. See [Usage with Rcpp](#Usage with Rcpp). 
+Below is the API reference for the R-bindings of the _SimplexTree_ class. A _SimplexTree_ object can also be passed, manipulated, and modified via C++ in another R package as well. See [Usage with Rcpp](#usage-with-rcpp). 
 
-In what follows, each _simplex_ is specified as an integer vector. Some methods accept multiple _simplices_ as well, which can be specified as a list of integer vectors. 
+In what follows, individual _simplex_'s are assumed to be [integer](https://stat.ethz.ch/R-manual/R-devel/library/base/html/integer.html) vectors. [Numeric](https://stat.ethz.ch/R-manual/R-devel/library/base/html/numeric.html) vectors are implicitly cast to integer vectors. Some methods accept multiple _simplices_ as well, which can be specified as a list of integer vectors. 
 
 ### SimplexTree
 
@@ -148,19 +148,57 @@ Returns the 3-simplices in the simplicial complex as an _( n x 4 )_ matrix, wher
 <a href='#insert' id='insert' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **insert**(\[*simplices*\])
 
-Inserts *simplices* into the simplex tree. Each _simplex_ is ordered prior to insertion. If a _simplex_ already exists, the tree is not modified. To keep the property of being a simplex tree, all non-existing proper faces of _simplex_ are also inserted. 
+Inserts *simplices* into the simplex tree. Each _simplex_ is ordered prior to insertion. If a _simplex_ already exists, the tree is not modified. To keep the property of being a simplex tree, the proper faces of _simplex_ are also inserted. 
 
 Note that the _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
+
+<details>
+	<summary> Insertion examples </summary>
+	```R
+	st <- simplex_tree()
+	st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
+	st$insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
+	print(st)
+	## Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+	```
+</details>
 
 <a href='#remove' id='remove' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **remove**(\[*simplices*\])
 
-Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to removal. If a _simplex_ doesn't exist, the tree is not modified. To keep the property of being a simplex tree, all non-existing proper faces of _simplex_ are also removed. 
+Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to removal. If a _simplex_ doesn't exist, the tree is not modified. To keep the property of being a simplex tree, the cofaces of _simplex_ are also removed. 
+
+<details>
+	<summary> Insertion examples </summary>
+	```R
+	st <- simplex_tree()
+	st$insert(list(c(1, 2, 3), c(4, 5), 6))
+	st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
+	print(st)
+	## Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+	```
+</details>
 
 <a href='#contract' id='contract' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **contract**(\[*a, b*\])
 
 Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is equivalent to removing vertex *b* from the simplex tree and augmenting the link of vertex *a* with the link of vertex *b*. If the edge does not exist in the tree, the tree is not modified.
+
+<details>
+	<summary> Contraction example </summary>
+  ```R
+  st <- simplex_tree()
+  st$insert(1:3)
+  st$print_tree()
+  # 1 (h = 2): .( 2 3 )..( 3 )
+  # 2 (h = 1): .( 3 )
+  # 3 (h = 0): 
+  st$contract(c(1, 3))
+  st$print_tree()
+  # 1 (h = 1): .( 2 )
+  # 2 (h = 0):
+	```
+</details>
 
 <a href='#collapse' id='collapse' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **collapse**(...)
@@ -180,6 +218,36 @@ Collapses a free pair (_u_, _v_) -> (_w_), where _u_, _v_, and _w_ are all _vert
 
 Note that an _elementary_ collapse in this sense has an injectivity requirement that either _u_ = _w_, such that (_u_, _v_) -> (_u_), or _v_ = _w_, such that (_u_, _v_) -> (_v_). If (_u_, _v_) -> (_w_) is specified, where _u_ != _w_ and _v_ != _w_ , the collapse is decomposed into two elementary collapses, (_u_, _w_) -> (_w_) and (_v_, _w_) -> (_w_), and both are performed. 
 
+<details>
+	<summary> Collapse example </summary>
+  ```R
+  st <- simplex_tree()
+  st$insert(1:3)
+  st$print_tree()
+  # 1 (h = 2): .( 2 3 )..( 3 )
+  # 2 (h = 1): .( 3 )
+  # 3 (h = 0): 
+  st$collapse(1:2, 1:3) ## collapse in the sense of (1)
+  st$print_tree()
+  # 1 (h = 1): .( 3 )
+  # 2 (h = 1): .( 3 )
+  # 3 (h = 0):
+  
+  st$insert(list(1:3, 2:5))
+  st$print_tree()
+  # 1 (h = 2): .( 2 3 )..( 3 )
+  # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
+  # 3 (h = 2): .( 4 5 )..( 5 )
+  # 4 (h = 1): .( 5 )
+  # 5 (h = 0): 
+  st$collapse(3, 4, 5) ## collapse in the sense of (2)
+  st$print_tree()
+  # 1 (h = 2): .( 2 5 )..( 5 )
+  # 2 (h = 2): .( 5 )..( 5 )
+  # 5 (h = 1): .( 5 )
+	```
+</details>
+
 <a href='#expand' id='expand' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **expand**(_k_)
 
@@ -187,10 +255,28 @@ Performs a _k-expansion_, constructing the _k_-skeleton as a flag complex. The e
 
 This method assumes the dimension of the simplicial complex before expansion is 1. 
 
+<details>
+	<summary> Expansion example </summary>
+  ```R
+  st <- simplex_tree()
+  st$insert(list(c(1, 2), c(2, 3), c(1, 3)))
+  st$print_tree()
+  # 1 (h = 1): .( 2 3 )
+  # 2 (h = 1): .( 3 )
+  # 3 (h = 0):
+  
+  st$expand(k=2) ## expand to simplicial 2-complex
+  st$print_tree()
+  # 1 (h = 2): .( 2 3 )..( 3 )
+  # 2 (h = 1): .( 3 )
+  # 3 (h = 0): 
+	```
+</details>
+
 <a href='#as_XPtr' id='as_XPtr' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **as_XPtr**()
 
-Converts the simplex tree into an [XPtr](https://github.com/RcppCore/Rcpp/blob/master/inst/include/Rcpp/XPtr.h), sometimes called an _external pointer_. _XPtr_'s can be passed as an [SEXP](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#SEXPs) to other C/C++ functions via R's C API or Rcpp. 
+Converts the simplex tree into an [XPtr](https://github.com/RcppCore/Rcpp/blob/master/inst/include/Rcpp/XPtr.h), sometimes called an _external pointer_. _XPtr_'s can be passed as an [SEXP](https://cran.r-project.org/doc/manuals/r-release/R-ints.html#SEXPs) to other C/C++ functions via R's C API or Rcpp. For usage, see [Usage with Rcpp](#usage-with-rcpp).
 
 This method does _not_ register a delete finalizer. 
 
@@ -437,9 +523,41 @@ Note that the C++ class contains a superset of the functionality exported to R, 
 
 > <a name="simplicial-map-paper">2.</a> Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
 
-## More Information
+## Visualizing the complex
 
-The full documentation for the package is available in the man pages.
+Summarizing the complex can be achieved via either the overridden [S3](https://stat.ethz.ch/R-manual/R-devel/library/methods/html/Methods_for_S3.html) print generic or the more detailed [print_tree](#print_tree) method.
+
+```R
+library(simplextree)
+st <- simplex_tree()
+st$insert(list(1:3, 3:6))
+
+print(st)
+# Simplex Tree with (6, 9, 5, 1) (0, 1, 2, 3)-simplices
+
+st$print_tree()
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 3): .( 4 5 6 )..( 5 6 6 )...( 6 )
+# 4 (h = 2): .( 5 6 )..( 6 )
+# 5 (h = 1): .( 6 )
+# 6 (h = 0): 
+```
+
+Alternatively, the plot generic is also overridden for _SimplexTree_ objects (of class type 'Rcpp_SimplexTree') to display the complex with [base graphics](https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/graphics-package.html).
+
+```R
+st$insert(list(6:7, 7:8, 8:10, 11:12))
+plot(st)
+```
+
+![](https://i.imgur.com/mo6069L.png)
+
+There are many other options for controlling how the complex is displayed (e.g. the positions of the simplices, the sizes/linewidths of the vertices/edges, the vertex labels, whether to color only maximal faces or individual simplices, etc.). For the full documentation, see `?plot.simplextree`.
+
+## More information 
+
+The full documentation for both the plot package is available in the man pages.
 
 ```R
 ## see ?simplextree

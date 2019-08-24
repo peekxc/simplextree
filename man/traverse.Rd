@@ -3,6 +3,7 @@
 \name{traverse}
 \alias{traverse}
 \alias{ltraverse}
+\alias{straverse}
 \title{traverse}
 \arguments{
 \item{sigma}{The simplex to initialize the traversal. See details.}
@@ -11,17 +12,20 @@
 
 \item{type}{One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".}
 }
+\value{
+NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
+}
 \description{
 Traverses subsets of a simplicial complex.
 }
 \details{
-\code{\link{traverse}} allows for traversing subsets of the simplex tree. 
-A subset of the simplex tree is represented by a set of simplices. The simplices within each subset is determined by
-two aspects: the traversal \code{type} and the initial simplex \code{sigma}. Given a simplex \code{sigma}, a subset of 
-the simplex tree is generated based on \code{type}, and then each simplex is passed as the first argument to \code{f}. \cr
+\code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
+The simplices within each subset are determined by two aspects: the initial simplex \code{sigma} 
+and the traversal \code{type}. Given an initial simplex \code{sigma}, \code{traverse} generates 
+an ordered set of simplices based on the traversal \code{type}, which are iteratively passed to 
+the supplied function \code{f} as the first argument to \code{f}. \cr
 \cr
-\code{sigma} can either be omitted, a simplex, or explicitly the \code{empty_face} or NULL.
-See examples for use-cases.
+\code{sigma} can either be omitted, a simplex, or the \code{empty_face} (which is an alias to NULL).
 }
 \examples{
 ## Starter example complex 
@@ -31,7 +35,7 @@ st$insert(list(1:3, 2:5))
 ## Print out complex using depth-first traversal. 
 ## 'empty_face' implies that the DFS will start at the root. 
 st$traverse(empty_face, print, "dfs")
-st$traverse(print, "dfs") ## overload available that assumes empty_face 
+st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
 
 ## Print of subtree rooted at vertex 1 using depth-first traversal. 
 st$traverse(1L, print, "dfs")
