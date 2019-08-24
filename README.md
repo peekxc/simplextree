@@ -154,6 +154,7 @@ Note that the _SimplexTree_ structure does not track orientation, e.g. the simpl
 
 <details>
 	<summary> Insertion examples </summary>
+	
 	```R
 	st <- simplex_tree()
 	st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
@@ -169,7 +170,8 @@ _SimplexTree_ $ **remove**(\[*simplices*\])
 Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to removal. If a _simplex_ doesn't exist, the tree is not modified. To keep the property of being a simplex tree, the cofaces of _simplex_ are also removed. 
 
 <details>
-	<summary> Insertion examples </summary>
+	<summary> Removal examples </summary>
+	
 	```R
 	st <- simplex_tree()
 	st$insert(list(c(1, 2, 3), c(4, 5), 6))
@@ -186,6 +188,7 @@ Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is e
 
 <details>
 	<summary> Contraction example </summary>
+	
   ```R
   st <- simplex_tree()
   st$insert(1:3)
@@ -220,6 +223,7 @@ Note that an _elementary_ collapse in this sense has an injectivity requirement 
 
 <details>
 	<summary> Collapse example </summary>
+	
   ```R
   st <- simplex_tree()
   st$insert(1:3)
@@ -257,6 +261,7 @@ This method assumes the dimension of the simplicial complex before expansion is 
 
 <details>
 	<summary> Expansion example </summary>
+  
   ```R
   st <- simplex_tree()
   st$insert(list(c(1, 2), c(2, 3), c(1, 3)))
