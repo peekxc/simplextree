@@ -160,8 +160,9 @@ Note that the _SimplexTree_ structure does not track orientation, e.g. the simpl
 	st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
 	st$insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
 	print(st)
-	## Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+	# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
 	```
+	
 </details>
 
 <a href='#remove' id='remove' class='anchor' aria-hidden='true'>#</a>
@@ -177,8 +178,9 @@ Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to re
 	st$insert(list(c(1, 2, 3), c(4, 5), 6))
 	st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
 	print(st)
-	## Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+	# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
 	```
+	
 </details>
 
 <a href='#contract' id='contract' class='anchor' aria-hidden='true'>#</a>
@@ -201,6 +203,7 @@ Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is e
   # 1 (h = 1): .( 2 )
   # 2 (h = 0):
 	```
+
 </details>
 
 <a href='#collapse' id='collapse' class='anchor' aria-hidden='true'>#</a>
@@ -250,6 +253,7 @@ Note that an _elementary_ collapse in this sense has an injectivity requirement 
   # 2 (h = 2): .( 5 )..( 5 )
   # 5 (h = 1): .( 5 )
 	```
+	
 </details>
 
 <a href='#expand' id='expand' class='anchor' aria-hidden='true'>#</a>
@@ -276,6 +280,7 @@ This method assumes the dimension of the simplicial complex before expansion is 
   # 2 (h = 1): .( 3 )
   # 3 (h = 0): 
 	```
+	
 </details>
 
 <a href='#as_XPtr' id='as_XPtr' class='anchor' aria-hidden='true'>#</a>
