@@ -19,13 +19,25 @@ using namespace Rcpp;
 #include <queue>
 #include <vector>
 #include <memory>
+#include <tuple>
 #include "UnionFind.h"
-#include "utilities.h"
+
+#include <Rcpp/Benchmark/Timer.h>
 
 typedef std::size_t idx_t;
-using std::set;
 
-// struct node; // forward declaration
+// Aliases
+using std::vector;
+using std::map;
+using std::size_t;
+using std::begin; 
+using std::end;
+using std::set;
+using std::find; 
+using std::get;
+template <typename T> using s_ptr = std::shared_ptr<T>; // Shared pointer
+template <typename T> using u_ptr = std::unique_ptr<T>; // Unique pointer
+template <typename T> using w_ptr = std::weak_ptr<T>;   // Weak pointer// struct node; // forward declaration
 
 template <typename T>
 struct ptr_comp {
@@ -52,11 +64,13 @@ using node_ptr = s_ptr< node >;
 // Forward declarations 
 struct dfs_iter;
 struct bfs_iter;
-
+  
 // Simplex tree data structure.
 // The Simplex Tree is a normal trie structure, with additional restrictions on the storage order, 
 // and a auxiliary map that is used to map 'cousin' simplexes at varying depths.
 struct SimplexTree {
+  //static constexpr node_ptr empty_face = node_ptr(new node(-1, nullptr));
+  
   // Aliases
   using node_ptr = s_ptr< node >; 
   using node_set_t = set< node_ptr, ptr_comp< node > >;
@@ -67,28 +81,52 @@ struct SimplexTree {
   
   // Fields 
   node_ptr root; // empty face; initialized to id = 0, parent = nullptr
-  std::unordered_map< std::string, vector< node_ptr > > level_map; // maps strings of the form "<id>-<depth>" to a vector of node pointers
+  // std::unordered_map< std::string, vector< node_ptr > > level_map; // maps strings of the form "<id>-<depth>" to a vector of node pointers
+  map< size_t, vector< node_ptr > > level_map; 
   vector< size_t > n_simplexes; // tracks the number of simplices if each order
   size_t tree_max_depth; // maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
   size_t max_id; // maximum vertex id used so far. Only needed by the id generator. 
   size_t id_policy;  // policy type to generate new ids
+  
+  // Forward declaration indexed simplex 
+  struct indexed_simplex;   
+  
+  // Filtration-specific fields 
+  vector< bool > included;
+  vector< indexed_simplex > fc; 
     
   // Attach friend class iterators  
   friend struct dfs_iter;
   friend struct bfs_iter;
     
   // Constructor + Destructor 
-  SimplexTree(){
-    root = node_ptr(new node(-1, nullptr));
-    level_map = std::unordered_map< std::string, vector< node_ptr > >();
-    n_simplexes = vector<idx_t>(); 
-    tree_max_depth = 0; 
-    max_id = 0; 
-    id_policy = 0; 
+  SimplexTree() : root(new node(-1, nullptr)), tree_max_depth(0), max_id(0), id_policy(0) {
+    // level_map = std::unordered_map< std::string, vector< node_ptr > >();
+    // n_simplexes = vector<idx_t>(); 
   };
   ~SimplexTree(){
     std::vector<idx_t>().swap(n_simplexes);
   };
+  
+  // Copy constructor
+  SimplexTree(const SimplexTree& st) : root(new node(-1, nullptr)), tree_max_depth(0), max_id(0), id_policy(0) {
+    deserialize(st.serialize());
+    id_policy = st.id_policy;
+    included = st.included;
+    fc.reserve(st.fc.size()); 
+    std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
+  };
+  
+  // Assignment operator
+  SimplexTree& operator=(const SimplexTree& st) {
+    deserialize(st.serialize());
+    id_policy = st.id_policy;
+    included = st.included;
+    fc.reserve(st.fc.size()); 
+    std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
+    return *this;
+  };
+  
   // Read-only property 
   SEXP dimension(){ return(tree_max_depth == 0 ? R_NilValue : wrap(tree_max_depth-1)); }
   
@@ -97,42 +135,41 @@ struct SimplexTree {
   SEXP as_XPtr();
   void record_new_simplexes(const idx_t k, const idx_t n);// record keeping
   
-  
   // Generates a new set of vertex ids, according to the given rule.
   vector< size_t > generate_ids(size_t);
   
   // Read-only "properties" that may be useful for the user
-  IntegerMatrix get_k_simplices(const size_t);
-  vector< idx_t > get_vertices();
-  IntegerMatrix get_edges();
-  IntegerMatrix get_triangles();
-  IntegerMatrix get_quads();
+  IntegerMatrix get_k_simplices(const size_t) const;
+  vector< idx_t > get_vertices() const;
+  IntegerMatrix get_edges() const;
+  IntegerMatrix get_triangles() const;
+  IntegerMatrix get_quads() const;
   
-  size_t vertex_index(const idx_t);
-  vector< size_t > degree(vector< idx_t >);
-  size_t degree(idx_t);
-  simplex_t adjacent_vertices(const idx_t);
+  size_t vertex_index(const idx_t) const;
+  size_t degree(idx_t) const;
+  vector< size_t > degree(vector< idx_t >) const;
+  simplex_t adjacent_vertices(const idx_t) const;
   
   // Simplex utilities
   void insert_simplex(simplex_t);
   void remove_simplex(simplex_t);
-  bool find_simplex(simplex_t);
+  bool find_simplex(simplex_t) const;
   
   // Extensions for multiple 
   void insert_simplices(vector< vector< idx_t > >);
   void remove_simplices(vector< vector< idx_t > >);
-  vector< bool > find_simplices(vector< simplex_t >);
+  vector< bool > find_simplices(vector< simplex_t >) const;
   
   // R-wrappers
   void insert(SEXP sigma);
   void remove(SEXP sigma);
-  LogicalVector find(SEXP sigma);
+  LogicalVector find(SEXP sigma) const;
 
   // Export utilities
-  IntegerMatrix as_adjacency_matrix(); // Exports the 1-skeleton as an adjacency matrix 
-  IntegerMatrix as_edge_list(); // Exports the 1-skeleton as an edgelist 
-  List as_adjacency_list(); // Exports the 1-skeleton as an adjacency matrix 
-  List as_list(); // Exports entire simplex to a list
+  IntegerMatrix as_adjacency_matrix() const; // Exports the 1-skeleton as an adjacency matrix 
+  IntegerMatrix as_edge_list() const; // Exports the 1-skeleton as an edgelist 
+  List as_adjacency_list() const; // Exports the 1-skeleton as an adjacency matrix 
+  List as_list() const; // Exports entire simplex to a list
   
   // Recursive helper functions
   node_ptr insert_child(node_ptr c_parent, node_ptr new_child, idx_t depth);
@@ -140,58 +177,63 @@ struct SimplexTree {
   void remove_leaf(node_ptr, idx_t);
   void add_children(node_ptr, const simplex_t&, idx_t);
   void insert(idx_t*, const size_t, const size_t, node_ptr, const idx_t);
-  node_ptr find_by_id(const node_set_t&, idx_t);
-  node_ptr find_node(simplex_t);
-  bool is_face(simplex_t, simplex_t);
-  node_ptr top_node(node_ptr);
-
-  // Find a vertex 
-  node_ptr find_vertex(const idx_t);
+  node_ptr find_by_id(const node_set_t&, idx_t) const;
+  node_ptr find_node(simplex_t) const;
+  bool is_face(simplex_t, simplex_t) const;
+  node_ptr top_node(node_ptr) const;
+  node_ptr find_vertex(const idx_t) const;
   
   // Node id equality predicate
-  std::function<bool(const node_ptr)> eq_node_id(const idx_t);
+  std::function<bool(const node_ptr)> eq_node_id(const idx_t) const;
   
   // Generic way of traversing complex
   template <typename Lambda> 
-  void trav_switch(node_ptr, Lambda, std::string, List);
-  List traverse_int(SEXP, Function, std::string, Rcpp::Nullable<List>, bool);
+  void trav_switch(node_ptr, Lambda, std::string, List) const;
+  
+  List traverse_int(SEXP, Function, std::string, Rcpp::Nullable<List>, bool) const;
   
   // Overloads for regular traversals 
-  void traverse(Function, std::string);
-  void traverse(SEXP, Function, std::string);
-  void traverse(SEXP, Function, std::string, Rcpp::Nullable<List>);
+  void traverse(Function, std::string) const;
+  void traverse(SEXP, Function, std::string) const;
+  void traverse(SEXP, Function, std::string, Rcpp::Nullable<List>) const;
   
-  // Overloads for list traversals 
-  List ltraverse(Function f, std::string);
-  List ltraverse(SEXP simp, Function f, std::string);
-  List ltraverse(SEXP, Function, std::string, Rcpp::Nullable<List>);
-  
-  // Overloads for vector traversals 
-  SEXP straverse(Function f, std::string);
-  SEXP straverse(SEXP simp, Function f, std::string);
-  SEXP straverse(SEXP, Function, std::string, Rcpp::Nullable<List>);
+  // // Overloads for list traversals 
+  // List ltraverse(Function f, std::string) const;
+  // List ltraverse(SEXP simp, Function f, std::string) const;
+  // List ltraverse(SEXP, Function, std::string, Rcpp::Nullable<List>) const;
+  // 
+  // // Overloads for vector traversals 
+  // SEXP straverse(Function f, std::string) const;
+  // SEXP straverse(SEXP simp, Function f, std::string) const;
+  // SEXP straverse(SEXP, Function, std::string, Rcpp::Nullable<List>) const;
 
   // Traversal specializations
-  template <typename Lambda> void traverse_dfs(node_ptr, Lambda f);
-  template <typename Lambda, typename P1, typename P2> void traverse_dfs_if(node_ptr, Lambda, P1, P2);
-  template <typename Lambda> void traverse_bfs(node_ptr, Lambda f);
-  template <typename Lambda> void traverse_cofaces(node_ptr, Lambda f);
-  template <typename Lambda> void traverse_link(node_ptr, Lambda f);
-  template <typename Lambda> void traverse_skeleton(node_ptr, Lambda f, size_t k);
-  template <typename Lambda> void traverse_max_skeleton(node_ptr, Lambda f, size_t k);
+  template <typename Lambda> void traverse_dfs(node_ptr, Lambda f) const;
+  template <typename Lambda, typename P1, typename P2> void traverse_dfs_if(node_ptr, Lambda, P1, P2) const;
+  template <typename Lambda> void traverse_bfs(node_ptr, Lambda f) const;
+  template <typename Lambda, typename P1, typename P2> void traverse_bfs_if(node_ptr, Lambda, P1, P2) const;
+  template <typename Lambda> void traverse_cofaces(node_ptr, Lambda f) const;
+  template <typename Lambda> void traverse_link(node_ptr, Lambda f) const;
+  template <typename Lambda> void traverse_skeleton(node_ptr, Lambda f, size_t k) const;
+  template <typename Lambda> void traverse_max_skeleton(node_ptr, Lambda f, size_t k) const;
+  template <typename Lambda> void traverse_facets(node_ptr, Lambda) const;
+  
+  // Simplex versions
+  template < typename Lambda > void traverse_faces_s(node_ptr, Lambda) const;
   
   // Utility 
-  simplex_t get_labels(const node_set_t& level, idx_t offset = 0);
-  size_t depth(node_ptr cn);
-  size_t max_depth(node_ptr cn);
+  simplex_t get_labels(const node_set_t& level, idx_t offset = 0) const;
+  size_t depth(node_ptr cn) const;
+  size_t max_depth(node_ptr cn) const;
   void remove_subtree(node_ptr parent);
-  vector< idx_t > connected_components();
+  vector< idx_t > connected_components() const;
   void reindex(SEXP);
   void reindex(vector< idx_t >);
   
-  bool is_tree(); // tests if is fully connected and is a tree
+  bool is_tree() const; // tests if is fully connected and is a tree
   // bool is_cycle(vector< idx_t > v); // Tests if vertex sequence has a cycle.
     
+  // Modifying the complex w/ higher order operations
   bool collapse(node_ptr, node_ptr);
   bool collapseR(simplex_t, simplex_t);
   bool vertex_collapseR(idx_t, idx_t, idx_t);
@@ -200,41 +242,58 @@ struct SimplexTree {
   void expansion(const idx_t k);
   void expand(set< node_ptr, ptr_comp< node > >&, const idx_t);
   
-  void get_cousins();
+  void get_cousins() const;
 
   // Constructs the full simplex from a given node, recursively
-  void full_simplex_r(node_ptr, simplex_t&);
-  simplex_t full_simplex(node_ptr);
+  void full_simplex_r(node_ptr, simplex_t&) const;
+  simplex_t full_simplex(node_ptr) const;
   void remove_subtree2(simplex_t);
   
   // Locate cofaces
-  vector< node_ptr > locate_cofaces(node_ptr cn);
-  vector< node_ptr > expand_subtree(node_ptr sigma); // unpacks a subtree
-  vector< node_ptr > expand_subtrees(vector< node_ptr >); // unpacks multiple subtrees
+  vector< node_ptr > locate_cofaces(node_ptr cn) const;
+  vector< node_ptr > expand_subtree(node_ptr sigma) const; // unpacks a subtree
+  vector< node_ptr > expand_subtrees(vector< node_ptr >) const; // unpacks multiple subtrees
   
   // Locate links  
-  vector< node_ptr > link(node_ptr);
+  vector< node_ptr > link(node_ptr) const;
     
   // Depth-first search iterator utility
-  dfs_iter begin_dfs(node_ptr), end_dfs(); 
-  bfs_iter begin_bfs(node_ptr), end_bfs(); 
+  dfs_iter begin_dfs(node_ptr) const, end_dfs() const; 
+  bfs_iter begin_bfs(node_ptr) const, end_bfs() const; 
   
   // Serialization/unserialization + saving/loading the complex
-  vector< simplex_t > serialize();
+  vector< simplex_t > serialize() const;
   void deserialize(vector< simplex_t >);  // void deserializeR(List simplices)
-  void save(std::string);
+  void save(std::string) const;
   void load(std::string);
   
   // Printing 
-  void print_tree();
-  void print_level(node_ptr, idx_t);
-  void print_subtree(node_ptr);
-  void print_simplex(node_ptr);
+  void print_tree() const;
+  void print_level(node_ptr, idx_t) const;
+  void print_subtree(node_ptr) const;
+  void print_simplex(node_ptr) const;
   
   // Policy for generating ids
-  std::string get_id_policy();
+  std::string get_id_policy() const;
   void set_id_policy(std::string);
   
+  // Indexed simplex 
+  struct indexed_simplex {
+    size_t parent_idx;  // index of its parent simplex in tree
+    idx_t label;        // last(sigma) 
+    double index;       // diameter/weight of the simplex 
+  };
+  
+  // Filtration
+  vector< size_t > simplex_idx(const size_t) const;
+  simplex_t expand_simplex(const vector< size_t >) const;
+  void rips(vector< double >, const size_t);
+  void threshold_function(double);
+  void threshold_index(size_t);
+  vector< vector< idx_t > > rips_simplices() const;
+  vector< double > rips_weights() const;
+  size_t rips_index() const;
+  double rips_epsilon() const;
 };
 
 #include <stack>

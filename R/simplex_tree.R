@@ -465,6 +465,21 @@ NULL
 #' st$is_tree() # false
 NULL
 
+# Internal function needed to return new simplex tree references from C++ calls
+# .threshold_new <- function(st_ptr, type, eps_or_idx, modify){
+#   if (modify){ return(invisible(st_ptr)) }
+#   new_st <- simplextree::simplex_tree()
+#   copy_trees(st_ptr, new_st$as_XPtr())
+#   if (type == "index"){
+#     new_st$threshold_idx(as.integer(eps_or_idx))
+#   } else if (type == "function"){
+#     new_st$threshold_function(as.integer(eps_or_idx))
+#   }
+#   return(new_st)
+# }
+
+
+
 # ---- plot.Rcpp_SimplexTree ----
 #' @name plot.simplextree
 #' @title Plots the simplex tree

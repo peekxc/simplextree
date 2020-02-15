@@ -150,8 +150,6 @@ _SimplexTree_ $ **insert**(\[*simplices*\])
 
 Inserts *simplices* into the simplex tree. Each _simplex_ is ordered prior to insertion. If a _simplex_ already exists, the tree is not modified. To keep the property of being a simplex tree, the proper faces of _simplex_ are also inserted. 
 
-Note that the _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
-
 <details>
 
 <summary> Insertion examples </summary>
@@ -180,7 +178,7 @@ st <- simplex_tree()
 st$insert(list(c(1, 2, 3), c(4, 5), 6))
 st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
 print(st)
-# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+# Simplex Tree with (6, 3) (0, 1)-simplices
 ```
 </details>
 
