@@ -6,17 +6,6 @@
 
 using namespace Rcpp;
 
-// copy_trees
-void copy_trees(SEXP st1, SEXP st2);
-RcppExport SEXP _simplextree_copy_trees(SEXP st1SEXP, SEXP st2SEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type st1(st1SEXP);
-    Rcpp::traits::input_parameter< SEXP >::type st2(st2SEXP);
-    copy_trees(st1, st2);
-    return R_NilValue;
-END_RCPP
-}
 // profile
 NumericVector profile(SEXP st);
 RcppExport SEXP _simplextree_profile(SEXP stSEXP) {
@@ -33,7 +22,6 @@ RcppExport SEXP _rcpp_module_boot_union_find_module();
 RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_simplextree_copy_trees", (DL_FUNC) &_simplextree_copy_trees, 2},
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},
     {"_rcpp_module_boot_union_find_module", (DL_FUNC) &_rcpp_module_boot_union_find_module, 0},
     {"_rcpp_module_boot_simplex_tree_module", (DL_FUNC) &_rcpp_module_boot_simplex_tree_module, 0},

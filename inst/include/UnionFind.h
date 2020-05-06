@@ -39,6 +39,6 @@ struct UnionFind {
   void printCC();
 }; // class UnionFind
 
-#include "UnionFind/UnionFind.hpp" // implementation
+#include "UnionFind/uf.hpp" // implementation
 
 #endif 
