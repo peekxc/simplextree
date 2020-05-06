@@ -7,7 +7,10 @@
 \alias{SimplexTree}
 \title{Simplex Tree}
 \usage{
-simplex_tree()
+simplex_tree(simplices = NULL)
+}
+\arguments{
+\item{simplices}{optional simplices to initialize the simplex tree with. See \code{\link{insert}}.}
 }
 \value{
 A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module).

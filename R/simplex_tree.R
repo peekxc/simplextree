@@ -53,6 +53,7 @@
 #' }
 #' @author Matt Piekenbrock
 #' @import methods
+#' @param simplices optional simplices to initialize the simplex tree with. See \code{\link{insert}}.
 #' @return A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module). 
 #' @references Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples
@@ -64,8 +65,10 @@
 #' ## Example insertion
 #' st$insert(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
 #' @export
-simplex_tree <- function(){
-  return(new(SimplexTree))
+simplex_tree <- function(simplices = NULL){
+  st <- new(SimplexTree)
+  if (!missing(simplices)){ st$insert(simplices) }
+  return(st)
 }
 
 # ---- empty_face ----

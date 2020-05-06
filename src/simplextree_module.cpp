@@ -45,6 +45,15 @@ void print_filtration(SimplexTree* st){
 //   return f(st->as_XPtr(), type, eps_or_idx, modify);
 // }
 
+void insert_matrix(SimplexTree* st, NumericMatrix x){
+  Rcout << "inserting matrix" << std::endl; 
+  const size_t n = x.nrow();
+  for (size_t i = 0; i < n; ++i){
+    NumericVector cr = x(i,_);
+    st->insert_simplex(as< vector< idx_t > >(cr));
+  }
+}
+  
 // Copies the contents of st1 to st2
 // [[Rcpp::export]]
 void copy_trees(SEXP st1, SEXP st2){
@@ -148,6 +157,7 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert",  (void (SimplexTree::*)(SEXP))(&SimplexTree::insert))
+    .method( "insert",  &insert_matrix)
     .method( "remove",  (void (SimplexTree::*)(SEXP))(&SimplexTree::remove))
     .method( "find",  (LogicalVector (SimplexTree::*)(SEXP))(&SimplexTree::find))
     .method( "expand", &SimplexTree::expansion )

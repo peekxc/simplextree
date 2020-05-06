@@ -222,7 +222,14 @@ void vector_handler(SEXP sigma, Lambda&& f){
       return(el < 0 || el > std::numeric_limits< idx_t >::max()); 
     });
   };
-  if (s_type == INTSXP || s_type == REALSXP){
+  if (!Rf_isNull(Rf_getAttrib(sigma, R_DimSymbol))){
+    NumericMatrix m = as< NumericMatrix >(sigma);
+    const size_t n = m.nrow();
+    for (size_t i = 0; i < n; ++i){
+      NumericVector cr = m(i,_);
+      f(as< vector< idx_t > >(cr));
+    }
+  } else if (s_type == INTSXP || s_type == REALSXP){
     if (check_valid(sigma)){ stop("Only unsigned integer simplices are supported."); }
     vector< idx_t > simplex = as< vector< idx_t > >(sigma);
     f(simplex);
@@ -1184,6 +1191,11 @@ struct weighted_simplex {
   //   : np(cn), diam(d1), face_diam(d2), dim(di){}
 };
 
+// TODO: rename to flag complex; a Flag complex is a complex built atop a weighted graph. This function 
+// essentially constructs a filtration of a weighted flag complex. 
+// TODO: Allow two approaches: one independent storage option, which allows arbitrary insertions before and 
+// and computing the filtration, or one static option, which *moves* the unique node_ptrs into a container 
+// and allows constant-time thresholding, but is invalidated by arbitrary insertions/removals afterwards. 
 // Given a dimension k and set of weighted edges (u,v) representing the weights of the ordered edges in the trie, 
 // constructs a std::function object which accepts as an argument some weight value 'epsilon' and 
 // returns the simplex tree object.  

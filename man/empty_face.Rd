@@ -4,7 +4,9 @@
 \name{empty_face}
 \alias{empty_face}
 \title{empty_face}
-\format{An object of class \code{NULL} of length 0.}
+\format{
+An object of class \code{NULL} of length 0.
+}
 \usage{
 empty_face
 }

@@ -5,10 +5,19 @@
 \alias{plot.Rcpp_SimplexTree}
 \title{Plots the simplex tree}
 \usage{
-\method{plot}{Rcpp_SimplexTree}(x, coords = NULL, vertex_opt = NULL,
-  text_opt = NULL, edge_opt = NULL, polygon_opt = NULL,
-  color_pal = NULL, maximal = TRUE, by_dim = TRUE, add = FALSE,
-  ...)
+\method{plot}{Rcpp_SimplexTree}(
+  x,
+  coords = NULL,
+  vertex_opt = NULL,
+  text_opt = NULL,
+  edge_opt = NULL,
+  polygon_opt = NULL,
+  color_pal = NULL,
+  maximal = TRUE,
+  by_dim = TRUE,
+  add = FALSE,
+  ...
+)
 }
 \arguments{
 \item{x}{a simplex tree.}
