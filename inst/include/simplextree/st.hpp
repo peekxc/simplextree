@@ -163,7 +163,7 @@ inline void SimplexTree::remove_leaf(node_ptr parent, idx_t child_label){
   }
 }
 
-// Removes an entire subtree rooted as 'sroot', including 'sroot' itself. This function calls remove_leaf recursively. 
+// Removes an entire subtree rooted as 'sroot', including 'sroot' itself. This function calls SimplexTree::remove_leaf(node_ptr parent, idx_t child_label) recursively. 
 inline void SimplexTree::remove_subtree(node_ptr sroot){
   if (sroot == nullptr){ return; }
   if (sroot->children.empty()){ remove_leaf(sroot->parent, sroot->label); }  // TODO: figure out how to overload constructor
@@ -451,8 +451,8 @@ inline void SimplexTree::expand(node_set_t& c_set, const idx_t k){
       
 			// Temporary 
 			vector< node_ptr > sib_ptrs;
-			std::transform(siblings, end(c_set), std::back_inserter(sib_ptrs), [](const auto& cn){
-				return cn.get();
+			std::transform(siblings, end(c_set), std::back_inserter(sib_ptrs), [](const auto& n){
+				return n.get();
 			});
 
       // Get the intersection
@@ -498,7 +498,7 @@ inline void SimplexTree::expand(node_set_t& c_set, const idx_t k){
 
 // Given two simplices tau and sigma, checks to see if tau is a face of sigma
 // Assumes tau and sigma are both sorted.
-inline bool SimplexTree::is_face(vector< idx_t > tau, vector< idx_t > sigma) const{
+inline bool SimplexTree::is_face(vector< idx_t > tau, vector< idx_t > sigma) {
   // std::sort(tau.begin(), tau.end());
   // std::sort(sigma.begin(), sigma.end());
   return std::includes(sigma.begin(), sigma.end(), tau.begin(), tau.end());

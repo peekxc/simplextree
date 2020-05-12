@@ -1,0 +1,5 @@
+/Users/mpiekenbrock/simplextree/inst/build/CMakeFiles/rebuild_cache.dir
+/Users/mpiekenbrock/simplextree/inst/build/CMakeFiles/edit_cache.dir
+/Users/mpiekenbrock/simplextree/inst/build/CMakeFiles/package_source.dir
+/Users/mpiekenbrock/simplextree/inst/build/CMakeFiles/package.dir
+/Users/mpiekenbrock/simplextree/inst/build/CMakeFiles/st_test.dir

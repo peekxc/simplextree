@@ -3,10 +3,13 @@
 \name{insert}
 \alias{insert}
 \title{Insert simplices}
+\usage{
+insert(st, simplices, check_valid = TRUE)
+}
 \arguments{
-\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
-
 \item{simplices}{a list of simplices.}
+
+\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
 }
 \description{
 Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.

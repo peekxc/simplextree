@@ -1,0 +1,101 @@
+---
+title: "simplextree: Introduction"
+output: html_notebook
+---
+
+There are many constructions which are represented by simplicial complexes. In the realm of Topological Data Analysis (TDA), Cech and Rips are complexes are often used in studying Persistent Homology; other complexes like the Witness complex, $alpha$-complex, the Delaunay Complex, also have their own applications. Each construction admits a certain intrinsic complexity: for example, the Rips complex at parameter $\epsilon$ admits a face for every subset of points which have diameter less than $\epsilon$, implying its simplices grow exponentially in the dimension. In contrast the Witness complex 
+
+The Simplex Tree[^1] is a flexible and efficent data structure for representing and manipulating general simplicial complexes of any dimension. It can effectively be thought of as an ordered [Trie](https://en.wikipedia.org/wiki/Trie), a tree-like data structure that has proven useful in storing and processing words/text corpora. Like a trie, the simplex tree stores just one 'character' per simplex (+ a constant number of extra pointers to maintain the ajacency structure), and each node is in the tree is in bijection with the faces of the complex. The storage complexity makes the simplex tree *flexible* in the sense that it scales with the intrinsic complexity of construction needed, without making too many assumptions on the type of construction to represent. 
+
+Here's a picture (taken from the paper) of a simplicial 3-complex (left) and its corresponding Simplex Tree (right):
+
+The primary benefit of the simplex tree is scalability and generality; while other structures may more be better suited to specific families of complexes (e.g. the tidy set for flag complexes), the simplex tree lies in between structures built for extremely specialized constructions and the naive approach of simply storing every face redundantly in a list.  
+
+The `simplextree` package was created to allow R users to (myself included) to play around with simplicial complexes, to 
+```{r}
+library(simplextree)
+st <- simplex_tree(list(1:3, 2:5))
+
+st %>% 
+  preorder() %>% 
+  traverse(function(sigma){ print(sigma) })
+
+lapply(st %>% preorder(), identity)
+
+traverse(preorder(st), function(sigma){ 
+  print(sigma) 
+})
+p <- simplextree:::parameterize_R(st$as_XPtr(), 3:4, "cofaces", NULL)
+w <- simplextree:::traverse_R(p, function(sigma){ print(sigma) })
+```
+
+## Example 1. Calculating cofaces of a given simplex
+For any simplex $\sigma \in \mathcal{K}$, the set cofaces of $\sigma$ are the simplices $\tau$ satisfying 
+$$ \text{cofaces}(\sigma) = \{ \, \tau \in \mathcal{K}, \, \sigma \subseteq \tau \, \}$$
+That is, the set of simplices in $K$ to which $\sigma$ is a face of, including (in this definition) $\sigma$ itself. How would one go about computing the cofaces of a simplex naively?  
+```{r}
+e <- new.env(parent = emptyenv())
+sigma <- c(3, 4)
+traverse(preorder(st), function(tau){ 
+  if (all(sigma %in% tau)){
+    e$cofaces <- append(e$cofaces, list(tau))
+  }
+})
+```
+
+
+```{r}
+e <- new.env(parent = emptyenv())
+e$max_depth <- 0L
+traverse(preorder(st), function(sigma){ 
+  
+  e$max_depth <- max(c(e$max_depth, length(sigma)))
+})
+
+
+```
+
+
+## Example 2. Computing the Rips complex 
+
+
+```{r}
+
+library(simplextree)
+
+
+
+simplices <- list(list(1,2), list(3,4,1:2,2:3), list(3:4,c(1,4)), list(c(1,3)), list(1:3), list(c(1,3,4)))
+layout(matrix(1:6, nrow=2, byrow=TRUE))
+st <- simplex_tree()
+for (sigma in simplices){
+  st %>% 
+    insert(sigma) %>% 
+    plot(text_opt=list(labels=letters[st$vertices]))
+}
+
+st %>% insert(as.list(1:5)) %>% plot()
+st %>% insert(combn(1:5, 2, simplify = FALSE)) %>%  plot() 
+st %>% insert(1:3) %>% plot()
+  
+
+
+e <- new.env(parent = emptyenv())
+e$max_depth <- 0L
+combn(4:6, 2, function(tau){ max(tau) })
+traverse(preorder(st), function(sigma){ 
+  
+  e$max_depth <- max(c(e$max_depth, length(sigma)))
+})
+```
+
+## Example 3. Computing the Euler characteristic curve on a sliding window
+
+```{r}
+sapply(maximal(st), function(sigma){ 
+  combn(sigma, length(sigma), FUN = function(cc){ })
+})
+```
+
+## References 
+[^1]: Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

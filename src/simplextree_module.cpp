@@ -4,19 +4,62 @@ using namespace Rcpp;
 
 #include "simplextree.h"
 
+using simplex_t = SimplexTree::simplex_t; 
+
 SEXP as_XPtr(SimplexTree* st){
   Rcpp::XPtr< SimplexTree > p(st, false);
   return(p);
 }
 
+// Generic function to handle various vector types
+template < bool check_rng = false, typename Lambda >
+void vector_handler(SEXP sigma, Lambda&& f){
+  const unsigned int s_type = TYPEOF(sigma);
+  const auto check_valid = [](SEXP v) -> bool { 
+    IntegerVector iv = v;
+    return std::any_of(begin(iv), end(iv), [](int el) -> bool { 
+      return(el < 0 || el > std::numeric_limits< idx_t >::max()); 
+    });
+  };
+  if (!Rf_isNull(Rf_getAttrib(sigma, R_DimSymbol))){
+    IntegerMatrix m = as< IntegerMatrix >(sigma);
+    const size_t n = m.nrow();
+    for (size_t i = 0; i < n; ++i){
+      IntegerVector cr = m(i,_);
+      if constexpr (check_rng) {
+        if (check_valid(sigma)){ stop("Only unsigned integer simplices are supported."); }
+      }
+      f(as< simplex_t >(cr));
+    }
+  } else if (s_type == INTSXP || s_type == REALSXP){
+    if constexpr (check_rng) {
+      if (check_valid(sigma)){ stop("Only unsigned integer simplices are supported."); }
+    }
+    f(as< simplex_t >(sigma));
+  } else if (s_type == LISTSXP || s_type == VECSXP){
+    List simplices = List(sigma);
+    const size_t n = simplices.size(); 
+    for (size_t i = 0; i < n; ++i){
+      if constexpr (check_rng) {
+        if (check_valid(simplices.at(i))){ stop("Only unsigned integer simplices are supported."); }
+      }
+      f(as< simplex_t >(simplices[i]));
+    }
+  } else { stop("Unknown type passed, must be list type or vector type."); }
+}
 
-// void faces(SimplexTree* st, vector< idx_t > sigma){
-//   st->traverse_faces_s(st->find_node(sigma), [](SimplexTree::simplex_t tau){
-//     IntegerVector tau_iv = wrap(tau);
-//     Rcout << tau_iv << std::endl; 
-//   });
-// }
-
+// R-facing Inserter 
+void insert(SimplexTree* st, SEXP x, const bool check_overflow=false){
+  if (check_overflow){
+    vector_handler< true >(x, [st](simplex_t&& sigma){
+      st->insert_simplex(sigma);
+    });
+  } else {
+    vector_handler< false >(x, [st](simplex_t&& sigma){
+      st->insert_simplex(sigma);
+    });
+  }
+}
 // Creates a filtration from a neighborhood graph
 void rips(SimplexTree* st, vector< double > edge_weights, const size_t k){
   st->rips(edge_weights, k);
@@ -53,15 +96,6 @@ void print_filtration(SimplexTree* st){
 //   return f(st->as_XPtr(), type, eps_or_idx, modify);
 // }
 
-void insert_matrix(SimplexTree* st, NumericMatrix x){
-  Rcout << "inserting matrix" << std::endl; 
-  const size_t n = x.nrow();
-  for (size_t i = 0; i < n; ++i){
-    NumericVector cr = x(i,_);
-    st->insert_simplex(as< vector< idx_t > >(cr));
-  }
-}
-  
 // Copies the contents of st1 to st2
 void copy_trees(SEXP st1, SEXP st2){
   Rcpp::XPtr<SimplexTree> st1_ptr(st1), st2_ptr(st2);
@@ -96,19 +130,19 @@ void copy_trees(SEXP st1, SEXP st2){
 // 
 // // Vector-traversal overload 1
 // SEXP straverse_1(SimplexTree* st, Function f, std::string type) {
-//   Environment base("package:base"); 
+//   Environment base("package:base");
 //   Function s2arr = base["simplify2array"];
 //   return s2arr(st->traverse_int(R_NilValue, f, type, R_NilValue, true));
 // }
 // // Vector-traversal overload 2
 // SEXP straverse_2(SimplexTree* st, SEXP simp, Function f, std::string type){
-//   Environment base("package:base"); 
+//   Environment base("package:base");
 //   Function s2arr = base["simplify2array"];
 //   return s2arr(st->traverse_int(simp, f, type, R_NilValue, true));
 // }
 // // Vector-traversal overload 3
 // SEXP straverse_3(SimplexTree* st, SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args) {
-//   Environment base("package:base"); 
+//   Environment base("package:base");
 //   Function s2arr = base["simplify2array"];
 //   return s2arr(st->traverse_int(simp, f, type, args, true));
 // }
@@ -139,116 +173,336 @@ NumericVector profile(SEXP st){
   return res;
 }
 
-// template <typename Lambda>
-// inline void SimplexTree::trav_switch(node_ptr sigma, Lambda f, std::string type, List args) const{
-//   if (type == "dfs") { traverse_dfs(sigma, f); }
-//   else if (type == "bfs") { traverse_bfs(sigma, f); }
-//   else if (type == "cofaces" || type == "star") { traverse_cofaces(sigma, f); } 
-//   else if (type == "link"){ traverse_link(sigma, f); } 
-//   else if (type == "skeleton" || type == "maximal-skeleton"){
-//     if (args.size() == 0){ stop("Expecting dimension 'k' to be passed."); }
-//     vector< std::string > args_str = as< vector< std::string > >(args.names());
-//     bool contains_k = std::any_of(args_str.begin(), args_str.end(), [](const std::string arg){
-//       return arg == "k";
-//     });
-//     if (!contains_k){ stop("Expecting dimension 'k' to be passed."); }
-//     size_t k = args["k"];
-//     if (type == "skeleton"){ traverse_skeleton(sigma, f, k); }
-//     if (type == "maximal-skeleton"){ traverse_max_skeleton(sigma, f, k); }
-//   } else if(type == "facets"){
-//     traverse_facets(sigma, f);
-//   } else { stop("Iteration 'type' is invalid. Please use one of: dfs, bfs, cofaces, star, link, skeleton, or maximal-skeleton"); }
+
+bool contains_arg(vector< std::string > v, std::string arg_name){
+  return(std::any_of(v.begin(), v.end(), [&arg_name](const std::string arg){ 
+      return arg == arg_name;
+  }));
+};
+
+// From: https://stackoverflow.com/questions/56465550/how-to-concatenate-lists-in-rcpp
+List cLists(List x, List y) {
+  int nsize = x.size(); 
+  int msize = y.size(); 
+  List out(nsize + msize);
+
+  CharacterVector xnames = x.names();
+  CharacterVector ynames = y.names();
+  CharacterVector outnames(nsize + msize);
+  out.attr("names") = outnames;
+  for(int i = 0; i < nsize; i++) {
+    out[i] = x[i];
+    outnames[i] = xnames[i];
+  }
+  for(int i = 0; i < msize; i++) {
+    out[nsize+i] = y[i];
+    outnames[nsize+i] = ynames[i];
+  }
+  return(out);
+}
+
+enum TRAVERSAL_TYPE { 
+  PREORDER = 0, LEVEL_ORDER = 1, FACES = 2, COFACES = 3, K_SKELETON = 4, MAX_SKELETON = 5, MAXIMAL = 6, LINK = 7 
+}; 
+
+// [[Rcpp::export]]
+void test_cofaces(SEXP st, simplex_t sigma){
+  XPtr< SimplexTree > st_p(st);
+  node_ptr sigma_np = st_p->find_node(sigma);
+  auto co = cofaces< true >(st_p, sigma_np);
+  for (auto& cn: co){
+    st_p->print_simplex(get< 0 >(cn), get< 1 >(cn));
+  }
+}
+
+// Exports a list with the parameters for a preorder traversal
+// [[Rcpp::export]]
+List parameterize_R(SEXP st, IntegerVector sigma, std::string type, Rcpp::Nullable<List> args){
+  List init_params = List::create(_[".ptr"] = st, _["sigma"] = sigma); 
+  List param_res = args.isNotNull() ? cLists(List(args), init_params) : init_params;
+  if (type == "preorder" || type == "dfs") { param_res["traversal_type"] = int(PREORDER); }
+  else if (type == "level_order" || type == "bfs") { param_res["traversal_type"] = int(LEVEL_ORDER); }
+  else if (type == "cofaces" || type == "star") { param_res["traversal_type"] = int(COFACES); }
+  else if (type == "link"){ param_res["traversal_type"] = int(LINK); }
+  else if (type == "k_skeleton" || type == "skeleton"){ param_res["traversal_type"] = int(K_SKELETON); }
+  else if (type == "k_simplices" || type == "maximal-skeleton"){ param_res["traversal_type"] = int(MAX_SKELETON); }
+  else if (type == "maximal"){ param_res["traversal_type"] = int(MAXIMAL); }
+  else if(type == "faces"){ param_res["traversal_type"] = int(FACES); }
+  else { stop("Iteration 'type' is invalid. Please use one of: preorder, level_order, faces, cofaces, star, link, skeleton, or maximal-skeleton"); }
+  param_res.attr("class") = "st_traversal";
+  return(param_res);
+}
+
+using param_pack = typename std::tuple< SimplexTree*, node_ptr, TRAVERSAL_TYPE >;
+
+template < class Lambda > 
+void traverse_switch(param_pack&& pp, List args, Lambda&& f){
+  auto args_str = as< vector< std::string > >(args.names());
+  SimplexTree* st = get< 0 >(pp);
+  node_ptr init = get< 1 >(pp);
+  TRAVERSAL_TYPE tt = get< 2 >(pp);
+  switch(tt){
+    case PREORDER: {
+      auto tr = preorder< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case LEVEL_ORDER: {
+      auto tr = level_order< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case FACES: {
+      auto tr = faces< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case COFACES: {
+      auto tr = cofaces< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case K_SKELETON: {
+      if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
+      idx_t k = args["k"];
+      auto tr = k_skeleton< true >(st, init, k);
+      traverse(tr, f);
+      break; 
+    }
+    case MAX_SKELETON: {
+      if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
+      idx_t k = args["k"];
+      auto tr = max_skeleton< true >(st, init, k);
+      traverse(tr, f);
+      break; 
+    }
+    case MAXIMAL: {
+      auto tr = maximal< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case LINK: {
+      auto tr = link< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+  }
+}
+
+// To validate the traversal parameters
+param_pack validate_params(List args){
+  // Extract parameters 
+  auto args_str = as< vector< std::string > >(args.names());
+  
+  // Extract tree
+  if (!contains_arg(args_str, ".ptr")){ stop("Simplex tree pointer missing."); }
+  SEXP xptr = args[".ptr"]; 
+  if (TYPEOF(xptr) != EXTPTRSXP || R_ExternalPtrAddr(xptr) == NULL){
+    stop("Invalid pointer to simplex tree.");
+  }
+  XPtr< SimplexTree > st(xptr); // Unwrap XPtr
+  
+  // Extract initial simplex
+  node_ptr init = nullptr; 
+  if (!contains_arg(args_str, "sigma")){ init = st->root.get(); }
+  else {
+    IntegerVector sigma = args["sigma"];
+    init = st->find_node(as< simplex_t >(sigma)); 
+    if (init == nullptr){ init = st->root.get(); }
+  }
+  if (init == nullptr){ stop("Invalid starting simplex"); }
+  
+  // Extract traversal type 
+  int tt = args["traversal_type"];
+  if (tt < 0 || tt > 7){ stop("Unknown traversal type."); }
+  
+  return(std::make_tuple(static_cast< SimplexTree* >(st), init, static_cast< TRAVERSAL_TYPE >(tt)));
+}
+
+// [[Rcpp::export]]
+void traverse_R(List args, Function f){
+  const auto run_Rf = [&f](node_ptr cn, idx_t depth, simplex_t tau){ f(tau); return true; };
+  traverse_switch(validate_params(args), args, run_Rf);
+}
+
+// [[Rcpp::export]]
+List ltraverse_R(List args, Function f){
+  List res = List(); 
+  auto run_Rf = [&f, &res](node_ptr cn, idx_t d, simplex_t tau){
+    res.push_back(f(wrap(tau)));
+    return(true);
+  };
+  traverse_switch(validate_params(args), args, run_Rf);
+  return(res);
+}
+
+// [[Rcpp::export]]
+SEXP straverse_R(List args, Function f) {
+  Environment base("package:base");
+  Function s2arr = base["simplify2array"];
+  return s2arr(ltraverse_R(args, f));
+}
+
+
+// inline void SimplexTree::load(std::string filename){
+//   Function readRDS = Function("readRDS");
+//   List st = readRDS(_["file"] = filename);
+//   const size_t n = st.size();
+//   for (size_t i = 0; i < n; ++i){
+//     IntegerVector si = st.at(i);
+//     vector< idx_t > sigma(si.begin(), si.end());
+//     insert_simplex(sigma);
+//   }
 // }
 
-// Generic way to apply function to various types of simplices. 
-// This acts the generic R-facing version.
-// inline List SimplexTree::traverse_int(SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args, bool save_res) const{
-//   node_ptr sigma = bool(Rf_isNull(simp)) ? root : find_node( as< vector<idx_t> >(simp) );
-//   if (sigma == nullptr){ return List::create(); }
-//   
-//   // Get the arguments
-//   List actual_args = args.isNotNull() ? List(args) : List();
-//   // vector< std::string > args_str;as< vector< std::string > >(actual_args.names());
-//   
-//   // Store results in a list
-//   List res = List(); 
-//   
-//   // Default eval function: retrieve the full simplex, and call R function with that simplex
-//   auto default_f = [this, &f, &res](const node_ptr cn, const size_t d = 0){
-//     vector< idx_t > simplex = full_simplex(cn);
-//     res.push_back(f(wrap(simplex)));
-//   };
-//   
-//   // Do the traversal, possibly saving the results
-//   trav_switch(sigma, default_f, type, actual_args);
-//   return res; 
+// inline void SimplexTree::reindex(SEXP target_ids){
+//   const unsigned int s_type = TYPEOF(target_ids);
+//   if (s_type == INTSXP || s_type == REALSXP){
+//     vector< idx_t > t_ids = as< vector< idx_t > >(target_ids);
+//     reindex(t_ids);
+//   } else if (s_type == LISTSXP || s_type == VECSXP){
+//     List t_ids_lst = as< List >(target_ids); 
+//     CharacterVector nm = t_ids_lst.names();
+//     if (Rf_isNull(nm) || Rf_length(nm) == 0){ stop("target ids must be named if given as a list."); }
+//     
+//     // Do the mapping, then send to regular reindexing function
+//     const vector< idx_t > base_vids = get_vertices();
+//     vector< idx_t > new_vids = vector< idx_t >(begin(base_vids), end(base_vids));
+//     for (size_t i = 0; i < nm.size(); ++i){
+//       idx_t src_id = std::stoi(as< std::string >(nm.at(i)));
+//       idx_t tgt_id = as< idx_t >(t_ids_lst.at(i));
+//       const size_t idx = std::distance(begin(base_vids), std::lower_bound(begin(base_vids), end(base_vids), src_id));
+//       new_vids.at(idx) = tgt_id;
+//     }
+//     reindex(new_vids);
+//   }
 // }
+// 
+inline void SimplexTree::reindex(vector< idx_t > target_ids){
+  if (n_simplexes.at(0) != target_ids.size()){ stop("target id vector must match the size of the number of 0-simplices."); }
+  vector< vector< idx_t > > minimal = serialize();
+  vector< idx_t > vids = get_vertices();
+
+  // Check the target ids are unique
+  vector< idx_t > v_check(begin(target_ids), end(target_ids));
+  std::sort(begin(v_check), end(v_check));
+  auto it = std::unique(begin(v_check), end(v_check));
+  if (std::distance(begin(v_check), it) != vids.size()){
+    stop("target ids must all unique.");
+  }
+
+  clear(); // clear the tree now that it's been serialized
+  for (simplex_t sigma: minimal){
+    const size_t n = sigma.size();
+    for (size_t i = 0; i < n; ++i){
+      const size_t idx = std::distance(begin(vids), std::lower_bound(begin(vids), end(vids), sigma.at(i)));
+      sigma.at(i) = target_ids.at(idx);
+    }
+    insert_simplex(sigma);
+  }
+}
+
+LogicalVector find_R(SimplexTree* st, SEXP simplices){
+  LogicalVector v; 
+  vector_handler< false >(simplices, [st, &v](simplex_t&& sigma){
+    v.push_back(st->find_simplex(sigma));
+  });
+  return(v);
+}
+
+
+IntegerMatrix get_k_simplices(SimplexTree* st, const size_t k) {
+  if (st->n_simplexes.size() <= k){ return IntegerMatrix(0, k+1); }
+  IntegerMatrix res = IntegerMatrix(st->n_simplexes.at(k), k+1);
+  size_t i = 0; 
+  auto tr = max_skeleton< true >(st, st->root.get(), k);
+  traverse(tr, [&res, &i](node_ptr cn, idx_t depth, simplex_t sigma){
+    res(i++, _) = IntegerVector(sigma.begin(), sigma.end());
+    return true; 
+  });
+  return(res);
+}
+
+// Retrieve the vertices by their label
+vector< idx_t > get_vertices(SimplexTree* st) {
+  if (st->n_simplexes.size() == 0){ return vector< idx_t >(); } //IntegerVector(); }
+  vector< idx_t > v;
+  v.reserve(st->n_simplexes.at(0));
+  for (auto& cn: st->root->children){ 
+    v.push_back(cn->label); 
+  }
+  //return IntegerVector(v.begin(), v.end());
+  return(v);
+}
+IntegerMatrix get_edges(SimplexTree* st) { return get_k_simplices(st, 1); }
+IntegerMatrix get_triangles(SimplexTree* st) { return get_k_simplices(st, 2); }
+IntegerMatrix get_quads(SimplexTree* st) { return get_k_simplices(st, 3); }
+
 
 // Exports the 1-skeleton as an adjacency matrix 
-// inline IntegerMatrix SimplexTree::as_adjacency_matrix() const{
-//   const size_t n = root->children.size();
-//   IntegerMatrix res = IntegerMatrix(n, n);
-//   
-//   // Fill in the adjacency matrix
-//   for (const node_ptr& vi: root->children){
-//     const size_t i = vertex_index(vi->label);
-//     for (const node_ptr& vj: vi->children){
-//       const size_t j = vertex_index(vj->label);
-//       res.at(i, j) = res.at(j, i) = 1; 
-//     }
-//   }
-//   return(res);
-// }
+IntegerMatrix as_adjacency_matrix(SimplexTree* st) {
+  const size_t n = st->root->children.size();
+  IntegerMatrix res = IntegerMatrix(n, n);
 
-// // Exports the 1-skeleton as an adjacency list 
-// inline List SimplexTree::as_adjacency_list() const{
-//   const size_t n = root->children.size();
-//   std::unordered_map< std::string, vector< idx_t > > res(n);
-//   for (const node_ptr& vi: root->children){
-//     for (const node_ptr& vj: vi->children){
-//       res[std::to_string(vi->label)].push_back(vj->label);
-//       res[std::to_string(vj->label)].push_back(vi->label);
-//     }
-//   }
-//   return(wrap(res));
-// }
-// 
-// // Exports the 1-skeleton as an edgelist 
-// inline IntegerMatrix as_edge_list(SimplexTree* st) const{
-//   return get_k_simplices(1);
-// }
-// 
-// // Exports the k-skeleton as a list
-// inline List as_list(SimplexTree* st) const{
-//   List res = List();
-//   vector<idx_t> all = vector<idx_t>(); 
-//   idx_t d = 1;
-//   std::for_each(begin_bfs(root), end_bfs(), [this, &d,&res, &all](const node_ptr sigma){
-//     if ( sigma != nullptr && sigma != root){
-//       vector<idx_t> si = full_simplex(sigma);
-//       if (si.size() > d){ 
-//         const size_t n = all.size() / d;
-//         IntegerMatrix tmp = IntegerMatrix(n, d);
-//         for (size_t i = 0; i < n; ++i){
-//           IntegerVector row = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-//           tmp(i, _) = row;
-//         }
-//         res.push_back(tmp);
-//         all.clear(); 
-//         d = si.size(); 
-//       }
-//       all.insert(all.end(), si.begin(), si.end());
-//     }
-//   });
-//   const size_t n = all.size() / d;
-//   IntegerMatrix tmp = IntegerMatrix(n, d);
-//   for (size_t i = 0; i < n; ++i){
-//     IntegerVector row = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-//     tmp(i, _) = row;
-//   }
-//   res.push_back(tmp);
-//   return res;
-// }
+  // Fill in the adjacency matrix
+  for (auto& vi: st->root->children){
+    const size_t i = st->vertex_index(vi->label);
+    for (auto& vj: vi->children){
+      const size_t j = st->vertex_index(vj->label);
+      res.at(i, j) = res.at(j, i) = 1;
+    }
+  }
+  return(res);
+}
+
+// Exports the 1-skeleton as an adjacency list
+List as_adjacency_list(SimplexTree* st) {
+  const size_t n = st->root->children.size();
+  std::unordered_map< std::string, vector< idx_t > > res(n);
+  for (auto& vi: st->root->children){
+    for (auto& vj: vi->children){
+      res[std::to_string(vi->label)].push_back(vj->label);
+      res[std::to_string(vj->label)].push_back(vi->label);
+    }
+  }
+  return(wrap(res));
+}
+
+// Exports the 1-skeleton as an edgelist
+IntegerMatrix as_edge_list(SimplexTree* st) {
+  return get_k_simplices(st, 1);
+}
+
+// Exports the k-skeleton as a list
+List as_list(SimplexTree* st){
+  List res = List();
+  vector< idx_t > all = vector< idx_t >();
+  idx_t d = 1;
+  auto bfs = level_order< true >(st);
+  traverse(bfs, [&res, &d, &all](node_ptr cn, idx_t depth, simplex_t sigma){
+    if (depth > d){
+      const size_t n = all.size() / d;
+      IntegerMatrix tmp = IntegerMatrix(n, d);
+      for (size_t i = 0; i < n; ++i){
+        IntegerVector row = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
+        tmp(i, _) = row;
+      }
+      res.push_back(tmp);
+      all.clear();
+      d = sigma.size();
+    }
+    all.insert(all.end(), sigma.begin(), sigma.end());
+    return true; 
+  });
+  const size_t n = all.size() / d;
+  IntegerMatrix tmp = IntegerMatrix(n, d);
+  for (size_t i = 0; i < n; ++i){
+    IntegerVector row = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
+    tmp(i, _) = row;
+  }
+  res.push_back(tmp);
+  return res;
+}
 
 // Exposed Rcpp Module 
 RCPP_MODULE(simplex_tree_module) {
@@ -257,17 +511,13 @@ RCPP_MODULE(simplex_tree_module) {
     .constructor()
     .method( "as_XPtr", &as_XPtr)
     .field_readonly("n_simplices", &SimplexTree::n_simplexes)
-    // .property("dimension", &SimplexTree::dimension)
-    // .property("rips_index", &SimplexTree::rips_index)
-    // .property("rips_epsilon", &SimplexTree::rips_epsilon)
+    .property("dimension", &SimplexTree::dimension)
     .property("id_policy", &SimplexTree::get_id_policy, &SimplexTree::set_id_policy)
-    .property("vertices", &SimplexTree::get_vertices)
-    // .property("edges", &SimplexTree::get_edges)
-    // .property("triangles", &SimplexTree::get_triangles)
-    // .property("quads", &SimplexTree::get_quads)
+    .property("vertices", &get_vertices, "Returns the vertex labels as an integer vector.")
+    .property("edges", &get_edges, "Returns the edges as an integer matrix.")
+    .property("triangles", &get_triangles, "Returns the 2-simplices as an integer matrix.")
+    .property("quads", &get_quads, "Returns the 3-simplices as an integer matrix.")
     .property("connected_components", &SimplexTree::connected_components)
-    // .property( "rips_simplices", &SimplexTree::rips_simplices)
-    // .property( "rips_weights", &SimplexTree::rips_weights)
     // .method("print_cousins", &SimplexTree::get_cousins)
     .const_method( "print_tree", &SimplexTree::print_tree )
     .method( "clear", &SimplexTree::clear)
@@ -275,40 +525,40 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "degree", &degree_2)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
-    .method( "insert",  (void (SimplexTree::*)(SEXP))(&SimplexTree::insert))
-    .method( "insert",  &insert_matrix)
-    .method( "remove",  (void (SimplexTree::*)(SEXP))(&SimplexTree::remove))
-    .method( "find",  (LogicalVector (SimplexTree::*)(SEXP))(&SimplexTree::find))
+    // .method( "insert",  (void (SimplexTree::*)(SEXP))(&SimplexTree::insert_simplex))
+    .method( "insert",  &insert)
+    // .method( "remove",  (void (SimplexTree::*)(SEXP))(&SimplexTree::remove))
+    .method( "find", &find_R)
+    // .method( "find",  (LogicalVector (SimplexTree::*)(SEXP))(&SimplexTree::find))
     .method( "expand", &SimplexTree::expansion )
     .method( "collapse", &SimplexTree::collapseR)
     .method( "collapse", &SimplexTree::vertex_collapseR)
     .method( "contract", &SimplexTree::contract)
-    .method( "reindex", (void (SimplexTree::*)(SEXP))(&SimplexTree::reindex))
+    // .method( "preorder", &preorder_R)
+    // .method( "parameterize", &parameterize_R)
+    // .method( "reindex", (void (SimplexTree::*)(SEXP))(&SimplexTree::reindex))
     // .const_method( "is_face", &SimplexTree::is_face)
     // .const_method( "is_tree", &SimplexTree::is_tree)
-    // .method( "traverse", &traverse_1)
-    // .method( "traverse", &traverse_2)
-    // .method( "traverse", &traverse_3)
-    // .method( "ltraverse", &ltraverse_1)
-    // .method( "ltraverse", &ltraverse_2)
-    // .method( "ltraverse", &ltraverse_3)
-    // .method( "straverse", &straverse_1)
-    // .method( "straverse", &straverse_2)
-    // .method( "straverse", &straverse_3)
-    // .const_method( "as_adjacency_matrix", &SimplexTree::as_adjacency_matrix)
-    // .const_method( "as_adjacency_list", &SimplexTree::as_adjacency_list)
-    // .const_method( "as_edge_list", &SimplexTree::as_edge_list)
-    // .const_method( "as_list", &SimplexTree::as_list)
+    .method( "as_adjacency_matrix", &as_adjacency_matrix)
+    .method( "as_adjacency_list", &as_adjacency_list)
+    .method( "as_edge_list", &as_edge_list)
+    .method( "as_list", &as_list)
     // .const_method( "serialize", &SimplexTree::serialize)
     // .method( "deserialize", &SimplexTree::deserialize)
     // .const_method( "save", &SimplexTree::save)
     // .method( "load", &SimplexTree::load)
     // .method( "faces", &faces)
-    // .method( "rips", &rips)
+    
     // .method( "threshold", &threshold)
     // .method( "threshold_index", &SimplexTree::threshold_index)
     // .method( "threshold_function", &SimplexTree::threshold_function)
     // .method( "print_filtration", &print_filtration )
+    
+    // .method( "rips", &rips)
+    // .property("rips_index", &SimplexTree::rips_index)
+    // .property("rips_epsilon", &SimplexTree::rips_epsilon)
+    // .property( "rips_simplices", &SimplexTree::rips_simplices)
+    // .property( "rips_weights", &SimplexTree::rips_weights)
     ;
 }
 

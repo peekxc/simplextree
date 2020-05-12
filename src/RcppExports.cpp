@@ -17,12 +17,77 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// test_cofaces
+void test_cofaces(SEXP st, simplex_t sigma);
+RcppExport SEXP _simplextree_test_cofaces(SEXP stSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type st(stSEXP);
+    Rcpp::traits::input_parameter< simplex_t >::type sigma(sigmaSEXP);
+    test_cofaces(st, sigma);
+    return R_NilValue;
+END_RCPP
+}
+// parameterize_R
+List parameterize_R(SEXP st, IntegerVector sigma, std::string type, Rcpp::Nullable<List> args);
+RcppExport SEXP _simplextree_parameterize_R(SEXP stSEXP, SEXP sigmaSEXP, SEXP typeSEXP, SEXP argsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type st(stSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<List> >::type args(argsSEXP);
+    rcpp_result_gen = Rcpp::wrap(parameterize_R(st, sigma, type, args));
+    return rcpp_result_gen;
+END_RCPP
+}
+// traverse_R
+void traverse_R(List args, Function f);
+RcppExport SEXP _simplextree_traverse_R(SEXP argsSEXP, SEXP fSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type args(argsSEXP);
+    Rcpp::traits::input_parameter< Function >::type f(fSEXP);
+    traverse_R(args, f);
+    return R_NilValue;
+END_RCPP
+}
+// ltraverse_R
+List ltraverse_R(List args, Function f);
+RcppExport SEXP _simplextree_ltraverse_R(SEXP argsSEXP, SEXP fSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type args(argsSEXP);
+    Rcpp::traits::input_parameter< Function >::type f(fSEXP);
+    rcpp_result_gen = Rcpp::wrap(ltraverse_R(args, f));
+    return rcpp_result_gen;
+END_RCPP
+}
+// straverse_R
+SEXP straverse_R(List args, Function f);
+RcppExport SEXP _simplextree_straverse_R(SEXP argsSEXP, SEXP fSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type args(argsSEXP);
+    Rcpp::traits::input_parameter< Function >::type f(fSEXP);
+    rcpp_result_gen = Rcpp::wrap(straverse_R(args, f));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 RcppExport SEXP _rcpp_module_boot_union_find_module();
 RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},
+    {"_simplextree_test_cofaces", (DL_FUNC) &_simplextree_test_cofaces, 2},
+    {"_simplextree_parameterize_R", (DL_FUNC) &_simplextree_parameterize_R, 4},
+    {"_simplextree_traverse_R", (DL_FUNC) &_simplextree_traverse_R, 2},
+    {"_simplextree_ltraverse_R", (DL_FUNC) &_simplextree_ltraverse_R, 2},
+    {"_simplextree_straverse_R", (DL_FUNC) &_simplextree_straverse_R, 2},
     {"_rcpp_module_boot_union_find_module", (DL_FUNC) &_rcpp_module_boot_union_find_module, 0},
     {"_rcpp_module_boot_simplex_tree_module", (DL_FUNC) &_rcpp_module_boot_simplex_tree_module, 0},
     {NULL, NULL, 0}

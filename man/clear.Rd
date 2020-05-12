@@ -3,6 +3,9 @@
 \name{clear}
 \alias{clear}
 \title{Clears the simplex tree}
+\usage{
+clear(st)
+}
 \description{
 Removes all simplices from the simplex tree, except the root node.
 }

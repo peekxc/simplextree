@@ -15,7 +15,6 @@ using simplex_t = SimplexTree::simplex_t;
 using node_ptr = SimplexTree::node_ptr;
 using node_uptr = SimplexTree::node_uptr;
 
-
 // Detection idom applied to member function operator*
 template <typename T>
 struct has_dereference {
@@ -139,8 +138,6 @@ struct TraversalInterface {
 			
 			static constexpr d_node sentinel() { return std::make_tuple(nullptr, 0); };
 
-			// inline static t_node sentinel_node = { nullptr, 0, simplex_t() };
-			// const iterator::sentinel_node = ; 
 			using d_iter = typename d_type::iterator;
 			std::reference_wrapper< d_type > info;
 			d_node current; 
@@ -158,23 +155,6 @@ struct TraversalInterface {
 			constexpr d_type& base() const {
 				return(this->info.get());
 			};
-			// constexpr simplex_t& labels() const {
-			// 	return(this->info.get());
-			// };
-			// // Copy constructor
-			// iterator(const iterator& other) : info(other.info)  { 
-      //   current = other.current; 
-			// 	labels = other.labels; 
-			// 	output = other.output; 
-			// };
-			// // copy assignment
-			// iterator& operator=(const iterator& other) {
-			// 	info = other.info;
-			// 	current = other.current; 
-			// 	labels = other.labels; 
-			// 	output = other.output; 
-			// 	return(*this);
-			// };
 			constexpr t_node& current_t_node(){
 				if constexpr (ts){ 
 					output = std::tuple_cat(current, std::make_tuple(labels)); 
@@ -208,7 +188,6 @@ struct TraversalInterface {
 
 			// Updates the current simplex labels, if tracking
 			constexpr void update_simplex() noexcept {
-				//std::cout << "label: " << get< 0 >(current)->label << ", depth: " << get< 1 >(current) << "," << labels.size() <<  std::flush << std::endl;
 				if constexpr(has_update_simplex< d_type >::value){
 					return static_cast< d_type* >(this)->update_simplex();
 				} else {
@@ -240,8 +219,6 @@ struct TraversalInterface {
 		};
 };
 // https://eli.thegreenplace.net/2011/05/17/the-curiously-recurring-template-pattern-in-c
-
-using node_ptr = SimplexTree::node_ptr;
 
 
 // Preorder traversal iterator
@@ -351,7 +328,14 @@ struct level_order : TraversalInterface< ts, level_order > {
 			} while (!base().p1(current_t_node()) && get< NP >(current) != nullptr);
 			return(*this);
 		}
-	};
+		
+		// Doesn't work with regular update method, so override
+  	constexpr void update_simplex(){
+  		if constexpr (ts){
+  			labels = base().st->full_simplex(get< NP >(current), get< DEPTH >(current));
+  		}
+  	};
+	};// iterator 
 
 	// Only start at a non-root node, else return the end
 	auto begin(){
@@ -423,19 +407,13 @@ struct coface_roots : TraversalInterface< ts, coface_roots > {
 
 			// If we've passed the tree's max depth, end the traversal
 			if (get< DEPTH >(current) > base().st->tree_max_depth || c_level_key == 0){
-				current = { nullptr, 0 };
+				current = sentinel();
 			} else {
 				// Otherwise iterate through the cousins
 				auto cousins = base().st->level_map.at(c_level_key);
-				if constexpr (ts){
-					if (base().st->is_face(start_coface_s, labels)){ 
-						get< NP >(current) = cousins.at(c_level_idx); // should be guarenteed to exist
-					}
-				} else {
-					node_ptr c_cousin = cousins.at(c_level_idx);
-					if (base().st->is_face(start_coface_s, base().st->full_simplex(c_cousin, get< DEPTH >(current)))){ 
+				node_ptr c_cousin = cousins.at(c_level_idx);
+				if (base().st->is_face(start_coface_s, base().st->full_simplex(c_cousin, get< DEPTH >(current)))){ 
 						get< NP >(current) = c_cousin; // should be guarenteed to exist
-					}
 				}
 				if (cousins.size() >= (c_level_idx + 1)){
 					c_level_key = 0; 
@@ -444,6 +422,7 @@ struct coface_roots : TraversalInterface< ts, coface_roots > {
 					c_level_idx++;
 				}
 			}
+			update_simplex();
 			return *this; 
 		}; // operator++
 
@@ -461,7 +440,7 @@ struct coface_roots : TraversalInterface< ts, coface_roots > {
 
 }; // end coface_roots 
 
-// coface iterator
+// ---- coface iterator ------
 template < bool ts = false > 
 struct cofaces : TraversalInterface< ts, cofaces > {
 	using B = TraversalInterface< ts, cofaces >;
@@ -487,39 +466,47 @@ struct cofaces : TraversalInterface< ts, cofaces > {
 		iterator(cofaces& dd, node_ptr cn) : TraversalInterface< ts, cofaces >::iterator(dd),
 		 roots(coface_roots< ts >(dd.st, cn)), c_root(roots, cn), subtree(preorder< ts >(dd.st, cn)), c_node(subtree.begin()) {
 			 current = std::make_tuple(cn, dd.st->depth(cn));
+		   update_simplex();
 		}
 		
 		// Increment operator is all that is needed by default
 		auto& operator++(){
 			// Need to increment iterator by one and return the result 
 			// Logically what needs to happen is: 
-			// - if the next root is at the end, return end 
-			// - else advance current root, reset subtree and return beginning
-			// else 
+			// - if next node is end of subtree 
+			//   - ... then if next root is end of coface_roots, we're finished return end 
+			//   - else next root is not end of coface_roots, advance root and reset subtree
+			// else while next node is not at end of subtree 
 			// - advance one in subtree, report it back
+			if (get< NP >(*c_root) == base().st->root.get()){ ++c_root; }
 			if (std::next(c_node) == subtree.end()){
 				if (c_root == roots.end()){
 					current = sentinel();
-					return(*this);
 				} else {
 					++c_root;
 					subtree.reset(get< NP >(*c_root));
 					c_node = subtree.begin();
 					current = { get< NP >(*c_node), get< DEPTH >(*c_node) };
-					return(*this);
 				}
 			} else {
 				++c_node;
 				current = { get< NP >(*c_node), get< DEPTH >(*c_node) };
-				return(*this);
 			}
+			update_simplex();
+			return(*this);
 		};
-	};
+		
+		// Doesn't work with regular update method, so override
+  	constexpr void update_simplex(){
+  		if constexpr (ts){
+  			labels = base().st->full_simplex(get< NP >(current), get< DEPTH >(current));
+  		}
+  	};
+	}; // iterator
 	
 	// Only start at a non-root node, else return the end
 	auto begin(){ return iterator(*this, init); };
 	auto end(){ return iterator(*this, nullptr); };
-
 }; // cofaces
 
 // K-skeleton iterator
@@ -618,6 +605,27 @@ struct link : preorder< ts > {
 	link(const SimplexTree* st, node_ptr start) : 
 		preorder< ts >(st, st->root.get(), valid_eval(st, start), always_true){}
 }; // link
+
+
+template < bool ts = false > 
+struct faces : level_order< ts > {
+	using t_node = typename TraversalInterface< ts, level_order >::t_node; 
+
+	// A valid member in a preorder-traversal is just 
+	static constexpr auto valid_eval = [](const SimplexTree* st, node_ptr start) { 
+		simplex_t sigma = st->full_simplex(start);
+		return([sigma](t_node& cn) -> bool { 
+		  return SimplexTree::is_face(get< 2 >(cn), sigma);
+		});
+	};
+	static constexpr auto valid_children = [](const SimplexTree* st, node_ptr start) constexpr { 
+	  idx_t k = st->depth(start);
+		return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
+	};
+	// Constructor is all that is needed
+	faces(const SimplexTree* st, node_ptr start) : 
+		level_order< ts >(st, start, valid_eval(st, start), valid_children(st, start)){}
+};
 
 // Generic traversal function which unpacks the tuple and allows for early termination of the iterable
 template <class Iterable, class Lambda> 

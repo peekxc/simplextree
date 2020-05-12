@@ -5,13 +5,13 @@
 \alias{empty_face}
 \title{empty_face}
 \format{
-An object of class \code{NULL} of length 0.
+An object of class \code{integer} of length 0.
 }
 \usage{
 empty_face
 }
 \description{
-Simple alias to the NULL value, used to indicate the empty face.
+Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree.
 }
 \seealso{
 traverse

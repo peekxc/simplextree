@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/Users/mpiekenbrock/simplextree/inst/build",
+  "command": "/usr/bin/clang++   -I/Users/mpiekenbrock/simplextree/inst/include   -Wall -pedantic -g   -std=gnu++17 -o CMakeFiles/st_test.dir/st_test.cpp.o -c /Users/mpiekenbrock/simplextree/inst/st_test.cpp",
+  "file": "/Users/mpiekenbrock/simplextree/inst/st_test.cpp"
+}
+]

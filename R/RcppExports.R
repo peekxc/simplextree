@@ -5,3 +5,23 @@ profile <- function(st) {
     .Call(`_simplextree_profile`, st)
 }
 
+test_cofaces <- function(st, sigma) {
+    invisible(.Call(`_simplextree_test_cofaces`, st, sigma))
+}
+
+parameterize_R <- function(st, sigma, type, args) {
+    .Call(`_simplextree_parameterize_R`, st, sigma, type, args)
+}
+
+traverse_R <- function(args, f) {
+    invisible(.Call(`_simplextree_traverse_R`, args, f))
+}
+
+ltraverse_R <- function(args, f) {
+    .Call(`_simplextree_ltraverse_R`, args, f)
+}
+
+straverse_R <- function(args, f) {
+    .Call(`_simplextree_straverse_R`, args, f)
+}
+

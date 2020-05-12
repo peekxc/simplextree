@@ -67,16 +67,204 @@
 #' @export
 simplex_tree <- function(simplices = NULL){
   st <- new(SimplexTree)
-  if (!missing(simplices)){ st$insert(simplices) }
+  # assign('insert', function(x, check=TRUE) { return(st$insert(x, check)) }, envir = st)
+  if (!missing(simplices)){ st$insert(simplices, TRUE) }
   return(st)
 }
 
 # ---- empty_face ----
 #' empty_face 
-#' @description Simple alias to the NULL value, used to indicate the empty face. 
+#' @description Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree. 
 #' @seealso traverse
 #' @export
-empty_face <- NULL
+empty_face <- integer(0L)
+
+.traversal_types = c("Preorder", "Level order", "Face", "Coface", "K-skeleton", "K-simplices", "Maximal simplex", "Link")
+
+# ---- print.st_traversal ----
+#' print.st_traversal
+#' @export
+print.st_traversal <- function(x){
+  sigma_str <- ifelse(length(x$sigma) == 0 || is.null(x$sigma), "empty face", paste0(x$sigma, collapse = " "))
+  tt <- .traversal_types[x$traversal_type+1L]
+  writeLines(sprintf("%s traversal @ { %s }", tt, sigma_str))
+}
+
+# ---- as.list.st_traversal ----
+#' as.list.st_traversal
+#' @export
+as.list.st_traversal <- function(x){
+  return(ltraverse(x, identity))
+}
+
+
+# ---- traverse ----
+#' @name traverse
+#' @aliases ltraverse straverse
+#' @title traverse
+#' @param sigma The simplex to initialize the traversal. See details.  
+#' @param f An arbitrary function which accepts as input a simplex. See details. 
+#' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".
+#' @description Traverses subsets of a simplicial complex.
+#' @details \code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
+#' The simplices within each subset are determined by two aspects: the initial simplex \code{sigma} 
+#' and the traversal \code{type}. Given an initial simplex \code{sigma}, \code{traverse} generates 
+#' an ordered set of simplices based on the traversal \code{type}, which are iteratively passed to 
+#' the supplied function \code{f} as the first argument to \code{f}. \cr
+#' \cr
+#' \code{sigma} can either be omitted, a simplex, or the \code{empty_face} (which is an alias to NULL).
+#' @family traversals 
+#' @return NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
+#' @examples
+#' ## Starter example complex 
+#' st <- simplex_tree()
+#' st$insert(list(1:3, 2:5))
+#' 
+#' ## Print out complex using depth-first traversal. 
+#' ## 'empty_face' implies that the DFS will start at the root. 
+#' st$traverse(empty_face, print, "dfs")
+#' st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
+#' 
+#' ## Print of subtree rooted at vertex 1 using depth-first traversal. 
+#' st$traverse(1L, print, "dfs")
+#' 
+#' ## Print simplices in the star of the edge [4, 5]
+#' st$traverse(c(4, 5), print, "star")
+#' 
+#' ## Traversals can be chained. Here's an example that prints the link of each vertex.
+#' st$traverse(function(simplex){
+#'   if (length(simplex) == 1){
+#'     print(sprintf("Link of %d:", simplex))    
+#'     st$traverse(simplex, print, "link")
+#'   }
+#' }, "bfs")
+#' 
+#' ## To see the cofaces of a given simplex 
+#' st <- simplex_tree()
+#' st$insert(c(1, 2, 3))
+#' st$traverse(1L, print, "cofaces")
+#' 
+#' ## Alternatively, collect results into a list 
+#' three_cofaces <- st$ltraverse(3L, identity, "cofaces")
+#' @export
+traverse <- function(traversal, f, ...){
+  stopifnot("st_traversal" %in% class(traversal))
+  traverse_R(traversal, f)
+}
+
+#' straverse 
+#' @family traversals 
+#' @export
+straverse <- function(traversal, f, ...){
+  stopifnot("st_traversal" %in% class(traversal))
+  return(straverse_R(traversal, f))
+}
+
+#' ltraverse 
+#' @family traversals 
+#' @export
+ltraverse <- function(traversal, f, ...){
+  stopifnot("st_traversal" %in% class(traversal))
+  return(ltraverse_R(traversal, f))
+}
+
+# ---- preorder ----- 
+#' @name preorder 
+#' @title Generates a preorder traversal on the simplex tree. 
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+preorder <- function(st, sigma = NULL){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  if (is.null(sigma)){ sigma <- empty_face }
+  parameterize_R(st$as_XPtr(), sigma, "preorder", NULL)
+}
+
+# ---- level_order ----- 
+#' @name level_order 
+#' @title Generates a level order traversal on the simplex tree. 
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+level_order <- function(st, sigma = NULL){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  if (is.null(sigma)){ sigma <- empty_face }
+  parameterize_R(st$as_XPtr(), sigma, "level_order", NULL)
+}
+
+# ---- faces ----- 
+#' @name faces 
+#' @title Generates a face traversal on the simplex tree. 
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+cofaces <- function(st, sigma){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  parameterize_R(st$as_XPtr(), sigma, "faces", NULL)
+}
+
+# ---- cofaces ----- 
+#' @name cofaces 
+#' @title Generates a coface traversal on the simplex tree. 
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+cofaces <- function(st, sigma){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  parameterize_R(st$as_XPtr(), sigma, "cofaces", NULL)
+}
+
+# ---- k_skeleton ----- 
+#' @name k_skeleton 
+#' @title Generates a k-skeleton traversal on the simplex tree.
+#' @param st the simplex tree to traverse.
+#' @param k the dimension of the skeleton to include.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+k_skeleton <- function(st, k, sigma = NULL){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  if (is.null(sigma)){ sigma <- empty_face }
+  parameterize_R(st$as_XPtr(), sigma, "k_skeleton", list(k=k))
+}
+
+# ---- maximal ----- 
+#' @name maximal 
+#' @title Generates a traversal on the maximal of the simplex tree.
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+maximal <- function(st, sigma = NULL){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  if (is.null(sigma)){ sigma <- empty_face }
+  parameterize_R(st$as_XPtr(), sigma, "maximal", NULL)
+}
+
+# ---- k_simplices ----- 
+#' @name k_simplices 
+#' @title Generates a traversal on the k-simplices of the simplex tree.
+#' @param st the simplex tree to traverse.
+#' @param k the dimension of the skeleton to include.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+k_simplices <- function(st, k, sigma = NULL){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  if (is.null(sigma)){ sigma <- empty_face }
+  parameterize_R(st$as_XPtr(), sigma, "k_simplices", list(k=k))
+}
+
+# ---- link ----- 
+#' @name link 
+#' @title Generates a traversal on the link of a given simplex in the simplex tree.
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @export
+link <- function(st, sigma){
+  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  if (is.null(sigma)){ sigma <- empty_face }
+  parameterize_R(st$as_XPtr(), sigma, "link", NULL)
+}
+
+
 
 # ---- print_tree ----
 #' @name print_tree
@@ -91,7 +279,9 @@ empty_face <- NULL
 #' \emph{subtree height} displays the highest order k-simplex in that subtree. Each 
 #' level in the subtree tree is a set of sibling k-simplices whose order is given  
 #' by the number of dots ('.') proceeding the print level.
-NULL
+print_tree <- function(st){
+  st$print_tree()
+}
 
 # ---- print.Rcpp_SimplexTree ----
 setClass("Rcpp_SimplexTree")
@@ -138,7 +328,10 @@ NULL
 #' print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
 #' st$clear()
 #' print(st) ## < empty simplex tree >
-NULL
+clear <- function(st){
+  st$clear()
+  return(st)
+}
 
 # ---- generate_ids ----
 #' @name generate_ids
@@ -172,54 +365,18 @@ NULL
 #' @description Returns the number of edges (degree) for each given vertex id. 
 NULL
 
-# ---- traverse ----
-#' @name traverse
-#' @aliases ltraverse straverse
-#' @title traverse
-#' @param sigma The simplex to initialize the traversal. See details.  
-#' @param f An arbitrary function which accepts as input a simplex. See details. 
-#' @param type One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".
-#' @description Traverses subsets of a simplicial complex.
-#' @details \code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
-#' The simplices within each subset are determined by two aspects: the initial simplex \code{sigma} 
-#' and the traversal \code{type}. Given an initial simplex \code{sigma}, \code{traverse} generates 
-#' an ordered set of simplices based on the traversal \code{type}, which are iteratively passed to 
-#' the supplied function \code{f} as the first argument to \code{f}. \cr
-#' \cr
-#' \code{sigma} can either be omitted, a simplex, or the \code{empty_face} (which is an alias to NULL).
-#' @return NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
-#' @examples
-#' ## Starter example complex 
-#' st <- simplex_tree()
-#' st$insert(list(1:3, 2:5))
-#' 
-#' ## Print out complex using depth-first traversal. 
-#' ## 'empty_face' implies that the DFS will start at the root. 
-#' st$traverse(empty_face, print, "dfs")
-#' st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
-#' 
-#' ## Print of subtree rooted at vertex 1 using depth-first traversal. 
-#' st$traverse(1L, print, "dfs")
-#' 
-#' ## Print simplices in the star of the edge [4, 5]
-#' st$traverse(c(4, 5), print, "star")
-#' 
-#' ## Traversals can be chained. Here's an example that prints the link of each vertex.
-#' st$traverse(function(simplex){
-#'   if (length(simplex) == 1){
-#'     print(sprintf("Link of %d:", simplex))    
-#'     st$traverse(simplex, print, "link")
-#'   }
-#' }, "bfs")
-#' 
-#' ## To see the cofaces of a given simplex 
-#' st <- simplex_tree()
-#' st$insert(c(1, 2, 3))
-#' st$traverse(1L, print, "cofaces")
-#' 
-#' ## Alternatively, collect results into a list 
-#' three_cofaces <- st$ltraverse(3L, identity, "cofaces")
-NULL
+# ---- expand ----
+#' @name expand
+#' @title k-expansion.
+#' @param ids the vertex ids to check the degree of. 
+#' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
+#' if all combinations of edges are included. This operation implicitly assumes the complex 
+#' is a flag complex. 
+expand <- function(st, k){
+  st$expand(k)
+  return(st)
+}
+
 
 # ---- adjacent ----
 #' @name adjacent
@@ -248,7 +405,11 @@ NULL
 #' st <- simplex_tree()
 #' st$insert(1:3) ## inserts the 2-simplex { 1, 2, 3 }
 #' st$insert(list(4:5, 6)) ## inserts a 1-simplex { 4, 5 } and a 0-simplex { 6 }.
-NULL
+#' @export
+insert <- function(st, simplices, check_valid = TRUE){
+  st$insert(simplices, check_valid)
+  return(st)
+}
 
 # ---- remove ----
 #' @name remove
@@ -593,7 +754,7 @@ NULL
 #'   }, movie.name = "si_animation.gif", interval=0.2)
 #' }
 #' @export
-plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE, ...) {
+plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE, ...) {
   stopifnot(methods::is(x, "Rcpp_SimplexTree"))
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
@@ -611,16 +772,16 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
   ## or length (# simplices) in breadth-first order, not including the empty face. 
   simplex_colors <- NULL # placeholder
   draw_simplex <- rep(TRUE, sum(x$n_simplices))
-  dim_idx <- (unlist(x$ltraverse(length, "bfs"))[-1]-1L)
+  dim_idx <- straverse(level_order(x), length)-1L
   is_char_vec <- all(is.character(color_pal))
   is_in <- function(lst){ 
-    return(function(element) { !is.null(element) && (list(as.integer(element)) %in% lst) })
+    return(function(element) { any(sapply(lst, function(x) (all.equal(x, element) == TRUE))) })
   }
   
   ## If the maximal faces are requested, set non-maximal `draw_simplex` indices to FALSE 
   if (maximal){
-    maximal_faces <- lapply(x$serialize(), as.integer)
-    draw_simplex <- unlist(x$ltraverse(is_in(maximal_faces), "bfs"))[-1]
+    maximal_faces <- as.list(maximal(x))
+    draw_simplex <- straverse(level_order(st), is_in(maximal_faces))
     draw_simplex[dim_idx %in% c(0L, 1L)] <- TRUE ## always draw points and edges
   }
   
@@ -647,8 +808,8 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
     ## Color named simplex w/ color if given, otherwise use default
     si_in <- is_in(simplices)
     si_color <- function(simplex){ ifelse(!is.null(simplex) && si_in(simplex), color_pal[[paste0(simplex, collapse=",")]], NA) }
-    draw_simplex <- unlist(x$ltraverse(si_in, "bfs"))[-1]
-    simplex_colors <- unlist(x$ltraverse(si_color, "bfs"))[-1]
+    draw_simplex <- straverse(level_order(x), si_in)
+    simplex_colors <- straverse(level_order(x), si_color)
   } else if (is_char_vec && (length(color_pal) == sum(x$n_simplices))){
     ## Case 2: color_pal is character vector w/ length == # simplices
     simplex_colors <- col_to_hex(color_pal)
@@ -682,11 +843,11 @@ plot.Rcpp_SimplexTree <- function (x, coords = NULL, vertex_opt=NULL, text_opt=N
   if (x$dimension >= 2L){
     for (d in seq(x$dimension, 2)){
       if (any(draw_simplex[dim_idx == d])){
-        polys <- x$ltraverse(empty_face, function(simplex){ 
+        polys <- ltraverse(k_simplices(x, k=d), function(simplex){ 
           # idx <- match(simplex[combn(d+1L, 3L)], v)
           poly <- coords[match(simplex, v),] 
           rbind(poly[grDevices::chull(poly),], c(NA, NA))
-        }, "maximal-skeleton", list(k=d))
+        })
         subset <- (draw_simplex & (dim_idx==d))
         d_subset <- subset[dim_idx==d]
         params <- list(x=do.call(rbind, polys[d_subset]), border=NA, col=simplex_colors[subset])

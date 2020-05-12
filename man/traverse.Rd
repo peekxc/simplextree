@@ -5,10 +5,13 @@
 \alias{ltraverse}
 \alias{straverse}
 \title{traverse}
+\usage{
+traverse(traversal, f, ...)
+}
 \arguments{
-\item{sigma}{The simplex to initialize the traversal. See details.}
-
 \item{f}{An arbitrary function which accepts as input a simplex. See details.}
+
+\item{sigma}{The simplex to initialize the traversal. See details.}
 
 \item{type}{One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".}
 }
@@ -59,3 +62,9 @@ st$traverse(1L, print, "cofaces")
 ## Alternatively, collect results into a list 
 three_cofaces <- st$ltraverse(3L, identity, "cofaces")
 }
+\seealso{
+Other traversals: 
+\code{\link{ltraverse}()},
+\code{\link{straverse}()}
+}
+\concept{traversals}

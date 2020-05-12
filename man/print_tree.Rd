@@ -3,6 +3,9 @@
 \name{print_tree}
 \alias{print_tree}
 \title{Prints the simplex tree}
+\usage{
+print_tree(st)
+}
 \description{
 Prints the simplicial complex to standard out. 
 By default, this is set to R's buffered output, which is shown in the R console. 

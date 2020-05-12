@@ -208,6 +208,10 @@ struct SimplexTree {
   };
   void record_new_simplexes(const idx_t k, const idx_t n);// record keeping
   
+  constexpr idx_t dimension() const {
+    return tree_max_depth == 0 ? 0 : tree_max_depth - 1; 
+  }
+  
   // Generates a new set of vertex ids, according to the given rule.
   vector< size_t > generate_ids(size_t);
   
@@ -228,15 +232,16 @@ struct SimplexTree {
   
   // Recursive helper functions
   node_ptr insert_child(node_ptr c_parent, node_ptr new_child, idx_t depth);
-  node_ptr remove(idx_t* labels, const size_t i, const size_t n_keys, node_ptr c_node, const idx_t depth);
+  // node_ptr remove(idx_t* labels, const size_t i, const size_t n_keys, node_ptr c_node, const idx_t depth);
   void remove_leaf(node_ptr, idx_t);
   void add_children(node_ptr, const simplex_t&, idx_t);
   void insert(idx_t*, const size_t, const size_t, node_ptr, const idx_t);
   node_ptr find_by_id(const node_set_t&, idx_t) const;
   node_ptr find_node(simplex_t) const;
-  bool is_face(simplex_t, simplex_t) const;
   node_ptr top_node(node_ptr) const;
   node_ptr find_vertex(const idx_t) const;
+  
+  bool static is_face(simplex_t, simplex_t);
   
   template < typename Lambda >
   void traverse_facets(node_ptr, Lambda) const;
