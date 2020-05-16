@@ -1,9 +1,9 @@
 // simplextree.h
 // Author: Matt Piekenbrock 
+// License: MIT 
 // This package provides a simple implementation of the Simplex tree data structure using Rcpp + STL
 // The simplex tree was originally introduced in the following paper: 
 // Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
-// MIT licensed
 
 #ifndef SIMPLEXTREE_H_
 #define SIMPLEXTREE_H_

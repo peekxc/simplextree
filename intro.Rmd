@@ -97,5 +97,50 @@ sapply(maximal(st), function(sigma){
 })
 ```
 
+```{r}
+remove.packages("simplextree")
+
+
+G <- igraph::sample_grg(20, 0.20, coords = TRUE)
+
+st <- simplex_tree(as.list(1:igraph::vcount(G)))
+insert(st, igraph::as_edgelist(G))
+st$expand(2)
+xy <- with(igraph::vertex.attributes(G), {
+  cbind(x,y)
+})
+
+
+jsonlite::toJSON(list(nodes=1:igraph::vcount(G), edges=st$edges, polygons=list(st$triangles)))
+simplices <- list(coords = xy, nodes=letters[1L:(igraph::vcount(G)-1L)], edges=st$edges-1L, polygons=list(st$triangles-1L, st$quads-1L))
+wut <- jsonlite::toJSON(simplices, pretty = TRUE, auto_unbox = FALSE)
+
+microbenchmark::microbenchmark({
+  st$expand(2)
+}, setup = {
+  st <- simplex_tree(as.list(1:igraph::vcount(G)))
+  insert(st, igraph::as_edgelist(G))
+})
+
+# Unit: milliseconds
+#                  expr      min       lq     mean   median       uq      max neval
+#  {     st$expand(2) } 3.494911 3.747423 4.521941 3.956999 4.147819 11.60263   100
+
+
+microbenchmark::microbenchmark({
+  st$expand(2)
+}, setup = {
+  st <- simplex_tree()
+  st$insert(as.list(1:igraph::vcount(G)))
+  E <- igraph::as_edgelist(G)
+  edges <- lapply(1:nrow(E), function(i){ E[i,] })
+  st$insert(edges)
+})
+# Unit: milliseconds
+#                  expr      min       lq    mean   median       uq      max neval
+#  {     st$expand(2) } 63.03884 64.60097 65.9168 65.68367 66.79374 76.15908   100
+```
+
+
 ## References 
 [^1]: Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

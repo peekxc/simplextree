@@ -1,7 +1,6 @@
 #include <Rcpp.h>
 using namespace Rcpp; 
 // [[Rcpp::plugins(cpp17)]] 
-
 #include "simplextree.h"
 
 using simplex_t = SimplexTree::simplex_t; 
@@ -209,7 +208,7 @@ enum TRAVERSAL_TYPE {
 void test_cofaces(SEXP st, simplex_t sigma){
   XPtr< SimplexTree > st_p(st);
   node_ptr sigma_np = st_p->find_node(sigma);
-  auto co = cofaces< true >(st_p, sigma_np);
+  auto co = st::cofaces< true >(st_p, sigma_np);
   for (auto& cn: co){
     st_p->print_simplex(get< 0 >(cn), get< 1 >(cn));
   }
@@ -243,46 +242,46 @@ void traverse_switch(param_pack&& pp, List args, Lambda&& f){
   TRAVERSAL_TYPE tt = get< 2 >(pp);
   switch(tt){
     case PREORDER: {
-      auto tr = preorder< true >(st, init);
+      auto tr = st::preorder< true >(st, init);
       traverse(tr, f);
       break; 
     }
     case LEVEL_ORDER: {
-      auto tr = level_order< true >(st, init);
+      auto tr = st::level_order< true >(st, init);
       traverse(tr, f);
       break; 
     }
     case FACES: {
-      auto tr = faces< true >(st, init);
+      auto tr = st::faces< true >(st, init);
       traverse(tr, f);
       break; 
     }
     case COFACES: {
-      auto tr = cofaces< true >(st, init);
+      auto tr = st::cofaces< true >(st, init);
       traverse(tr, f);
       break; 
     }
     case K_SKELETON: {
       if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
       idx_t k = args["k"];
-      auto tr = k_skeleton< true >(st, init, k);
+      auto tr = st::k_skeleton< true >(st, init, k);
       traverse(tr, f);
       break; 
     }
     case MAX_SKELETON: {
       if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
       idx_t k = args["k"];
-      auto tr = max_skeleton< true >(st, init, k);
+      auto tr = st::max_skeleton< true >(st, init, k);
       traverse(tr, f);
       break; 
     }
     case MAXIMAL: {
-      auto tr = maximal< true >(st, init);
+      auto tr = st::maximal< true >(st, init);
       traverse(tr, f);
       break; 
     }
     case LINK: {
-      auto tr = link< true >(st, init);
+      auto tr = st::link< true >(st, init);
       traverse(tr, f);
       break; 
     }
@@ -415,7 +414,7 @@ IntegerMatrix get_k_simplices(SimplexTree* st, const size_t k) {
   if (st->n_simplexes.size() <= k){ return IntegerMatrix(0, k+1); }
   IntegerMatrix res = IntegerMatrix(st->n_simplexes.at(k), k+1);
   size_t i = 0; 
-  auto tr = max_skeleton< true >(st, st->root.get(), k);
+  auto tr = st::max_skeleton< true >(st, st->root.get(), k);
   traverse(tr, [&res, &i](node_ptr cn, idx_t depth, simplex_t sigma){
     res(i++, _) = IntegerVector(sigma.begin(), sigma.end());
     return true; 
@@ -478,7 +477,7 @@ List as_list(SimplexTree* st){
   List res = List();
   vector< idx_t > all = vector< idx_t >();
   idx_t d = 1;
-  auto bfs = level_order< true >(st);
+  auto bfs = st::level_order< true >(st);
   traverse(bfs, [&res, &d, &all](node_ptr cn, idx_t depth, simplex_t sigma){
     if (depth > d){
       const size_t n = all.size() / d;

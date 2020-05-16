@@ -372,6 +372,7 @@ NULL
 #' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
 #' if all combinations of edges are included. This operation implicitly assumes the complex 
 #' is a flag complex. 
+#' @export
 expand <- function(st, k){
   st$expand(k)
   return(st)
@@ -780,8 +781,10 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
   
   ## If the maximal faces are requested, set non-maximal `draw_simplex` indices to FALSE 
   if (maximal){
-    maximal_faces <- as.list(maximal(x))
-    draw_simplex <- straverse(level_order(st), is_in(maximal_faces))
+    all_simplices <- as.list(level_order(x))
+    max_idx <- match(as.list(maximal(x)), all_simplices)
+    draw_simplex <- vector("logical", length=sum(x$n_simplices))
+    draw_simplex[max_idx] <- TRUE
     draw_simplex[dim_idx %in% c(0L, 1L)] <- TRUE ## always draw points and edges
   }
   
@@ -882,16 +885,3 @@ alpha4sc <- function(col_pal) {
   si_alpha <- c(1, 1, ext) 
   sapply(seq_along(col_pal), function(i){ grDevices::adjustcolor(col_pal[i], alpha.f = si_alpha[i]) })
 }
-
-# ids <- apply(utils::combn(d+1L, 2), 2, function(i){ simplex[i] })
-# apply(ids, 2, function(c_id){
-#   idx <- match(c_id, v)
-#   coords[idx,,drop=FALSE]
-#   
-# })
-# #st$ltraverse(empty_face, identity, "bfs")
-# stopifnot(is.character(color_pal))
-# if (length(color_pal) == 1){ color_pal <- rep(color_pal, x$dimension+1L) }
-# 
-# ## Final check:
-# stopifnot(length(color_pal) == x$dimension+1L)

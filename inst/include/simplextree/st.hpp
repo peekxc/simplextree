@@ -188,7 +188,7 @@ inline void SimplexTree::remove_simplices(vector< vector< idx_t > > simplices){
 inline void SimplexTree::remove_simplex(vector< idx_t > simplex){
   std::sort(simplex.begin(), simplex.end()); // Demand that labels are sorted on insertion! 
   node_ptr cn = find_node(simplex);
-  auto co = cofaces(this, cn);
+  auto co = st::cofaces(this, cn);
   vector< node_ptr > co_v;
   std::transform(co.begin(), co.end(), std::back_inserter(co_v), [](auto& cn){ return(get< 0 >(cn)); });
   for (auto& cn: co_v){
@@ -349,7 +349,7 @@ inline size_t SimplexTree::depth(node_ptr cn) const{
 // Utility to get the maximum height / longest path from any given node.
 inline size_t SimplexTree::max_depth(node_ptr cn) const {
   // size_t max_height = depth(cn);
-	auto dfs = preorder(this, cn);
+	auto dfs = st::preorder(this, cn);
 	auto me = std::max_element(dfs.begin(), dfs.end(), [](auto& n1, auto& n2){
 		return(get< 1 >(n1) < get< 1 >(n2));
 	});
@@ -576,8 +576,8 @@ inline bool SimplexTree::vertex_collapse(node_ptr vp1, node_ptr vp2, node_ptr vt
 		return(get_unique(si));
 	};
 	std::vector< simplex_t > to_insert; 
-	for (auto& cn: cofaces< true >(this, vp1)){ to_insert.push_back(map_collapse(get< 2 >(cn), vp1)); }
-	for (auto& cn: cofaces< true >(this, vp2)){ to_insert.push_back(map_collapse(get< 2 >(cn), vp2)); }
+	for (auto& cn: st::cofaces< true >(this, vp1)){ to_insert.push_back(map_collapse(get< 2 >(cn), vp1)); }
+	for (auto& cn: st::cofaces< true >(this, vp2)){ to_insert.push_back(map_collapse(get< 2 >(cn), vp2)); }
 	for (auto& si: to_insert){
 		insert_simplex(si);
 	}
@@ -619,7 +619,7 @@ inline bool SimplexTree::collapse(node_ptr tau, node_ptr sigma){
   //   return(true);
   // } 
   // return(false);
-	auto tau_cofaces = cofaces(this, tau);
+	auto tau_cofaces = st::cofaces(this, tau);
 	bool sigma_only_coface = false; 
 	size_t n_cf = 0; 
 	traverse(tau_cofaces, [&tau, &n_cf, &sigma_only_coface](node_ptr coface, idx_t depth){
@@ -653,7 +653,7 @@ inline vector< idx_t > SimplexTree::connected_components() const{
   
   // Traverse the edges, unioning vertices 
   UnionFind uf = UnionFind(root->children.size());
-  traverse(max_skeleton(this, root.get(), 1), [&idx_of, &uf](node_ptr cn, idx_t d){
+  traverse(st::max_skeleton(this, root.get(), 1), [&idx_of, &uf](node_ptr cn, idx_t d){
     uf.Union(idx_of(cn->label), idx_of(cn->parent->label));
 		return true; 
   });
@@ -778,7 +778,7 @@ inline simplex_t SimplexTree::full_simplex(node_ptr cn, const idx_t depth) const
 inline vector< vector< idx_t > > SimplexTree::serialize() const{
   using simplex_t = vector< idx_t >;
   vector< simplex_t > minimal;
-	traverse(maximal< true >(this, root.get()), [&minimal](node_ptr cn, idx_t depth, simplex_t sigma){
+	traverse(st::maximal< true >(this, root.get()), [&minimal](node_ptr cn, idx_t depth, simplex_t sigma){
 		minimal.push_back(sigma);
 		return true; 
 	});
@@ -856,7 +856,7 @@ inline void SimplexTree::traverse_facets(node_ptr s, Lambda f) const{
       for (; tn != end(cn->parent->children); ++tn){ // TODO: end loop if tn != face
         simplex_t c_tau = full_simplex((*tn).get());
         c_tau.resize(sigma_depth);
-				auto tr = preorder(this, (*tn).get(), valid_eval, valid_children);
+				auto tr = st::preorder(this, (*tn).get(), valid_eval, valid_children);
         traverse(tr, [&c_tau, &sigma, &f](node_ptr t, idx_t d){
           c_tau[d-1] = t->label;
           if ((d == c_tau.size()-1) && std::includes(begin(sigma), end(sigma), begin(c_tau), begin(c_tau)+d)){
@@ -925,7 +925,7 @@ inline void SimplexTree::rips(vector< double > weights, const size_t k){
   // 2. Assign edge weights to a map; relies on precondition that 
   size_t i = 0;
   std::map< node_ptr, double > simplex_weights;
-	traverse(max_skeleton(this, root.get(), 1), [&simplex_weights, &weights, &i](node_ptr cn, idx_t d){
+	traverse(st::max_skeleton(this, root.get(), 1), [&simplex_weights, &weights, &i](node_ptr cn, idx_t d){
     simplex_weights.emplace(cn, weights.at(i++)); 
 		return true; 
   });
@@ -961,7 +961,7 @@ inline void SimplexTree::rips(vector< double > weights, const size_t k){
 
   // 3. Sort simplices by weight in ascending order
   vector< weighted_simplex > w_simplices;
-  traverse(k_skeleton(this, root.get(), k), [&w_simplices, &sigma_weight](node_ptr cn, size_t d){
+  traverse(st::k_skeleton(this, root.get(), k), [&w_simplices, &sigma_weight](node_ptr cn, size_t d){
     double w = sigma_weight(cn, d); 
     double pw = d == 0 ? -std::numeric_limits< double >::infinity() : sigma_weight(cn->parent, d-1);
     w_simplices.push_back(weighted_simplex{cn, w, pw, d});
@@ -1145,7 +1145,7 @@ inline bool SimplexTree::is_tree() const{
   
   // Apply DFS w/ UnionFind. If a cycle is detected, no more recursive evaluations are performed. 
 	bool has_cycle = false; 
-	auto st_dfs = k_skeleton< true >(this, root.get(), 1);
+	auto st_dfs = st::k_skeleton< true >(this, root.get(), 1);
 	for (auto& cn: st_dfs){
 		const auto si = get< 2 >(cn);
 		idx_t i1 = index_of(si.at(0)), i2 = index_of(si.at(1)); 
