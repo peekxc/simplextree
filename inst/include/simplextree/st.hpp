@@ -930,12 +930,6 @@ inline void SimplexTree::rips(vector< double > weights, const size_t k){
 		return true; 
   });
 
-  // traverse_max_skeleton(root.get(), [&simplex_weights, &weights, &i](const node_ptr cn, const size_t d){
-  //   if (cn != nullptr){
-  //     simplex_weights.emplace(cn, weights.at(i++)); 
-  //   }
-  // }, 1);
-
   // 2. Define way getting 'weight' of any simplex.
   std::function< double(node_ptr, idx_t) > sigma_weight; 
   sigma_weight = [this, &simplex_weights, &sigma_weight](node_ptr sigma, const idx_t d) -> double {

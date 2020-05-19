@@ -253,7 +253,9 @@ namespace st {
   
   		// Iterator constructor
   		iterator(preorder& dd, node_ptr cn = nullptr) : TraversalInterface< ts, preorder >::iterator(dd){
-  			current = std::make_tuple(cn, dd.st->depth(cn));
+  			const idx_t d = dd.st->depth(cn);
+  			current = std::make_tuple(cn, d);
+  		  labels = dd.st->full_simplex(cn, d);
   		}
   		
   		// Increment operator is all that is needed by default
@@ -313,6 +315,7 @@ namespace st {
   		// Iterator constructor
   		iterator(level_order& dd, node_ptr cn = nullptr) : TraversalInterface< ts, level_order >::iterator(dd){
   			current = std::make_tuple(cn, dd.st->depth(cn));
+  		  update_simplex();
   		}
   		
   		// Increment operator is all that is needed by default
@@ -460,17 +463,17 @@ namespace st {
   		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::current_t_node, Bit::sentinel;
   
   		using preorder_it = decltype(std::declval< preorder< ts > >().begin());
-  		using coface_root_it = decltype(std::declval< coface_roots< ts > >().begin());
+  		using coface_root_it = decltype(std::declval< coface_roots< false > >().begin());
   
   		// coface-roots-specific structures 
-  		coface_roots< ts > roots; 
+  		coface_roots< false > roots; 
   		coface_root_it c_root;
   		preorder< ts > subtree; 
   		preorder_it c_node; 
   
   		// Iterator constructor
   		iterator(cofaces& dd, node_ptr cn) : TraversalInterface< ts, cofaces >::iterator(dd),
-  		 roots(coface_roots< ts >(dd.st, cn)), c_root(roots, cn), subtree(preorder< ts >(dd.st, cn)), c_node(subtree.begin()) {
+  		 roots(coface_roots< false >(dd.st, cn)), c_root(roots, cn), subtree(preorder< ts >(dd.st, cn)), c_node(subtree.begin()) {
   			 current = std::make_tuple(cn, dd.st->depth(cn));
   		   update_simplex();
   		}
@@ -505,7 +508,8 @@ namespace st {
   		// Doesn't work with regular update method, so override
     	constexpr void update_simplex(){
     		if constexpr (ts){
-    			labels = base().st->full_simplex(get< NP >(current), get< DEPTH >(current));
+    		  labels = get< LABELS >(*c_node);
+    			// labels = base().st->full_simplex(get< NP >(current), get< DEPTH >(current));
     		}
     	};
   	}; // iterator
