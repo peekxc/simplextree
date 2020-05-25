@@ -653,14 +653,6 @@ namespace st {
   template <class T>
   constexpr auto get_simplex(T& cn){ return std::get< 2 >(cn); }
   
-  // template <class Iterable, class Lambda> 
-  // auto traverse(Iterable traversal, Lambda f){
-  // 	auto v = std::generate(traversal.begin(), traversal.end(), f);
-  // 	return(v);
-  // }
-  // 
-  
-  
 }; // end namespace st 
 
 
