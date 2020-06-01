@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 using namespace Rcpp; 
+
 // [[Rcpp::plugins(cpp17)]] 
 #include "simplextree.h"
 
@@ -59,10 +60,24 @@ void insert(SimplexTree* st, SEXP x, const bool check_overflow=false){
     });
   }
 }
-// Creates a filtration from a neighborhood graph
-void rips(SimplexTree* st, vector< double > edge_weights, const size_t k){
-  st->rips(edge_weights, k);
+
+// R-facing remover 
+void remove(SimplexTree* st, SEXP x, const bool check_overflow=false){
+  if (check_overflow){
+    vector_handler< true >(x, [st](simplex_t&& sigma){
+      st->remove_simplex(sigma);
+    });
+  } else {
+    vector_handler< false >(x, [st](simplex_t&& sigma){
+      st->remove_simplex(sigma);
+    });
+  }
 }
+
+// Creates a filtration from a neighborhood graph
+// void rips(SimplexTree* st, vector< double > edge_weights, const size_t k){
+//   st->rips(edge_weights, k);
+// }
 
 // double filtration_index(SimplexTree* st){
 
@@ -72,11 +87,11 @@ void rips(SimplexTree* st, vector< double > edge_weights, const size_t k){
 // }
 
 // For Debugging
-void print_filtration(SimplexTree* st){
-  Rcout << "Included vector: " << std::endl;
-  LogicalVector is_included = wrap(st->included);
-  Rcout << is_included << std::endl;
-}
+// void print_filtration(SimplexTree* st){
+//   Rcout << "Included vector: " << std::endl;
+//   LogicalVector is_included = wrap(st->included);
+//   Rcout << is_included << std::endl;
+// }
 
 // Workaround to allow returning simplextree references when modify==TRUE 
 // SEXP threshold(SimplexTree* st, std::string type, double eps_or_idx, bool modify){
@@ -101,50 +116,6 @@ void copy_trees(SEXP st1, SEXP st2){
   *st2_ptr = static_cast< const SimplexTree& >(*st1_ptr);
 }
 
-// // Traversal overload 1
-// void traverse_1(SimplexTree* st, Function f, std::string type){
-//   st->traverse_int(R_NilValue, f, type, R_NilValue, false);
-// }
-// // Traversal overload 2
-// void traverse_2(SimplexTree* st, SEXP simp, Function f, std::string type){
-//   st->traverse_int(simp, f, type, R_NilValue, false);
-// }
-// // Traversal overload 3
-// void traverse_3(SimplexTree* st, SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args) {
-//   st->traverse_int(simp, f, type, args, false);
-// }
-// 
-// // List-traversal overload 1
-// List ltraverse_1(SimplexTree* st, Function f, std::string type){
-//   return st->traverse_int(R_NilValue, f, type, R_NilValue, true);
-// }
-// // List-traversal overload 2
-// List ltraverse_2(SimplexTree* st, SEXP simp, Function f, std::string type){
-//   return st->traverse_int(simp, f, type, R_NilValue, true);
-// }
-// // List-traversal overload 3
-// List ltraverse_3(SimplexTree* st, SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args) {
-//   return st->traverse_int(simp, f, type, args, true);
-// }
-// 
-// // Vector-traversal overload 1
-// SEXP straverse_1(SimplexTree* st, Function f, std::string type) {
-//   Environment base("package:base");
-//   Function s2arr = base["simplify2array"];
-//   return s2arr(st->traverse_int(R_NilValue, f, type, R_NilValue, true));
-// }
-// // Vector-traversal overload 2
-// SEXP straverse_2(SimplexTree* st, SEXP simp, Function f, std::string type){
-//   Environment base("package:base");
-//   Function s2arr = base["simplify2array"];
-//   return s2arr(st->traverse_int(simp, f, type, R_NilValue, true));
-// }
-// // Vector-traversal overload 3
-// SEXP straverse_3(SimplexTree* st, SEXP simp, Function f, std::string type, Rcpp::Nullable<List> args) {
-//   Environment base("package:base");
-//   Function s2arr = base["simplify2array"];
-//   return s2arr(st->traverse_int(simp, f, type, args, true));
-// }
 
 // Workaround for internal const-member overloades
 int degree_1(SimplexTree* st, int id){
@@ -154,205 +125,6 @@ int degree_1(SimplexTree* st, int id){
 IntegerVector degree_2(SimplexTree* st, vector< idx_t > ids){
   return wrap(st->degree(ids));
 }
-
-
-#include <Rcpp/Benchmark/Timer.h>
-
-// [[Rcpp::export]]
-NumericVector profile(SEXP st){
-  Rcpp::XPtr< SimplexTree > st_ptr(st);
-  Timer timer;
-  timer.step("start");
-  st_ptr->expansion(2);
-  timer.step("expansion");
-  
-  NumericVector res(timer);
-  const size_t n = 1000;
-  for (size_t i=0; i < res.size(); ++i) { res[i] = res[i] / n; }
-  return res;
-}
-
-
-bool contains_arg(vector< std::string > v, std::string arg_name){
-  return(std::any_of(v.begin(), v.end(), [&arg_name](const std::string arg){ 
-      return arg == arg_name;
-  }));
-};
-
-// From: https://stackoverflow.com/questions/56465550/how-to-concatenate-lists-in-rcpp
-List cLists(List x, List y) {
-  int nsize = x.size(); 
-  int msize = y.size(); 
-  List out(nsize + msize);
-
-  CharacterVector xnames = x.names();
-  CharacterVector ynames = y.names();
-  CharacterVector outnames(nsize + msize);
-  out.attr("names") = outnames;
-  for(int i = 0; i < nsize; i++) {
-    out[i] = x[i];
-    outnames[i] = xnames[i];
-  }
-  for(int i = 0; i < msize; i++) {
-    out[nsize+i] = y[i];
-    outnames[nsize+i] = ynames[i];
-  }
-  return(out);
-}
-
-enum TRAVERSAL_TYPE { 
-  PREORDER = 0, LEVEL_ORDER = 1, FACES = 2, COFACES = 3, K_SKELETON = 4, MAX_SKELETON = 5, MAXIMAL = 6, LINK = 7 
-}; 
-
-// [[Rcpp::export]]
-void test_cofaces(SEXP st, simplex_t sigma){
-  XPtr< SimplexTree > st_p(st);
-  node_ptr sigma_np = st_p->find_node(sigma);
-  auto co = st::cofaces< true >(st_p, sigma_np);
-  for (auto& cn: co){
-    st_p->print_simplex(get< 0 >(cn), get< 1 >(cn));
-  }
-}
-
-// Exports a list with the parameters for a preorder traversal
-// [[Rcpp::export]]
-List parameterize_R(SEXP st, IntegerVector sigma, std::string type, Rcpp::Nullable<List> args){
-  List init_params = List::create(_[".ptr"] = st, _["sigma"] = sigma); 
-  List param_res = args.isNotNull() ? cLists(List(args), init_params) : init_params;
-  if (type == "preorder" || type == "dfs") { param_res["traversal_type"] = int(PREORDER); }
-  else if (type == "level_order" || type == "bfs") { param_res["traversal_type"] = int(LEVEL_ORDER); }
-  else if (type == "cofaces" || type == "star") { param_res["traversal_type"] = int(COFACES); }
-  else if (type == "link"){ param_res["traversal_type"] = int(LINK); }
-  else if (type == "k_skeleton" || type == "skeleton"){ param_res["traversal_type"] = int(K_SKELETON); }
-  else if (type == "k_simplices" || type == "maximal-skeleton"){ param_res["traversal_type"] = int(MAX_SKELETON); }
-  else if (type == "maximal"){ param_res["traversal_type"] = int(MAXIMAL); }
-  else if(type == "faces"){ param_res["traversal_type"] = int(FACES); }
-  else { stop("Iteration 'type' is invalid. Please use one of: preorder, level_order, faces, cofaces, star, link, skeleton, or maximal-skeleton"); }
-  param_res.attr("class") = "st_traversal";
-  return(param_res);
-}
-
-using param_pack = typename std::tuple< SimplexTree*, node_ptr, TRAVERSAL_TYPE >;
-
-template < class Lambda > 
-void traverse_switch(param_pack&& pp, List args, Lambda&& f){
-  auto args_str = as< vector< std::string > >(args.names());
-  SimplexTree* st = get< 0 >(pp);
-  node_ptr init = get< 1 >(pp);
-  TRAVERSAL_TYPE tt = get< 2 >(pp);
-  switch(tt){
-    case PREORDER: {
-      auto tr = st::preorder< true >(st, init);
-      traverse(tr, f);
-      break; 
-    }
-    case LEVEL_ORDER: {
-      auto tr = st::level_order< true >(st, init);
-      traverse(tr, f);
-      break; 
-    }
-    case FACES: {
-      auto tr = st::faces< true >(st, init);
-      traverse(tr, f);
-      break; 
-    }
-    case COFACES: {
-      auto tr = st::cofaces< true >(st, init);
-      traverse(tr, f);
-      break; 
-    }
-    case K_SKELETON: {
-      if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
-      idx_t k = args["k"];
-      auto tr = st::k_skeleton< true >(st, init, k);
-      traverse(tr, f);
-      break; 
-    }
-    case MAX_SKELETON: {
-      if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
-      idx_t k = args["k"];
-      auto tr = st::max_skeleton< true >(st, init, k);
-      traverse(tr, f);
-      break; 
-    }
-    case MAXIMAL: {
-      auto tr = st::maximal< true >(st, init);
-      traverse(tr, f);
-      break; 
-    }
-    case LINK: {
-      auto tr = st::link< true >(st, init);
-      traverse(tr, f);
-      break; 
-    }
-  }
-}
-
-// To validate the traversal parameters
-param_pack validate_params(List args){
-  // Extract parameters 
-  auto args_str = as< vector< std::string > >(args.names());
-  
-  // Extract tree
-  if (!contains_arg(args_str, ".ptr")){ stop("Simplex tree pointer missing."); }
-  SEXP xptr = args[".ptr"]; 
-  if (TYPEOF(xptr) != EXTPTRSXP || R_ExternalPtrAddr(xptr) == NULL){
-    stop("Invalid pointer to simplex tree.");
-  }
-  XPtr< SimplexTree > st(xptr); // Unwrap XPtr
-  
-  // Extract initial simplex
-  node_ptr init = nullptr; 
-  if (!contains_arg(args_str, "sigma")){ init = st->root.get(); }
-  else {
-    IntegerVector sigma = args["sigma"];
-    init = st->find_node(as< simplex_t >(sigma)); 
-    if (init == nullptr){ init = st->root.get(); }
-  }
-  if (init == nullptr){ stop("Invalid starting simplex"); }
-  
-  // Extract traversal type 
-  int tt = args["traversal_type"];
-  if (tt < 0 || tt > 7){ stop("Unknown traversal type."); }
-  
-  return(std::make_tuple(static_cast< SimplexTree* >(st), init, static_cast< TRAVERSAL_TYPE >(tt)));
-}
-
-// [[Rcpp::export]]
-void traverse_R(List args, Function f){
-  const auto run_Rf = [&f](node_ptr cn, idx_t depth, simplex_t tau){ f(tau); return true; };
-  traverse_switch(validate_params(args), args, run_Rf);
-}
-
-// [[Rcpp::export]]
-List ltraverse_R(List args, Function f){
-  List res = List(); 
-  auto run_Rf = [&f, &res](node_ptr cn, idx_t d, simplex_t tau){
-    res.push_back(f(wrap(tau)));
-    return(true);
-  };
-  traverse_switch(validate_params(args), args, run_Rf);
-  return(res);
-}
-
-// [[Rcpp::export]]
-SEXP straverse_R(List args, Function f) {
-  Environment base("package:base");
-  Function s2arr = base["simplify2array"];
-  return s2arr(ltraverse_R(args, f));
-}
-
-
-// inline void SimplexTree::load(std::string filename){
-//   Function readRDS = Function("readRDS");
-//   List st = readRDS(_["file"] = filename);
-//   const size_t n = st.size();
-//   for (size_t i = 0; i < n; ++i){
-//     IntegerVector si = st.at(i);
-//     vector< idx_t > sigma(si.begin(), si.end());
-//     insert_simplex(sigma);
-//   }
-// }
 
 // inline void SimplexTree::reindex(SEXP target_ids){
 //   const unsigned int s_type = TYPEOF(target_ids);
@@ -503,6 +275,29 @@ List as_list(SimplexTree* st){
   return res;
 }
 
+void load(SimplexTree* st, std::string filename){
+  Function readRDS = Function("readRDS");
+  List st_lst = readRDS(_["file"] = filename);
+  const size_t n = st_lst.size();
+  for (size_t i = 0; i < n; ++i){
+    IntegerVector si = st_lst.at(i);
+    simplex_t sigma(si.begin(), si.end());
+    st->insert_simplex(sigma);
+  }
+}
+
+void save(SimplexTree* st, std::string filename){
+  using simplex_t = vector< idx_t >;
+  Function saveRDS = Function("saveRDS");
+  vector< simplex_t > minimal = st->serialize();
+  List res = wrap(minimal);
+  saveRDS(_["object"] = res, _["file"] = filename);
+}
+// 
+// void print_cousins(SimplexTree* st){
+//   st->print_cousins();
+// }
+
 // Exposed Rcpp Module 
 RCPP_MODULE(simplex_tree_module) {
   using namespace Rcpp;
@@ -517,51 +312,321 @@ RCPP_MODULE(simplex_tree_module) {
     .property("triangles", &get_triangles, "Returns the 2-simplices as an integer matrix.")
     .property("quads", &get_quads, "Returns the 3-simplices as an integer matrix.")
     .property("connected_components", &SimplexTree::connected_components)
-    // .method("print_cousins", &SimplexTree::get_cousins)
     .const_method( "print_tree", &SimplexTree::print_tree )
+    .const_method( "print_cousins", &SimplexTree::print_cousins )
     .method( "clear", &SimplexTree::clear)
     .method( "degree", &degree_1)
     .method( "degree", &degree_2)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
-    // .method( "insert",  (void (SimplexTree::*)(SEXP))(&SimplexTree::insert_simplex))
     .method( "insert",  &insert)
-    // .method( "remove",  (void (SimplexTree::*)(SEXP))(&SimplexTree::remove))
+    .method( "remove",  &remove)
     .method( "find", &find_R)
-    // .method( "find",  (LogicalVector (SimplexTree::*)(SEXP))(&SimplexTree::find))
     .method( "expand", &SimplexTree::expansion )
-    .method( "collapse", &SimplexTree::collapseR)
+    .method( "collapse", &SimplexTree::collapse)
     .method( "collapse", &SimplexTree::vertex_collapseR)
     .method( "contract", &SimplexTree::contract)
-    // .method( "preorder", &preorder_R)
-    // .method( "parameterize", &parameterize_R)
-    // .method( "reindex", (void (SimplexTree::*)(SEXP))(&SimplexTree::reindex))
-    // .const_method( "is_face", &SimplexTree::is_face)
-    // .const_method( "is_tree", &SimplexTree::is_tree)
+    .const_method( "is_tree", &SimplexTree::is_tree)
     .method( "as_adjacency_matrix", &as_adjacency_matrix)
     .method( "as_adjacency_list", &as_adjacency_list)
     .method( "as_edge_list", &as_edge_list)
     .method( "as_list", &as_list)
-    // .const_method( "serialize", &SimplexTree::serialize)
-    // .method( "deserialize", &SimplexTree::deserialize)
-    // .const_method( "save", &SimplexTree::save)
-    // .method( "load", &SimplexTree::load)
-    // .method( "faces", &faces)
-    
-    // .method( "threshold", &threshold)
-    // .method( "threshold_index", &SimplexTree::threshold_index)
-    // .method( "threshold_function", &SimplexTree::threshold_function)
-    // .method( "print_filtration", &print_filtration )
-    
-    // .method( "rips", &rips)
-    // .property("rips_index", &SimplexTree::rips_index)
-    // .property("rips_epsilon", &SimplexTree::rips_epsilon)
-    // .property( "rips_simplices", &SimplexTree::rips_simplices)
-    // .property( "rips_weights", &SimplexTree::rips_weights)
+    .const_method( "serialize", &SimplexTree::serialize)
+    .method( "deserialize", &SimplexTree::deserialize)
+    .method( "save", &save)
+    .method( "load", &load)
     ;
 }
 
+// typedef bool (*ValidConstructor)(SEXP*,int);
 
+void init_filtration(Filtration* filt, SEXP st) {
+  Rcpp::XPtr< SimplexTree > st_ptr(st);
+  filt->initialize(*st_ptr);
+}
+
+List get_simplices(Filtration* st){
+  auto si = st->simplices(); 
+  List results = List();
+  for (auto& sigma: si){ results.push_back(sigma); }
+  return results;
+}
+
+void make_filtration(Filtration* st, const NumericVector& D){
+  const size_t ne = st->n_simplexes.at(2);
+  const auto v = st->get_vertices();
+  const size_t N = BinomialCoefficient(v.size(), 2);
+  if (ne == D.size()){
+    vector< double > weights(D.begin(), D.end());
+    st->flag(weights, false);
+  } else if (D.size() == N){ // full distance vector passed in
+    auto edge_iter = st::max_skeleton< true >(st, st->root.get(), 1);
+    // auto edge_iter = st::k_simplices< true >(*st, 1);
+    vector< double > weights;
+    weights.reserve(ne);
+    st::traverse(edge_iter, [&weights, &D, &v](node_ptr np, idx_t depth, simplex_t sigma){
+      auto v1 = sigma[0], v2 = sigma[1];
+      auto idx1 = std::distance(begin(v), std::lower_bound(begin(v), end(v), v1));
+      auto idx2 = std::distance(begin(v), std::lower_bound(begin(v), end(v), v2));
+      auto dist_idx = to_natural_2(idx1, idx2, v.size());
+      weights.push_back(D[dist_idx]);
+      Rcout << D[dist_idx] << ", ";
+      return true; 
+    });
+    Rcout << std::endl;
+    st->flag(weights, false);
+  } else {
+    throw std::invalid_argument("Flag filtrations require a vector of distances for each edge or a 'dist' object");
+  }
+}
+// 
+// void test_filtration(Filtration* st, const size_t i){
+//   auto ind = st->simplex_idx(i);
+//   for (auto idx: ind){ Rcout << idx << ", "; }
+//   Rcout << std::endl;
+//   auto sigma = st->expand_simplex(begin(ind), end(ind));
+//   for (auto& label: sigma){ Rcout << label << ", "; }
+//   Rcout << std::endl; 
+// }
+
+
+
+RCPP_MODULE(filtration_module) {
+  using namespace Rcpp;
+  Rcpp::class_< SimplexTree >("SimplexTree")
+    .constructor()
+    .method( "as_XPtr", &as_XPtr)
+    .field_readonly("n_simplices", &SimplexTree::n_simplexes)
+    .property("dimension", &SimplexTree::dimension)
+    .property("id_policy", &SimplexTree::get_id_policy, &SimplexTree::set_id_policy)
+    .property("vertices", &get_vertices, "Returns the vertex labels as an integer vector.")
+    .property("edges", &get_edges, "Returns the edges as an integer matrix.")
+    .property("triangles", &get_triangles, "Returns the 2-simplices as an integer matrix.")
+    .property("quads", &get_quads, "Returns the 3-simplices as an integer matrix.")
+    .property("connected_components", &SimplexTree::connected_components)
+    .const_method( "print_tree", &SimplexTree::print_tree )
+    .const_method( "print_cousins", &SimplexTree::print_cousins )
+    .method( "clear", &SimplexTree::clear)
+    .method( "degree", &degree_1)
+    .method( "degree", &degree_2)
+    .method( "generate_ids", &SimplexTree::generate_ids)
+    .method( "adjacent", &SimplexTree::adjacent_vertices)
+    .method( "insert", &insert)
+    .method( "remove", &remove)
+    .method( "find", &find_R)
+    .method( "expand", &SimplexTree::expansion )
+    .method( "collapse", &SimplexTree::collapse)
+    .method( "collapse", &SimplexTree::vertex_collapseR)
+    .method( "contract", &SimplexTree::contract)
+    .const_method( "is_tree", &SimplexTree::is_tree)
+    .const_method( "serialize", &SimplexTree::serialize)
+    .method( "deserialize", &SimplexTree::deserialize)
+    .method( "as_adjacency_matrix", &as_adjacency_matrix)
+    .method( "as_adjacency_list", &as_adjacency_list)
+    .method( "as_edge_list", &as_edge_list)
+    .method( "as_list", &as_list)
+    .method( "save", &save)
+    .method( "load", &load)
+    ;
+  Rcpp::class_< Filtration >("Filtration")
+    .derives< SimplexTree >("SimplexTree")
+    .constructor()
+    .method("init_tree", &init_filtration)
+    .field("included", &Filtration::included)
+    .property("current_index", &Filtration::current_index)
+    .property("current_value", &Filtration::current_value)
+    .property("simplices", &get_simplices, "Returns the simplices in the filtration")
+    .method("flag", &make_filtration, "Constructs a flag filtration")
+    .method("weights", &Filtration::weights)
+    .method("threshold_value", &Filtration::threshold_value)
+    .method("threshold_index", &Filtration::threshold_index)
+    ;
+}
+
+// --- Begin functional exports + helpers ---
+
+#include <Rcpp/Benchmark/Timer.h>
+// [[Rcpp::export]]
+NumericVector profile(SEXP st){
+  Rcpp::XPtr< SimplexTree > st_ptr(st);
+  Timer timer;
+  timer.step("start");
+  st_ptr->expansion(2);
+  timer.step("expansion");
+  
+  NumericVector res(timer);
+  const size_t n = 1000;
+  for (size_t i=0; i < res.size(); ++i) { res[i] = res[i] / n; }
+  return res;
+}
+
+
+bool contains_arg(vector< std::string > v, std::string arg_name){
+  return(std::any_of(v.begin(), v.end(), [&arg_name](const std::string arg){ 
+      return arg == arg_name;
+  }));
+};
+
+// From: https://stackoverflow.com/questions/56465550/how-to-concatenate-lists-in-rcpp
+List cLists(List x, List y) {
+  int nsize = x.size(); 
+  int msize = y.size(); 
+  List out(nsize + msize);
+
+  CharacterVector xnames = x.names();
+  CharacterVector ynames = y.names();
+  CharacterVector outnames(nsize + msize);
+  out.attr("names") = outnames;
+  for(int i = 0; i < nsize; i++) {
+    out[i] = x[i];
+    outnames[i] = xnames[i];
+  }
+  for(int i = 0; i < msize; i++) {
+    out[nsize+i] = y[i];
+    outnames[nsize+i] = ynames[i];
+  }
+  return(out);
+}
+
+// The types of traversal supported
+enum TRAVERSAL_TYPE { 
+  PREORDER, LEVEL_ORDER, FACES, COFACES, COFACE_ROOTS, K_SKELETON, MAX_SKELETON, MAXIMAL, LINK
+}; 
+const size_t N_TRAVERSALS = 9;
+
+// Exports a list with the parameters for a preorder traversal
+// [[Rcpp::export]]
+List parameterize_R(SEXP st, IntegerVector sigma, std::string type, Rcpp::Nullable<List> args){
+  List init_params = List::create(_[".ptr"] = st, _["sigma"] = sigma); 
+  List param_res = args.isNotNull() ? cLists(List(args), init_params) : init_params;
+  if (type == "preorder" || type == "dfs") { param_res["traversal_type"] = int(PREORDER); }
+  else if (type == "level_order" || type == "bfs") { param_res["traversal_type"] = int(LEVEL_ORDER); }
+  else if (type == "cofaces" || type == "star") { param_res["traversal_type"] = int(COFACES); }
+  else if (type == "coface_roots") { param_res["traversal_type"] = int(COFACE_ROOTS); }
+  else if (type == "link"){ param_res["traversal_type"] = int(LINK); }
+  else if (type == "k_skeleton" || type == "skeleton"){ param_res["traversal_type"] = int(K_SKELETON); }
+  else if (type == "k_simplices" || type == "maximal-skeleton"){ param_res["traversal_type"] = int(MAX_SKELETON); }
+  else if (type == "maximal"){ param_res["traversal_type"] = int(MAXIMAL); }
+  else if(type == "faces"){ param_res["traversal_type"] = int(FACES); }
+  else { stop("Iteration 'type' is invalid. Please use one of: preorder, level_order, faces, cofaces, star, link, skeleton, or maximal-skeleton"); }
+  param_res.attr("class") = "st_traversal";
+  return(param_res);
+}
+
+using param_pack = typename std::tuple< SimplexTree*, node_ptr, TRAVERSAL_TYPE >;
+
+template < class Lambda > 
+void traverse_switch(param_pack&& pp, List args, Lambda&& f){
+  auto args_str = as< vector< std::string > >(args.names());
+  SimplexTree* st = get< 0 >(pp);
+  node_ptr init = get< 1 >(pp);
+  TRAVERSAL_TYPE tt = get< 2 >(pp);
+  switch(tt){
+    case PREORDER: {
+      auto tr = st::preorder< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case LEVEL_ORDER: {
+      auto tr = st::level_order< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case FACES: {
+      auto tr = st::faces< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case COFACES: {
+      auto tr = st::cofaces< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case COFACE_ROOTS: {
+      auto tr = st::coface_roots< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case K_SKELETON: {
+      if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
+      idx_t k = args["k"];
+      auto tr = st::k_skeleton< true >(st, init, k);
+      traverse(tr, f);
+      break; 
+    }
+    case MAX_SKELETON: {
+      if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
+      idx_t k = args["k"];
+      auto tr = st::max_skeleton< true >(st, init, k);
+      traverse(tr, f);
+      break; 
+    }
+    case MAXIMAL: {
+      auto tr = st::maximal< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+    case LINK: {
+      auto tr = st::link< true >(st, init);
+      traverse(tr, f);
+      break; 
+    }
+  }
+}
+
+// To validate the traversal parameters
+param_pack validate_params(List args){
+  // Extract parameters 
+  auto args_str = as< vector< std::string > >(args.names());
+  
+  // Extract tree
+  if (!contains_arg(args_str, ".ptr")){ stop("Simplex tree pointer missing."); }
+  SEXP xptr = args[".ptr"]; 
+  if (TYPEOF(xptr) != EXTPTRSXP || R_ExternalPtrAddr(xptr) == NULL){
+    stop("Invalid pointer to simplex tree.");
+  }
+  XPtr< SimplexTree > st(xptr); // Unwrap XPtr
+  
+  // Extract initial simplex
+  node_ptr init = nullptr; 
+  if (!contains_arg(args_str, "sigma")){ init = st->root.get(); }
+  else {
+    IntegerVector sigma = args["sigma"];
+    init = st->find_node(as< simplex_t >(sigma)); 
+    if (init == nullptr){ init = st->root.get(); }
+  }
+  if (init == nullptr){ stop("Invalid starting simplex"); }
+  
+  // Extract traversal type 
+  int tt = args["traversal_type"];
+  if (tt < 0 || tt >= N_TRAVERSALS){ stop("Unknown traversal type."); }
+  
+  return(std::make_tuple(static_cast< SimplexTree* >(st), init, static_cast< TRAVERSAL_TYPE >(tt)));
+}
+
+// [[Rcpp::export]]
+void traverse_R(List args, Function f){
+  const auto run_Rf = [&f](node_ptr cn, idx_t depth, simplex_t tau){ f(tau); return true; };
+  traverse_switch(validate_params(args), args, run_Rf);
+}
+
+// [[Rcpp::export]]
+List ltraverse_R(List args, Function f){
+  List res = List(); 
+  auto run_Rf = [&f, &res](node_ptr cn, idx_t d, simplex_t tau){
+    res.push_back(f(wrap(tau)));
+    return(true);
+  };
+  traverse_switch(validate_params(args), args, run_Rf);
+  return(res);
+}
+
+// [[Rcpp::export]]
+SEXP straverse_R(List args, Function f) {
+  Environment base("package:base");
+  Function s2arr = base["simplify2array"];
+  return s2arr(ltraverse_R(args, f));
+}
 
 
 

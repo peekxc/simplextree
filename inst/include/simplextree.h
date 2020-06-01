@@ -18,9 +18,10 @@
 #include <map>
 #include <string>
 #include "UnionFind.h"
+#include "utility/discrete.h"
+#include "utility/combinations.h"
 #include "utility/delegate.hpp"
-#include "utility/short_alloc.h"
-#include "simplextree/st_traits.hpp"
+
 
 // Type for simplex labels
 typedef std::size_t idx_t;
@@ -29,7 +30,6 @@ typedef std::size_t idx_t;
 static constexpr size_t array_threshold = 9; 
 
 // Buffer type
-#include "utility/short_alloc.h"
 using splex_t = std::vector< idx_t, short_alloc< idx_t, 16, alignof(idx_t)> >;
 using splex_alloc_t = typename splex_t::allocator_type::arena_type;
 
@@ -56,6 +56,7 @@ struct SimplexTree {
 	using node_uptr = u_ptr< node >; 
 	using node_set_t = set< node_uptr, less_ptr< node_uptr > >;
   using simplex_t = vector< idx_t >; 
+  // using simplex_t = splex_t;
   using difference_type = std::ptrdiff_t;
   using size_type = std::size_t;
   using value_type = node_ptr;
@@ -67,12 +68,6 @@ struct SimplexTree {
   size_t tree_max_depth; 												// maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
   size_t max_id;										 						// maximum vertex id used so far. Only needed by the id generator. 
   size_t id_policy;  														// policy type to generate new ids
-
-  // Filtration-specific fields 
-	struct indexed_simplex;   
-  vector< bool > included;
-  vector< indexed_simplex > fc; 
-  
 
 	// Node structure stored by the simplex tree. Contains the following fields:
 	//  label := integer index type representing the id of simplex it represents
@@ -192,18 +187,18 @@ struct SimplexTree {
   SimplexTree(const SimplexTree& st) : root(new node(-1, nullptr)), tree_max_depth(0), max_id(0), id_policy(0) {
     deserialize(st.serialize());
     id_policy = st.id_policy;
-    included = st.included;
-    fc.reserve(st.fc.size()); 
-    std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
+    // included = st.included;
+    // fc.reserve(st.fc.size()); 
+    // std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
   };
   
   // Assignment operator
   SimplexTree& operator=(const SimplexTree& st) {
     deserialize(st.serialize());
     id_policy = st.id_policy;
-    included = st.included;
-    fc.reserve(st.fc.size()); 
-    std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
+    // included = st.included;
+    // fc.reserve(st.fc.size()); 
+    // std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
     return *this;
   };
   void record_new_simplexes(const idx_t k, const idx_t n);// record keeping
@@ -261,8 +256,8 @@ struct SimplexTree {
   // bool is_cycle(vector< idx_t > v); // Tests if vertex sequence has a cycle.
     
   // Modifying the complex w/ higher order operations
-  bool collapse(node_ptr, node_ptr);
-  bool collapseR(simplex_t, simplex_t);
+  bool collapse_(node_ptr, node_ptr);
+  bool collapse(simplex_t, simplex_t);
   bool vertex_collapseR(idx_t, idx_t, idx_t);
   bool vertex_collapse(node_ptr, node_ptr, node_ptr);
   void contract(simplex_t);
@@ -283,8 +278,6 @@ struct SimplexTree {
   // Serialization/unserialization + saving/loading the complex
   vector< simplex_t > serialize() const;
   void deserialize(vector< simplex_t >);  // void deserializeR(List simplices)
-  void save(std::string) const;
-  void load(std::string);
   
   // Printing 
   void print_tree() const;
@@ -299,26 +292,16 @@ struct SimplexTree {
   std::string get_id_policy() const;
   void set_id_policy(std::string);
   
-  // Indexed simplex 
-  struct indexed_simplex {
-    size_t parent_idx;  // index of its parent simplex in tree
-    idx_t label;        // last(sigma) 
-    double index;       // diameter/weight of the simplex 
-  };
-  
-  // Filtration
-  vector< size_t > simplex_idx(const size_t) const;
-  simplex_t expand_simplex(const vector< size_t >) const;
-  void rips(vector< double >, const size_t);
-  void threshold_function(double);
-  void threshold_index(size_t);
-  vector< vector< idx_t > > rips_simplices() const;
-  vector< double > rips_weights() const;
-  size_t rips_index() const;
-  double rips_epsilon() const;
+  // Handle filtration w/ PIMPL
+  // private:
+  //   class Filtration;
+  //   std::unique_ptr< Filtration > filtr_ptr;
+  //   const Filtration* Pimpl() const { return filtr_ptr.get(); }
+  //   Filtration* Pimpl() { return filtr_ptr.get(); }
 };
 
 #include "simplextree/st_iterators.hpp"
+#include "simplextree/st_filtration.hpp"
 #include "simplextree/st.hpp"
 
 

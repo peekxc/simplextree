@@ -161,6 +161,9 @@ namespace st {
   			constexpr d_type& base() const {
   				return(this->info.get());
   			};
+  			constexpr const SimplexTree& trie() const {
+  				return(*(this->info.get().st));
+  			};
   			constexpr t_node& current_t_node(){
   				if constexpr (ts){ 
   					output = std::tuple_cat(current, std::make_tuple(labels)); 
@@ -246,7 +249,7 @@ namespace st {
   	// Iterator type
   	struct iterator : public TraversalInterface< ts, preorder >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
   
   		// DFS specific data structures
   		std::stack< typename B::d_node > node_stack;  
@@ -307,7 +310,7 @@ namespace st {
   	// Iterator type
   	struct iterator : public TraversalInterface< ts, level_order >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
   
   		// BFS specific data structures
   		std::queue< typename B::d_node > node_queue;  
@@ -341,7 +344,7 @@ namespace st {
   		// Doesn't work with regular update method, so override
     	constexpr void update_simplex(){
     		if constexpr (ts){
-    			labels = base().st->full_simplex(get< NP >(current), get< DEPTH >(current));
+    			labels = trie().full_simplex(get< NP >(current), get< DEPTH >(current));
     		}
     	};
   	};// iterator 
@@ -373,78 +376,163 @@ namespace st {
   	// Iterator type
   	struct iterator : public TraversalInterface< ts, coface_roots >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
   
   		// coface-roots-specific structures 
   		simplex_t start_coface_s; 
-  		// SimplexTree::level_map::value_type;
-  		// vector< node_ptr >* current_cousins { nullptr }; 
-  		// vector< node_ptr >::const_iterator current_cousin;
   		size_t c_level_key = 0; // the current level_map key
-  		size_t c_level_idx = 0; 
+  		size_t c_level_idx = 0; // the current level_map index 
   
   		// Iterator constructor
   		iterator(coface_roots& dd, node_ptr cn) : TraversalInterface< ts, coface_roots >::iterator(dd){
-  			// if (cn == nullptr || cn == dd.st->root.get()){ throw std::invalid_argument("Invalid given coface."); };
+  			if (cn == dd.st->root.get()){ throw std::invalid_argument("Invalid given coface."); };
   			const size_t c_depth = dd.st->depth(cn); 
-  			current = std::make_tuple(cn, c_depth);
   			start_coface_s = dd.st->full_simplex(cn, c_depth);
+  			current = std::make_tuple(cn, c_depth);
+  			update_simplex();
+  			++get< DEPTH >(current); // start at next depth
+  		}
+  		
+  		// Finds the next coface of a given face starting at some offset + key, or nullptr if there is none
+  		std::pair< node_ptr, bool > next_coface(simplex_t face, size_t offset, idx_t depth){
+  		  const size_t key = encode_level(depth);
+  		  auto& st = trie();
+  		  auto& lm = trie().level_map; 
+  		  auto cousin_it = lm.find(key);
+  		  
+  		  // If the key doesn't exist or the cousins are empty, return the end
+  		  if (cousin_it == lm.end() || lm.at(key).size() == 0 || offset >= lm.at(key).size()){
+  		    return std::make_pair(nullptr, false);
+  		  }
+  		  
+  		  // Else the cousins exist; see if any of the are a coface
+  		  const auto cousins = cousin_it->second;
+  		  auto coface_it = std::find_if(cousins.begin() + offset, cousins.end(), [&st, &face, depth](node_ptr np){
+  		    return st.is_face(face, st.full_simplex(np, depth));
+  		  });
+  		  
+  		  // If it exists, return it, otherwise return sentinel
+  		  return coface_it != cousins.end() ? std::make_pair(*coface_it, true) : std::make_pair(nullptr, false);
+  		}
+  		
+  		// Encodes the key at a specific level to find cousins
+  		size_t encode_level(size_t depth){
+  		  if (base().init == nullptr || base().init == trie().root.get()){ return 0;}
+  		  return trie().encode_node(base().init->label, depth);
   		}
   		
   		// Increment operator is all that is needed by default
   		auto& operator++(){
   			// If root was given, end the traversal immediately.
-  			if (get< NP >(current) == base().st->root.get()){ 
+  			if (get< NP >(current) == trie().root.get() || get< NP >(current) == nullptr){ 
   				current = sentinel();
   				return(*this);
   			}
-  			// 1. Increment the depth until a cousin is found; else if exceed tree the depth, set current = { nullptr, 0 };
-  			// 2. Assume current depth is <= tree depth. Iterate through cousins, checking whether they are coface roots.
-  			while(get< DEPTH >(current) <= base().st->tree_max_depth && base().st->level_map.count(c_level_key) == 0) {
-  				get< DEPTH >(current) = get< DEPTH >(current)+1;
-  				
-  				// Look for cousins at next depth going up 
-  				auto tmp_key = base().st->encode_node(base().init->label, get< DEPTH >(current)); 
-  				auto ni = base().st->level_map.find(tmp_key); 
-  				if (ni == base().st->level_map.end()){
-  					c_level_key = 0; 
-  				} else {
-  					c_level_key = tmp_key;
-  				}
-  				c_level_idx = 0; 
+  			
+  			// By the end of this block, current should be set to the next (possibly sentinel) coface root 
+  			{
+  			  // While the coface doesn't exist at the current depth, increment depth
+  			  std::pair< node_ptr, bool > coface = next_coface(start_coface_s, c_level_idx, get< DEPTH >(current));
+  			  while (coface.second == false && get< DEPTH >(current) <= trie().tree_max_depth){
+  			    c_level_idx = 0; 
+  			    get< DEPTH >(current)++;
+  			    coface = next_coface(start_coface_s, c_level_idx, get< DEPTH >(current));
+  			  }
+  			  
+  			  // If it doesn't exist, we're done
+  			  if (coface.second == false){
+  			    current = sentinel();
+  			  } else {
+  			    get< NP >(current) = coface.first;
+  			    c_level_idx++;
+  			  }
+  			  update_simplex();
+  			  return *this; 
   			}
-  
-  			// If we've passed the tree's max depth, end the traversal
-  			if (get< DEPTH >(current) > base().st->tree_max_depth || c_level_key == 0){
-  				current = sentinel();
-  			} else {
-  				// Otherwise iterate through the cousins
-  				auto cousins = base().st->level_map.at(c_level_key);
-  				node_ptr c_cousin = cousins.at(c_level_idx);
-  				if (base().st->is_face(start_coface_s, base().st->full_simplex(c_cousin, get< DEPTH >(current)))){ 
-  						get< NP >(current) = c_cousin; // should be guarenteed to exist
-  				}
-  				if (cousins.size() >= (c_level_idx + 1)){
-  					c_level_key = 0; 
-  					c_level_idx = 0; 
-  				} else {
-  					c_level_idx++;
-  				}
-  			}
-  			update_simplex();
-  			return *this; 
+  			//   
+  			//   // Find the cousins. If there are none, increase the depth until there are or
+  			//   // until the depth has exceeded the maximum depth of the tree 
+  			//   
+  			//   auto cousin_it = level_map.find(key);
+  			//   
+  			//   while (cousin_it == level_map.end() && get< DEPTH >(current) <= trie().tree_max_depth){
+  			//     get< DEPTH >(current)++;
+  			//     cousin_it = level_map.find(key);
+  			//   }
+  			//   
+  			//   // At this point, either we're past tree max_depth or we found a coface
+  			//   if (get< DEPTH >(current))
+  			//   
+  			//   // Returns an iterator to the next 
+  			//   const auto next_face = [this](size_t key, size_t offset){
+  			//     std::find_if(begin(level_map[key]))
+  			//   };
+  			//   trie().is_face(start_coface_s, trie().full_simplex(c_cousin, get< DEPTH >(current)))
+  			//   is_face()
+  			//   std::find()
+  			//   next face
+  			// }
+  			// 
+  			// 
+  			// // 1. Increment the depth until a cousin is found; else if exceed tree the depth, set current = { nullptr, 0 };
+  			// // 2. Assume current depth is <= tree depth. Iterate through cousins, checking whether they are coface roots.
+  			// // c_level_key = trie().encode_node(base().init->label, get< DEPTH >(current)); 
+  			// auto c_level_it = trie().level_map.find(c_level_key);
+  			// while(get< DEPTH >(current) <= trie().tree_max_depth && (c_level_it == trie().level_map.end() || trie().level_map.count(c_level_key) == 0)) {
+  			// 	std::cout << "incrementing current depth" << std::flush << std::endl; 
+  			// 	get< DEPTH >(current) = get< DEPTH >(current)+1;
+  			// 	
+  			// 	// Look for cousins at next depth going up 
+  			// 	auto tmp_key = trie().encode_node(base().init->label, get< DEPTH >(current)); 
+  			// 	auto ni = trie().level_map.find(tmp_key); 
+  			// 	if (ni == trie().level_map.end()){
+  			// 	  std::cout << "key not found: " << tmp_key << " encoded from " << base().init->label << ", " << get< DEPTH >(current) << std::flush << std::endl; 
+  			// 		c_level_key = 0; 
+  			// 	} else {
+  			// 	  std::cout << "key found: " << tmp_key << " encoded from " << base().init->label << ", " << get< DEPTH >(current) << std::flush << std::endl; 
+  			// 		c_level_key = tmp_key;
+  			// 	}
+  			// 	c_level_it = trie().level_map.find(c_level_key);
+  			// 	c_level_idx = 0; 
+  			// }
+  			// 
+  			// // If we've passed the tree's max depth, end the traversal
+  			// if (get< DEPTH >(current) > trie().tree_max_depth || c_level_key == 0){
+  			//   std::cout << "yielding sentinel" << std::flush << std::endl;
+  			// 	current = sentinel();
+  			// } else {
+  			//   std::cout << "updating cousin" << std::flush << std::endl;
+  			// 	// Otherwise iterate through the cousins
+  			// 	auto cousins = trie().level_map.at(c_level_key);
+  			// 	node_ptr c_cousin = cousins.at(c_level_idx);
+  			// 	if (trie().is_face(start_coface_s, trie().full_simplex(c_cousin, get< DEPTH >(current)))){ 
+  			// 		get< NP >(current) = c_cousin; // should be guaranteed to exist
+  			// 	}
+  			// 	if ((c_level_idx+1) >= cousins.size()){
+  			// 	  c_level_idx = 0; 
+  			// 	  c_level_key = 0; // trie().encode_node(base().init->label, get< DEPTH >(current)); 
+  			// 	} else {
+  			// 	  c_level_idx++; 
+  			// 	}
+  			// }
+  			// std::cout << "yielding simplex" << std::flush << std::endl;
+  			// update_simplex();
+  			// return *this; 
   		}; // operator++
   
   		// Doesn't work with regular update method, so override
   		constexpr void update_simplex(){
   			if constexpr (ts){
-  				labels = base().st->full_simplex(get< NP >(current));
+  				labels = trie().full_simplex(get< NP >(current), get< DEPTH >(current));
   			}
   		};
   	}; // iterator 
   
   	// Only start at a non-root node, else return the end
-  	auto begin(){ return iterator(*this, init); };
+  	auto begin(){
+  		if (init == st->root.get() || init == nullptr){ return iterator(*this, nullptr); } 
+  		else { return iterator(*this, init); }
+  	};
   	auto end(){ return iterator(*this, nullptr); };
   
   }; // end coface_roots 
@@ -460,7 +548,7 @@ namespace st {
   
   	struct iterator : public TraversalInterface< ts, cofaces >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
   
   		using preorder_it = decltype(std::declval< preorder< ts > >().begin());
   		using coface_root_it = decltype(std::declval< coface_roots< false > >().begin());
@@ -487,7 +575,7 @@ namespace st {
   			//   - else next root is not end of coface_roots, advance root and reset subtree
   			// else while next node is not at end of subtree 
   			// - advance one in subtree, report it back
-  			if (get< NP >(*c_root) == base().st->root.get()){ ++c_root; }
+  			if (get< NP >(*c_root) == trie().root.get()){ ++c_root; }
   			if (std::next(c_node) == subtree.end()){
   				if (c_root == roots.end()){
   					current = sentinel();
@@ -509,7 +597,6 @@ namespace st {
     	constexpr void update_simplex(){
     		if constexpr (ts){
     		  labels = get< LABELS >(*c_node);
-    			// labels = base().st->full_simplex(get< NP >(current), get< DEPTH >(current));
     		}
     	};
   	}; // iterator

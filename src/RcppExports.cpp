@@ -6,6 +6,31 @@
 
 using namespace Rcpp;
 
+// to_subscript_R
+IntegerMatrix to_subscript_R(IntegerVector numbers, const size_t n, const size_t k);
+RcppExport SEXP _simplextree_to_subscript_R(SEXP numbersSEXP, SEXP nSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type numbers(numbersSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(to_subscript_R(numbers, n, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// to_natural_R
+IntegerVector to_natural_R(IntegerMatrix m, const size_t n);
+RcppExport SEXP _simplextree_to_natural_R(SEXP mSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(to_natural_R(m, n));
+    return rcpp_result_gen;
+END_RCPP
+}
 // profile
 NumericVector profile(SEXP st);
 RcppExport SEXP _simplextree_profile(SEXP stSEXP) {
@@ -15,17 +40,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type st(stSEXP);
     rcpp_result_gen = Rcpp::wrap(profile(st));
     return rcpp_result_gen;
-END_RCPP
-}
-// test_cofaces
-void test_cofaces(SEXP st, simplex_t sigma);
-RcppExport SEXP _simplextree_test_cofaces(SEXP stSEXP, SEXP sigmaSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type st(stSEXP);
-    Rcpp::traits::input_parameter< simplex_t >::type sigma(sigmaSEXP);
-    test_cofaces(st, sigma);
-    return R_NilValue;
 END_RCPP
 }
 // parameterize_R
@@ -80,16 +94,19 @@ END_RCPP
 
 RcppExport SEXP _rcpp_module_boot_union_find_module();
 RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
+RcppExport SEXP _rcpp_module_boot_filtration_module();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_simplextree_to_subscript_R", (DL_FUNC) &_simplextree_to_subscript_R, 3},
+    {"_simplextree_to_natural_R", (DL_FUNC) &_simplextree_to_natural_R, 2},
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},
-    {"_simplextree_test_cofaces", (DL_FUNC) &_simplextree_test_cofaces, 2},
     {"_simplextree_parameterize_R", (DL_FUNC) &_simplextree_parameterize_R, 4},
     {"_simplextree_traverse_R", (DL_FUNC) &_simplextree_traverse_R, 2},
     {"_simplextree_ltraverse_R", (DL_FUNC) &_simplextree_ltraverse_R, 2},
     {"_simplextree_straverse_R", (DL_FUNC) &_simplextree_straverse_R, 2},
     {"_rcpp_module_boot_union_find_module", (DL_FUNC) &_rcpp_module_boot_union_find_module, 0},
     {"_rcpp_module_boot_simplex_tree_module", (DL_FUNC) &_rcpp_module_boot_simplex_tree_module, 0},
+    {"_rcpp_module_boot_filtration_module", (DL_FUNC) &_rcpp_module_boot_filtration_module, 0},
     {NULL, NULL, 0}
 };
 

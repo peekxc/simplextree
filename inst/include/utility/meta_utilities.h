@@ -1,7 +1,6 @@
-// st_traits.h
 // Type traits and other meta-programming necessities for the simplex tree implementation
-#ifndef ST_TRAITS_H
-#define ST_TRAITS_H
+#ifndef META_UTILITIES_H_
+#define META_UTILITIES_H_
 
 #include <type_traits>
 #include <memory> 
@@ -53,11 +52,8 @@ using dereference_t = decltype(std::declval<T>().operator*());
 template <typename T> 
 using is_dereferenceable = is_detected< dereference_t, T>;
 
-template <typename T>
-using remove_pointer_t = typename detail::remove_pointer_<T>::type;
-
 template <typename T> 
-using is_ptr = disjunction< is_pointer<T>,  is_dereferenceable<T> >; 
+using is_ptr = disjunction< is_pointer<T>,  is_dereferenceable< T > >; 
 
 template <typename T>
 inline constexpr bool is_ptr_v = is_ptr< T >::value;
@@ -70,25 +66,16 @@ struct less_ptr {
 	}
 };
 
-// So good: https://blog.tartanllama.xyz/exploding-tuples-fold-expressions/
+// Compile-time index dispatchers from amazing post: https://blog.tartanllama.xyz/exploding-tuples-fold-expressions/
 template <std::size_t... Idx>
-auto make_index_dispatcher(std::index_sequence<Idx...>) {
+constexpr auto make_index_dispatcher(std::index_sequence<Idx...>) {
 	return [] (auto&& f) { (f(std::integral_constant<std::size_t,Idx>{}), ...); };
 };
 
 template <std::size_t N>
-auto make_index_dispatcher() {
-	return make_index_dispatcher(std::make_index_sequence<N>{}); 
+constexpr auto make_index_dispatcher() {
+	return make_index_dispatcher(std::make_index_sequence< N >{}); 
 };
 
-// Szudziks pairing function. Takes as input two unsigned integral types (a, b), and uniquely 
-// maps (a, b) to a number c, where c is possibly a different integral type 
-template <typename T1, typename T2> 
-constexpr inline T2 szudzik_pair(T1 a, T1 b){
-  static_assert(std::is_integral<T1>::value, "Integral-type required as a range storage type.");
-  static_assert(std::is_unsigned<T1>::value, "Integral-type required as a range storage type.");
-  return static_cast<T2>(a >= b ? a * a + a + b : a + b * b);
-}
-  
 
 #endif 

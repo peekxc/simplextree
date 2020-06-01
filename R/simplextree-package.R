@@ -13,3 +13,6 @@ NULL
 
 ## Simplex Tree module (can be loaded anywhere)
 Rcpp::loadModule("simplex_tree_module", TRUE)
+
+
+Rcpp::loadModule("filtration_module", TRUE)

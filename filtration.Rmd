@@ -1,0 +1,89 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(simplextree)
+st <- simplex_tree()
+st %>% insert(0:3)
+  
+fi <- new(simplextree:::Filtration)
+
+fi$init_tree(st$as_XPtr())
+set.seed(1234)
+D <- dist(replicate(2, rnorm(fi$n_simplices[1])))
+fi$flag(D)
+
+fi$weights()
+
+structure(fi$simplices, names = seq(0L:(sum(st$n_simplices)-1L)))
+
+fi$current_index
+fi$threshold_index(15)
+fi$current_index
+fi$threshold_index(10)
+fi$current_index
+fi$threshold_index(15)
+
+fi$remove(fi$simplices[[15]], FALSE)
+fi$simplices[[15]]
+
+fi$threshold_index(14)
+fi$current_index
+fi$threshold_index(13)
+fi$current_index
+fi$threshold_index(1)
+fi$current_index
+fi$threshold_index(0)
+fi$current_index
+fi$threshold_index(1)
+fi$current_index
+fi$threshold_index(5)
+fi$current_index
+fi$threshold_index(100)
+fi$current_index
+fi$threshold_index(0)
+x <- do.call(cbind, as.list(k_simplices(st, k = 1)))
+simplextree::sub_to_nat(x, 5)
+simplextree::sub_to_nat(x, 5)
+
+
+library(simplextree)
+st <- simplextree::simplex_tree()
+st %>% insert(1:8)
+
+for (i in 1:100){
+  sigma <- sort(sample(1:8, size = runif(1, min = 1, max = 8)))
+  if (i %% 2){
+    st$insert(sigma, FALSE)
+  } else {
+    st$remove(sigma, FALSE)
+  }
+}
+st$remove(1:2, FALSE)
+
+
+st <- simplextree::simplex_tree()
+st %>% insert(1:4)
+as.list(cofaces(st, 4))
+as.list(cofaces(st, c(1,2))) ## repeats 
+straverse(simplextree:::parameterize_R(st$as_XPtr(), c(1), "preorder", NULL), identity)
+
+st <- simplextree::simplex_tree() %>% insert(1:4)
+ltraverse(simplextree:::parameterize_R(st$as_XPtr(), c(1,4), "coface_roots", NULL), identity)
+
+st <- simplextree::simplex_tree() %>% insert(list(1:3, 2:5))
+ltraverse(simplextree:::parameterize_R(st$as_XPtr(), c(3,4), "coface_roots", NULL), identity)
+```
+
+```{r}
+st <- simplex_tree()
+st$insert(1:3, TRUE)
+st$remove(1:2, TRUE)
+```
+

@@ -836,8 +836,15 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
   
   ## Create a new plot by default unless specified otherwise 
   if (!add){
+    params <- list(...)
+    rel_params <- intersect(c("xlim", "ylim", "log", "asp", "xaxs", "yaxs", "lab"), names(params))
     graphics::plot.new()
-    graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2]))
+    if (length(rel_params) > 0){
+      default_p <- list(xlim=range(coords[,1]), ylim=range(coords[,2]))
+      do.call(graphics::plot.window, modifyList(default_p, params[rel_params]))
+    } else {
+      graphics::plot.window(xlim=range(coords[,1]), ylim=range(coords[,2])) 
+    }
   }
   
   # plot polygons for simplices of dimension 2+; omits edges and vertices

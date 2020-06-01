@@ -23,6 +23,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// To use alloca portably
+#ifdef __GNUC__
+/* Includes GCC, clang and Intel compilers */
+# undef alloca
+# define alloca(x) __builtin_alloca((x))
+#elif defined(__sun) || defined(_AIX)
+/* this is necessary for Solaris 10 and AIX 6: */
+# include <alloca.h>
+#endif
+
+
 #include <cstddef>
 #include <cassert>
 
