@@ -3,6 +3,9 @@
 \name{degree}
 \alias{degree}
 \title{The vertex degree.}
+\usage{
+degree(st, vertices)
+}
 \arguments{
 \item{ids}{the vertex ids to check the degree of.}
 }

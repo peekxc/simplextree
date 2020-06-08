@@ -353,7 +353,8 @@ List get_simplices(Filtration* st){
 }
 
 void make_filtration(Filtration* st, const NumericVector& D){
-  const size_t ne = st->n_simplexes.at(2);
+  if (st->n_simplexes.size() <= 1){ return; }
+  const size_t ne = st->n_simplexes.at(1);
   const auto v = st->get_vertices();
   const size_t N = BinomialCoefficient(v.size(), 2);
   if (ne == D.size()){
@@ -361,7 +362,6 @@ void make_filtration(Filtration* st, const NumericVector& D){
     st->flag(weights, false);
   } else if (D.size() == N){ // full distance vector passed in
     auto edge_iter = st::max_skeleton< true >(st, st->root.get(), 1);
-    // auto edge_iter = st::k_simplices< true >(*st, 1);
     vector< double > weights;
     weights.reserve(ne);
     st::traverse(edge_iter, [&weights, &D, &v](node_ptr np, idx_t depth, simplex_t sigma){
@@ -436,8 +436,9 @@ RCPP_MODULE(filtration_module) {
     .property("current_index", &Filtration::current_index)
     .property("current_value", &Filtration::current_value)
     .property("simplices", &get_simplices, "Returns the simplices in the filtration")
+    .property("weights", &Filtration::weights, "Returns the weights in the filtration")
+    .property("dimensions", &Filtration::dimensions, "Returns the dimensions of the simplices in the filtration")
     .method("flag", &make_filtration, "Constructs a flag filtration")
-    .method("weights", &Filtration::weights)
     .method("threshold_value", &Filtration::threshold_value)
     .method("threshold_index", &Filtration::threshold_index)
     ;

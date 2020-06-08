@@ -3,6 +3,11 @@
 
 #include "meta_utilities.h" // template-utilities
 #include "short_alloc.h"    // stack-based allocation helpers
+#include <assert.h>         // assertions
+#include <array>
+
+template < class T, std::size_t BufSize = 32 >
+using SmallVector = std::vector<T, short_alloc<T, BufSize, alignof(T)>>;
 
 // Szudziks pairing function. Takes as input two unsigned integral types (a, b), and uniquely 
 // maps the pair (a, b) to a distinct number c, where c is possibly a different integral type
@@ -49,9 +54,7 @@ static constexpr auto BC = BinomialCoefficientTable< max_choose, max_choose >();
 
 // Recursive binomial coefficient dispatcher; should be compiled to support up to max_choose - 1 at compile time
 inline size_t BinomialCoefficient(const size_t n, const size_t k) noexcept {
-	if (n < k - 1){ return(1); }
-	// static constexpr size_t max_choose = 10;
-	// auto BC = BinomialCoefficientTable< max_choose, max_choose >();
+	assert(n >= k - 1);
 	switch(n){
 		case 0: return 0;
 		case 1: 
@@ -74,9 +77,20 @@ inline size_t BinomialCoefficient(const size_t n, const size_t k) noexcept {
 			return BC.combinations[n][k];
 		default: {
 			if (n == k || k == 0){ return 1; }
-			return BinomialCoefficient(n-1,k-1) + BinomialCoefficient(n-1,k);		
+			return BinomialCoefficient(n-1, k-1) + BinomialCoefficient(n-1, std::min(n-1-k, k));		
 		}	
 	}
+}
+
+// Given a binomial coefficient 'x' representing (n choose 2), finds 'n'
+inline size_t inv_choose_2(const size_t x) noexcept {
+  const size_t a = floor(sqrt(2*x)), b = ceil(sqrt(2*x)+2);
+  SmallVector< size_t >::allocator_type::arena_type arena;
+  SmallVector< size_t > rng{ arena };
+  rng.resize((b - a) + 1);
+  std::iota(begin(rng), end(rng), a);
+  auto it = std::find_if(begin(rng), end(rng), [x](size_t n){ return(x == BinomialCoefficient(n, 2)); });
+  return it == end(rng) ? 0 : *it;
 }
 
 // constexpr implicitly inlined 
@@ -85,33 +99,28 @@ constexpr size_t to_natural_2(size_t i, size_t j, size_t n) noexcept {
 }
 
 // 0-based
-inline std::pair< size_t, size_t > to_subscript_2(const size_t x, const size_t n) noexcept {
-	auto i = (n - 2 - floor(sqrt(-8*x + 4*n*(n-1)-7)/2.0 - 0.5));
-	auto j = x + i + 1 - n*(n-1)/2 + (n-i)*((n-i)-1)/2;
-	return std::make_pair(i,j);
+inline std::array< size_t, 2 > to_subscript_2(const size_t x, const size_t n) noexcept {
+	auto i = static_cast< size_t >( (n - 2 - floor(sqrt(-8*x + 4*n*(n-1)-7)/2.0 - 0.5)) );
+	auto j = static_cast< size_t >( x + i + 1 - n*(n-1)/2 + (n-i)*((n-i)-1)/2 );
+	return { i, j };
 }
 
 // converts to natural number
 template < typename Iter > 
 inline size_t to_natural_k(Iter s, Iter e, const size_t k, const size_t n) {
 	using int_t = typename std::iterator_traits< Iter >::value_type;
-	size_t N = BinomialCoefficient(n,k);
+	const size_t N = BinomialCoefficient(n,k);
 	
 	// Apply the dual index
 	int_t* encoded = static_cast< int_t* >(alloca(k));
-	std::transform(s, e, encoded, [n](size_t num){ return (n-1) - (num - 1); });
+	size_t i = k; 
+	std::transform(s, e, encoded, [n, &i](size_t num){ 
+	  return BinomialCoefficient((n-1) - num, i--); 
+	});
 	
-	// Expand with the binomial coefficient
-	size_t expanded = 0; 
-	for (size_t i = k; i > 0; --i){
-		expanded = expanded + BinomialCoefficient(encoded[((k+1)-i)-1], i);
-	}
-	expanded = (N-1)-expanded;
-	return(expanded);
+	// Assumulate the binomial coefficients and apply dual 
+	return((N-1) - std::accumulate(encoded, encoded + k, 0));
 }
-
-template < class T, std::size_t BufSize = 32 >
-using SmallVector = std::vector<T, short_alloc<T, BufSize, alignof(T)>>;
 
 // 0-based conversion of (n choose k) combinadic subscripts to natural number
 template < typename Iter, typename Lambda > 
@@ -137,18 +146,18 @@ inline void to_subscript(Iter s, Iter e, const size_t n, const size_t k, Lambda&
   combination.resize(k);
   switch(k){
     case 2:{
-      std::for_each(s, e, [&](auto& i){
-        auto cc = to_subscript_2(i, n);
-        combination[0] = cc.first; 
-        combination[1] = cc.second;
+      std::array< size_t, 2 > cc; 
+      std::for_each(s, e, [n, &cc, &f, &combination](auto& i){
+        cc = to_subscript_2(i, n);
+        std::move(cc.begin(), cc.end(), combination.begin());
         f(combination);
       });
       break;
     }
     default: {
-      size_t N = BinomialCoefficient(n, k);
+      const size_t N = BinomialCoefficient(n, k);
       std::for_each(s, e, [&](auto& i){
-        if (i < 0 || i >= N) { throw std::out_of_range ("Combinatic out of range."); }
+        if (i < 0 || i >= N) { throw std::out_of_range ("Combinadic out of range."); }
         size_t z = (N-1)-i, cc = 0, pc = n;
         for (size_t j = k; j > 0; --j){
         	size_t value = z + 1; 

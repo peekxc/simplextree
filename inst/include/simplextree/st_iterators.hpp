@@ -429,95 +429,23 @@ namespace st {
   				return(*this);
   			}
   			
-  			// By the end of this block, current should be set to the next (possibly sentinel) coface root 
-  			{
-  			  // While the coface doesn't exist at the current depth, increment depth
-  			  std::pair< node_ptr, bool > coface = next_coface(start_coface_s, c_level_idx, get< DEPTH >(current));
-  			  while (coface.second == false && get< DEPTH >(current) <= trie().tree_max_depth){
-  			    c_level_idx = 0; 
-  			    get< DEPTH >(current)++;
-  			    coface = next_coface(start_coface_s, c_level_idx, get< DEPTH >(current));
-  			  }
-  			  
-  			  // If it doesn't exist, we're done
-  			  if (coface.second == false){
-  			    current = sentinel();
-  			  } else {
-  			    get< NP >(current) = coface.first;
-  			    c_level_idx++;
-  			  }
-  			  update_simplex();
-  			  return *this; 
-  			}
-  			//   
-  			//   // Find the cousins. If there are none, increase the depth until there are or
-  			//   // until the depth has exceeded the maximum depth of the tree 
-  			//   
-  			//   auto cousin_it = level_map.find(key);
-  			//   
-  			//   while (cousin_it == level_map.end() && get< DEPTH >(current) <= trie().tree_max_depth){
-  			//     get< DEPTH >(current)++;
-  			//     cousin_it = level_map.find(key);
-  			//   }
-  			//   
-  			//   // At this point, either we're past tree max_depth or we found a coface
-  			//   if (get< DEPTH >(current))
-  			//   
-  			//   // Returns an iterator to the next 
-  			//   const auto next_face = [this](size_t key, size_t offset){
-  			//     std::find_if(begin(level_map[key]))
-  			//   };
-  			//   trie().is_face(start_coface_s, trie().full_simplex(c_cousin, get< DEPTH >(current)))
-  			//   is_face()
-  			//   std::find()
-  			//   next face
-  			// }
-  			// 
-  			// 
-  			// // 1. Increment the depth until a cousin is found; else if exceed tree the depth, set current = { nullptr, 0 };
-  			// // 2. Assume current depth is <= tree depth. Iterate through cousins, checking whether they are coface roots.
-  			// // c_level_key = trie().encode_node(base().init->label, get< DEPTH >(current)); 
-  			// auto c_level_it = trie().level_map.find(c_level_key);
-  			// while(get< DEPTH >(current) <= trie().tree_max_depth && (c_level_it == trie().level_map.end() || trie().level_map.count(c_level_key) == 0)) {
-  			// 	std::cout << "incrementing current depth" << std::flush << std::endl; 
-  			// 	get< DEPTH >(current) = get< DEPTH >(current)+1;
-  			// 	
-  			// 	// Look for cousins at next depth going up 
-  			// 	auto tmp_key = trie().encode_node(base().init->label, get< DEPTH >(current)); 
-  			// 	auto ni = trie().level_map.find(tmp_key); 
-  			// 	if (ni == trie().level_map.end()){
-  			// 	  std::cout << "key not found: " << tmp_key << " encoded from " << base().init->label << ", " << get< DEPTH >(current) << std::flush << std::endl; 
-  			// 		c_level_key = 0; 
-  			// 	} else {
-  			// 	  std::cout << "key found: " << tmp_key << " encoded from " << base().init->label << ", " << get< DEPTH >(current) << std::flush << std::endl; 
-  			// 		c_level_key = tmp_key;
-  			// 	}
-  			// 	c_level_it = trie().level_map.find(c_level_key);
-  			// 	c_level_idx = 0; 
-  			// }
-  			// 
-  			// // If we've passed the tree's max depth, end the traversal
-  			// if (get< DEPTH >(current) > trie().tree_max_depth || c_level_key == 0){
-  			//   std::cout << "yielding sentinel" << std::flush << std::endl;
-  			// 	current = sentinel();
-  			// } else {
-  			//   std::cout << "updating cousin" << std::flush << std::endl;
-  			// 	// Otherwise iterate through the cousins
-  			// 	auto cousins = trie().level_map.at(c_level_key);
-  			// 	node_ptr c_cousin = cousins.at(c_level_idx);
-  			// 	if (trie().is_face(start_coface_s, trie().full_simplex(c_cousin, get< DEPTH >(current)))){ 
-  			// 		get< NP >(current) = c_cousin; // should be guaranteed to exist
-  			// 	}
-  			// 	if ((c_level_idx+1) >= cousins.size()){
-  			// 	  c_level_idx = 0; 
-  			// 	  c_level_key = 0; // trie().encode_node(base().init->label, get< DEPTH >(current)); 
-  			// 	} else {
-  			// 	  c_level_idx++; 
-  			// 	}
-  			// }
-  			// std::cout << "yielding simplex" << std::flush << std::endl;
-  			// update_simplex();
-  			// return *this; 
+			  // While the coface doesn't exist at the current depth, increment depth
+			  std::pair< node_ptr, bool > coface = next_coface(start_coface_s, c_level_idx, get< DEPTH >(current));
+			  while (coface.second == false && get< DEPTH >(current) <= trie().tree_max_depth){
+			    c_level_idx = 0; 
+			    get< DEPTH >(current)++;
+			    coface = next_coface(start_coface_s, c_level_idx, get< DEPTH >(current));
+			  }
+			  
+			  // If it doesn't exist, we're done
+			  if (coface.second == false){
+			    current = sentinel();
+			  } else {
+			    get< NP >(current) = coface.first;
+			    c_level_idx++;
+			  }
+			  update_simplex();
+			  return *this; 
   		}; // operator++
   
   		// Doesn't work with regular update method, so override
@@ -739,6 +667,36 @@ namespace st {
   
   template <class T>
   constexpr auto get_simplex(T& cn){ return std::get< 2 >(cn); }
+  
+  template < class Iterable > 
+  auto generate_node_pairs(Iterable traversal) ->  vector< std::pair< node_ptr, idx_t > > {
+    auto result = vector< std::pair< node_ptr, idx_t > >(); 
+    for (auto& cn: traversal){ 
+      result.push_back(std::make_tuple(get_node_ptr(cn), get_depth(cn)));
+    }
+    return(result);
+  }
+  
+  template < class Iterable > 
+  auto generate_simplices(Iterable traversal) -> vector< simplex_t > {
+    vector< simplex_t > result; 
+    for (auto& cn: traversal){ 
+      result.push_back(get_simplex(cn));
+    }
+    return(result);
+  }
+  
+   // Generic traversal function which unpacks the tuple and allows for early termination of the iterable
+  // template <class Iterable, class Lambda> 
+  // decltype(auto) generate(Iterable traversal, Lambda f){
+  //   using V = typename Iterable::value_type;
+  //   using T = decltype( std::declval< Lambda >()(V) );
+  //   vector< T > result; 
+  // 	for (auto& cn: traversal){ 
+  // 		bool should_continue = std::apply(f, cn);
+  // 		if (!should_continue){ break; }
+  // 	}
+  // }
   
 }; // end namespace st 
 

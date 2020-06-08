@@ -72,6 +72,19 @@ simplex_tree <- function(simplices = NULL){
   return(st)
 }
 
+#' filtration
+#' @description Creates a filtration. 
+#' @param st a simplicial complex, either as a simplex tree or an ordered list of simplices. See details. 
+#' @param d a vector of edge weights, or a 'dist' object. 
+#' @export
+filtration <- function(st, d){
+  # stopifnot(length(d) != )
+  fi <- new(Filtration)
+  fi$init_tree(st$as_XPtr())
+  fi$flag(d)
+  return(fi)
+}
+
 # ---- empty_face ----
 #' empty_face 
 #' @description Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree. 
@@ -175,7 +188,7 @@ ltraverse <- function(traversal, f, ...){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 preorder <- function(st, sigma = NULL){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "preorder", NULL)
 }
@@ -187,7 +200,7 @@ preorder <- function(st, sigma = NULL){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 level_order <- function(st, sigma = NULL){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "level_order", NULL)
 }
@@ -199,7 +212,7 @@ level_order <- function(st, sigma = NULL){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 cofaces <- function(st, sigma){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   parameterize_R(st$as_XPtr(), sigma, "faces", NULL)
 }
 
@@ -210,7 +223,7 @@ cofaces <- function(st, sigma){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 cofaces <- function(st, sigma){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   parameterize_R(st$as_XPtr(), sigma, "cofaces", NULL)
 }
 
@@ -222,10 +235,26 @@ cofaces <- function(st, sigma){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 k_skeleton <- function(st, k, sigma = NULL){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "k_skeleton", list(k=k))
 }
+
+# ---- coface_roots ----- 
+#' @name coface_roots 
+#' @title Generates a coface roots traversal on the simplex tree.
+#' @param st the simplex tree to traverse.
+#' @param sigma simplex to start the traversal at. 
+#' @description The coface roots of a given simplex \code{sigma} are the roots of subtrees 
+#' in the trie whose descendents (including the roots themselves) are cofaces of \code{sigma}.
+#' This traversal is more useful when used in conjunction with other traversals, e.g. a \emph{preorder} 
+#' or \emph{level_order} traversal at the roots enumerates the cofaces of \code{sigma}.
+#' @export
+cofaces <- function(st, sigma){
+  stopifnot(class(st) %in% .st_classes)
+  parameterize_R(st$as_XPtr(), sigma, "coface_roots", NULL)
+}
+
 
 # ---- maximal ----- 
 #' @name maximal 
@@ -234,7 +263,7 @@ k_skeleton <- function(st, k, sigma = NULL){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 maximal <- function(st, sigma = NULL){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "maximal", NULL)
 }
@@ -247,7 +276,7 @@ maximal <- function(st, sigma = NULL){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 k_simplices <- function(st, k, sigma = NULL){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "k_simplices", list(k=k))
 }
@@ -259,7 +288,7 @@ k_simplices <- function(st, k, sigma = NULL){
 #' @param sigma simplex to start the traversal at. 
 #' @export
 link <- function(st, sigma){
-  stopifnot("Rcpp_SimplexTree" %in% class(st))
+  stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "link", NULL)
 }
@@ -280,6 +309,7 @@ link <- function(st, sigma){
 #' level in the subtree tree is a set of sibling k-simplices whose order is given  
 #' by the number of dots ('.') proceeding the print level.
 print_tree <- function(st){
+  stopifnot(class(st) %in% .st_classes)
   st$print_tree()
 }
 
@@ -290,6 +320,19 @@ setClass("Rcpp_SimplexTree")
   if (max_k == 0){ cat("< empty simplex tree >\n") }
   else {
     cat(sprintf("Simplex Tree with (%s) (%s)-simplices\n", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")))
+  }
+})
+
+# ---- print.Rcpp_Filtration ----
+setClass("Rcpp_Filtration")
+.print_filtration <- setMethod("show", "Rcpp_Filtration", function (object) {
+  max_k <- length(object$n_simplices)
+  if (max_k == 0){ cat("< empty filtration >\n") }
+  else {
+    writeLines(c(
+      sprintf("Simplex Tree with (%s) (%s)-simplices", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")), 
+      sprintf("Current filtration index: %d", object$current_index)
+    ))
   }
 })
 
@@ -329,8 +372,9 @@ NULL
 #' st$clear()
 #' print(st) ## < empty simplex tree >
 clear <- function(st){
+  stopifnot(class(st) %in% .st_classes)
   st$clear()
-  return(st)
+  return(invisible(st))
 }
 
 # ---- generate_ids ----
@@ -363,7 +407,10 @@ NULL
 #' @title The vertex degree.
 #' @param ids the vertex ids to check the degree of. 
 #' @description Returns the number of edges (degree) for each given vertex id. 
-NULL
+degree <- function(st, vertices){
+  stopifnot(is.vector(vertices))
+  return(st$degree(vertices))
+}
 
 # ---- expand ----
 #' @name expand
@@ -374,8 +421,9 @@ NULL
 #' is a flag complex. 
 #' @export
 expand <- function(st, k){
+  stopifnot(is.numeric(k))
   st$expand(k)
-  return(st)
+  return(invisible(st))
 }
 
 
@@ -387,7 +435,10 @@ expand <- function(st, k){
 #' st <- simplex_tree()
 #' st$insert(1:3)
 #' st$adjacent(2) ## 1 3
-NULL
+adjacent <- function(st, vertices){
+  stopifnot(is.vector(vertices))
+  return(st$adjacent(vertices))
+}
 
 # ---- insert ----
 #' @name insert
@@ -408,8 +459,9 @@ NULL
 #' st$insert(list(4:5, 6)) ## inserts a 1-simplex { 4, 5 } and a 0-simplex { 6 }.
 #' @export
 insert <- function(st, simplices, check_valid = TRUE){
+  stopifnot(class(st) %in% .st_classes)
   st$insert(simplices, check_valid)
-  return(st)
+  return(invisible(st))
 }
 
 # ---- remove ----
@@ -423,7 +475,12 @@ insert <- function(st, simplices, check_valid = TRUE){
 #' it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
 #' Cofaces of \code{simplex} are also removed.
 #' @seealso find remove
-NULL
+#' @export
+remove <- function(st, simplices, check_valid = TRUE){
+  stopifnot(class(st) %in% .st_classes)
+  st$remove(simplices, check_valid)
+  return(invisible(st))
+}
 
 # ---- find ----
 #' @name find
@@ -644,7 +701,6 @@ NULL
 # }
 
 
-
 # ---- plot.Rcpp_SimplexTree ----
 #' @name plot.simplextree
 #' @title Plots the simplex tree
@@ -756,7 +812,7 @@ NULL
 #' }
 #' @export
 plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE, ...) {
-  stopifnot(methods::is(x, "Rcpp_SimplexTree"))
+  stopifnot(class(x) %in% .st_classes)
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
   ## Default color palette; categorical diverging if (# colors) <= 9, o/w rainbow
@@ -880,6 +936,12 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
     do.call(graphics::points, modifyList(list(x=coords[v_subset,,drop=FALSE], pch=21, bg=simplex_colors[subset], col=simplex_colors[subset], cex=2), as.list(vertex_opt)))
     do.call(graphics::text, modifyList(list(x=coords[v_subset,,drop=FALSE], labels=as.character(x$vertices)[v_subset], col="white", cex=0.75), as.list(text_opt))) 
   }
+}
+
+#' plot.Rcpp_Filtration
+#' @export
+plot.Rcpp_Filtration <- function(...){
+  plot.Rcpp_SimplexTree(...)
 }
 
 .default_st_colors <- c("#e41a1c", "#377eb8", "#ffff33", "#984ea3", "#ff7f00", "#4daf4a", "#a65628", "#f781bf", "#999999")

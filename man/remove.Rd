@@ -3,6 +3,9 @@
 \name{remove}
 \alias{remove}
 \title{Remove simplices}
+\usage{
+remove(st, simplices, check_valid = TRUE)
+}
 \arguments{
 \item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
 }

@@ -133,6 +133,7 @@ inline void SimplexTree::record_new_simplexes(const idx_t k, const idx_t n){
   if (n_simplexes.size() < k+1){ n_simplexes.resize(k+1); }
   n_simplexes.at(k) += n;
   while(n_simplexes.back() == 0 && n_simplexes.size() > 0){ n_simplexes.resize(n_simplexes.size() - 1); }
+  tree_max_depth = n_simplexes.size();
 }
 
 // Remove a child node directly from the parent, if it exists
@@ -140,7 +141,6 @@ inline void SimplexTree::record_new_simplexes(const idx_t k, const idx_t n){
 // 1) Remove the child from the parents children map
 // 2) Remove the child from the level map 
 inline void SimplexTree::remove_leaf(node_ptr parent, idx_t child_label){
-  std::cout << "removing leaf: " << child_label << std::flush << std::endl; 
   if (parent == nullptr){ return; }
   const idx_t child_depth = depth(parent) + 1;
 	const auto eq_node_id_lambda = [child_label](auto& cn){ return(child_label == node_label(cn)); };
@@ -159,13 +159,11 @@ inline void SimplexTree::remove_leaf(node_ptr parent, idx_t child_label){
 		parent->children.erase(child_it);
     record_new_simplexes(child_depth-1, -1);
   }
-	std::cout << "finished removing leaf" << std::flush << std::endl; 
 }
 
 // Removes an entire subtree rooted as 'sroot', including 'sroot' itself; calls 'remove_leaf' recursively. 
 inline void SimplexTree::remove_subtree(node_ptr sroot){
   if (sroot == nullptr){ return; }
-  std::cout << "here: " << sroot->label << std::endl; 
   if (sroot->children.empty()){ remove_leaf(sroot->parent, sroot->label); }  // remove self 
   else {
     // Remark: make sure to use labels instead of iterator here, otherwise the iterator will be invalidated.
@@ -195,9 +193,9 @@ inline void SimplexTree::remove_simplex(vector< idx_t > simplex){
     auto cr = st::coface_roots(this, cn);
     vector< node_ptr > co_v;
     std::transform(cr.begin(), cr.end(), std::back_inserter(co_v), [](auto& cn){ return(get< 0 >(cn)); });
-     std::cout << "Removing simplices: " << std::flush << std::endl; 
+    // std::cout << "Removing simplices: " << std::flush << std::endl; 
     for (auto cn: co_v){
-      print_simplex(cn, true);
+      // print_simplex(cn, true);
       if (cn != root.get()){ remove_subtree(cn); }
     }
   }

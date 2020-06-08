@@ -3,6 +3,9 @@
 \name{adjacent}
 \alias{adjacent}
 \title{Adjacent vertices.}
+\usage{
+adjacent(st, vertices)
+}
 \description{
 Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 }

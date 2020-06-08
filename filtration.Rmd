@@ -3,20 +3,52 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
 ```{r}
+
+xy <- replicate(2, rnorm(25))
+d <- dist(xy)
+st <- simplex_tree(t(combn(25,2))) %>% filtration(d)
+
+
+st$threshold_index(0)
+print(st)
+st$threshold_index(10)
+print(st)
+st$threshold_index(35)
+print(st)
+
+st <- simplex_tree() %>% insert(t(combn(10,2)))
+
+
+st <- st %>% expand(k = 2)
+
+
+st 
+
+
 library(simplextree)
-st <- simplex_tree()
-st %>% insert(0:3)
-  
+st <- simplex_tree(as.list(5:10))
+D <- dist(replicate(2, rnorm(st$n_simplices[1])))
+
+density <- floor(0.30*choose(st$n_simplices[1],2))
+edges <- sample(st$vertices, size = ifelse(density %% 2, density+1L, density), replace = TRUE)
+st %>% insert(matrix(edges, ncol = 2), TRUE)
+
+st$edges
+st <- filtration(st, D)
+plot(st)
 fi <- new(simplextree:::Filtration)
+
+
+st <- simplex_tree(as.list(5:10)) %>% insert(list(c(5,10), c(5,8), c(8,10), c(5,6), c(7,9), c(7,10)))
+st %>% expand(k=2)
+dd <- as.matrix(D)[matrix(match(st$edges, st$vertices), ncol = 2)]
+st <- filtration(st, dd)
 
 fi$init_tree(st$as_XPtr())
 set.seed(1234)
 D <- dist(replicate(2, rnorm(fi$n_simplices[1])))
+fi$insert(t(combn(fi$n_simplices[1],2))-1L, FALSE)
 fi$flag(D)
 
 fi$weights()

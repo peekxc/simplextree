@@ -3,6 +3,16 @@ using namespace Rcpp;
 
 #include "utility/discrete.h"
 
+// [[Rcpp::export]]
+size_t n_choose_k(const size_t n, const size_t k){
+  return BinomialCoefficient(n, k);
+}
+
+// [[Rcpp::export]]
+size_t inv_choose_2_R(const size_t x){
+  return inv_choose_2(x);
+}
+
 // 0-based conversion of natural number to (n choose k) combinadic
 // [[Rcpp::export]]
 IntegerMatrix to_subscript_R(IntegerVector numbers, const size_t n, const size_t k){

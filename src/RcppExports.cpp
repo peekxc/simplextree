@@ -6,6 +6,29 @@
 
 using namespace Rcpp;
 
+// n_choose_k
+size_t n_choose_k(const size_t n, const size_t k);
+RcppExport SEXP _simplextree_n_choose_k(SEXP nSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const size_t >::type n(nSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type k(kSEXP);
+    rcpp_result_gen = Rcpp::wrap(n_choose_k(n, k));
+    return rcpp_result_gen;
+END_RCPP
+}
+// inv_choose_2_R
+size_t inv_choose_2_R(const size_t x);
+RcppExport SEXP _simplextree_inv_choose_2_R(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const size_t >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(inv_choose_2_R(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 // to_subscript_R
 IntegerMatrix to_subscript_R(IntegerVector numbers, const size_t n, const size_t k);
 RcppExport SEXP _simplextree_to_subscript_R(SEXP numbersSEXP, SEXP nSEXP, SEXP kSEXP) {
@@ -97,6 +120,8 @@ RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
 RcppExport SEXP _rcpp_module_boot_filtration_module();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_simplextree_n_choose_k", (DL_FUNC) &_simplextree_n_choose_k, 2},
+    {"_simplextree_inv_choose_2_R", (DL_FUNC) &_simplextree_inv_choose_2_R, 1},
     {"_simplextree_to_subscript_R", (DL_FUNC) &_simplextree_to_subscript_R, 3},
     {"_simplextree_to_natural_R", (DL_FUNC) &_simplextree_to_natural_R, 2},
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},

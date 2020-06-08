@@ -4,7 +4,7 @@ library("testthat")
 testthat::context("Testing Simplex Tree")
 
 test_that("Can construct and deconstruct a Simplex Tree object", {
-  st <- simplextree::simplex_tree()
+  st <- simplex_tree()
   expect_is(st, "Rcpp_SimplexTree")
   expect_is(st$as_XPtr(), "externalptr")
   expect_equal(st$n_simplices, numeric(0))
@@ -12,7 +12,7 @@ test_that("Can construct and deconstruct a Simplex Tree object", {
 })
 
 test_that("Can add and remove vertices", {
-  st <- simplextree::simplex_tree()
+  st <- simplex_tree()
   invisible(sapply(seq(5L), function(i) st$insert(i)))
   expect_equal(head(st$n_simplices, 1), 5L)
   invisible(sapply(seq(5L), function(i) st$remove(i)))
@@ -21,40 +21,40 @@ test_that("Can add and remove vertices", {
 })
 
 test_that("Can add and remove edges", {
-  stree <- simplextree::simplex_tree()
+  st <- simplex_tree()
   n_vertices <- sample(5L:25L, size = 1)
   edges <- t(combn(n_vertices, 2L))
   
   ## Insert vertices
   expect_silent(invisible(sapply(seq(n_vertices), function(v){
-    stree$insert(as.integer(v))
+    st %>% insert(as.integer(v))
   })))
   ## Insert edges
   expect_silent(invisible(apply(edges, 1, function(e){
-    stree$insert(as.integer(e))
+    st %>% insert(as.integer(e))
   })))
-  expect_equal(stree$n_simplices, c(n_vertices, choose(n_vertices, 2L)))
+  expect_equal(st$n_simplices, c(n_vertices, choose(n_vertices, 2L)))
   
   ## Remove edges, check each time
   cc <- choose(n_vertices, 2L)
   expect_silent(invisible(apply(edges, 1, function(e){
-    stree$remove(as.integer(e))
+    st %>% remove(as.integer(e))
   })))
-  expect_equal(stree$n_simplices, c(n_vertices, numeric(0L)))
+  expect_equal(st$n_simplices, c(n_vertices, numeric(0L)))
   rm(stree)
 })
 
 test_that("Export types work", {
-  stree <- simplextree::simplex_tree()
+  st <- simplex_tree()
   n_vertices <- sample(2:25, size = 1)
   edges <- t(combn(n_vertices, 2L))
   invisible(apply(edges, 1, function(e){
-    stree$insert(as.integer(e))
+    st %>%  insert(as.integer(e))
   }))
   
   ## Test can export to adjacency matrix 
-  expect_is(stree$as_adjacency_matrix(), class = "matrix")
-  am <- stree$as_adjacency_matrix()
+  expect_is(st$as_adjacency_matrix(), class = "matrix")
+  am <- st$as_adjacency_matrix()
   expect_equal(nrow(am), n_vertices)
   expect_equal(sum(am == 1), choose(n_vertices, 2)*2) 
   
