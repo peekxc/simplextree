@@ -137,9 +137,9 @@ Identifying the coface roots
 ```{r}
 st <- simplex_tree(list(1:3, 2:5, c(6,7,9), 7:8, 10))
 
-edge_pairs <- function(simplex){ t(combn(length(simplex), 2, function(i){ simplex[i] })) }
-edges <- do.call(rbind, list(edge_pairs(1:3), edge_pairs(2:5), edge_pairs(c(6,7,9))))
-st <- simplex_tree(edges) %>% insert(list(7:8, 10))
+edge_pairs <- function(simplex){ combn(length(simplex), 2, function(i){ simplex[i] }) }
+edges <- do.call(cbind, list(edge_pairs(1:3), edge_pairs(2:5), edge_pairs(c(6,7,9))))
+st <- simplex_tree(t(edges)) %>% insert(list(7:8, 10))
 plot(st, coords=coords, asp = 1)
 ```
 

@@ -304,9 +304,6 @@ inline size_t SimplexTree::vertex_index(const idx_t id) const{
 
 // Overloaded in the case where a single (1-length vector) label is given
 inline SimplexTree::node_ptr SimplexTree::find_by_id(const node_set_t& level, idx_t label) const{
-	// const auto eq_node_id_lambda = [label](auto& cn){
-	// 	return(label == node_label(cn));
-	// };
   auto it = std::find_if(begin(level), end(level), eq_node_id(label));
   return it != end(level) ? (*it).get() : nullptr; 
 }
@@ -383,18 +380,10 @@ inline SimplexTree::node_ptr SimplexTree::top_node(node_ptr cn) const{
 // Recursively calculate the depth of a node
 inline size_t SimplexTree::depth(node_ptr cn) const{
   if (cn == nullptr || cn == root.get()){ return 0; }
-  size_t d = 1; 
-  node_ptr r = cn; // copy 
-  while (r && r->parent != root.get()){ 
-    ++d; 
-    r = r->parent;
-		// std::cout << "1: " << r << ", " << r->parent << std::flush << std::endl;
-		// if (r->parent == nullptr || r->parent == NULL){
-		// 	std::cout << "here" << std::endl;
-		// 	break; 
-		// }
+  size_t d;
+  for (d = 1; cn && cn->parent != root.get(); ++d){ 
+    cn = cn->parent;
   }
-	// std::cout << "got depth" << std::flush << std::endl;
   return d; 
 }
 
@@ -717,65 +706,6 @@ inline void SimplexTree::contract(vector< idx_t > edge){
 	for (auto& edge: to_remove){ remove_subtree(edge); }
 	for (auto& edge: to_insert){ insert_simplex(edge); }
 }
-
-// Recursive version
-// template < size_t I >
-// inline simplex_t SimplexTree::full_simplex_r(node_ptr cn) const noexcept {
-// 	if (cn == nullptr || cn->parent == nullptr){ return(simplex_t()); };
-// 	splex_alloc_t a; 
-// 	splex_t buffer{a};
-// 	if constexpr(I > 0 && I <= array_threshold){
-// 		buffer.resize(I);
-// 		auto dispatcher = make_index_dispatcher< I >();
-// 		dispatcher([&buffer, &cn](auto idx) { buffer[idx] = node_label_r< (I - idx - 1) >(cn); });
-// 	} else {
-// 		auto out = std::back_inserter(buffer);
-// 		while (cn->parent != nullptr){
-// 			*(out)++ = cn->label;
-// 			cn = cn->parent;
-// 		}
-// 		std::reverse(begin(buffer), end(buffer));
-// 	}
-// 	simplex_t result; 
-// 	result.insert(end(result), std::make_move_iterator(begin(buffer)), std::make_move_iterator(end(buffer)));
-// 	return result;
-// }
-// 
-// // Run-time version that supports compile-time optimizations
-// inline simplex_t SimplexTree::full_simplex(node_ptr cn, const idx_t depth) const noexcept {
-// 	switch(depth){ 
-// 		case 1: 
-// 			return(full_simplex_r< 1 >(cn));
-// 			break; 
-// 		case 2: 
-// 			return(full_simplex_r< 2 >(cn));
-// 			break; 
-// 		case 3: 
-// 			return(full_simplex_r< 3 >(cn));
-// 			break; 
-// 		case 4: 
-// 			return(full_simplex_r< 4 >(cn));
-// 			break; 
-// 		case 5: 
-// 			return(full_simplex_r< 5 >(cn));
-// 			break; 
-// 		case 6: 
-// 			return(full_simplex_r< 6 >(cn));
-// 			break; 
-// 		case 7: 
-// 			return(full_simplex_r< 7 >(cn));
-// 			break; 
-// 		case 8: 
-// 			return(full_simplex_r< 8 >(cn));
-// 			break; 
-// 		case 9: 
-// 			return(full_simplex_r< 9 >(cn));
-// 			break; 
-// 		default:
-// 			return(full_simplex_r< 0 >(cn));
-// 			break;
-// 	}
-// }
 
 // Recursive version output 
 template < size_t I, typename OutputIt >
