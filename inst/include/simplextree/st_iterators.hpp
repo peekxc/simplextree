@@ -417,7 +417,7 @@ namespace st {
   		
   		// Encodes the key at a specific level to find cousins
   		size_t encode_level(size_t depth){
-  		  if (base().init == nullptr || base().init == trie().root.get()){ return 0;}
+  		  if (base().init == nullptr || base().init == trie().root.get()){ return 0; }
   		  return trie().encode_node(base().init->label, depth);
   		}
   		

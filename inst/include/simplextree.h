@@ -215,6 +215,15 @@ struct SimplexTree {
   vector< size_t > degree(vector< idx_t >) const;
   simplex_t adjacent_vertices(const idx_t) const;
   
+  template< typename Iter >
+  void insert_it(Iter, Iter, node_ptr, const idx_t);
+    
+  template< typename Iter >
+  node_ptr find_it(Iter, Iter) const; 
+  
+  template < typename Iter >
+  void remove_it(Iter, Iter);
+  
   // Simplex utilities
   void insert_simplex(simplex_t);
   void remove_simplex(simplex_t);
@@ -242,7 +251,9 @@ struct SimplexTree {
   void traverse_facets(node_ptr, Lambda) const;
     
   // Node id equality predicate
-  std::function<bool(const node_ptr)> eq_node_id(const idx_t) const;
+  constexpr auto eq_node_id(const idx_t id) const noexcept {
+    return [id](auto& cn) -> bool { return id == node_label(cn); }; 
+  };
   
   // Utility 
   simplex_t get_labels(const node_set_t& level, idx_t offset = 0) const;
@@ -266,9 +277,19 @@ struct SimplexTree {
   void get_cousins() const;
 
   // Constructs the full simplex from a given node, recursively
-  template < size_t I = 0 >
-	simplex_t full_simplex_r(node_ptr) const noexcept;
+//   template < size_t I = 0 >
+// 	simplex_t full_simplex_r(node_ptr) const noexcept;
+//   simplex_t full_simplex(node_ptr, const idx_t depth = 0) const noexcept;
+  
+  template < size_t I, typename OutputIt >
+  void full_simplex_r(node_ptr cn, OutputIt out) const noexcept;
+  
+  template< typename OutputIt >
+  void full_simplex_out(node_ptr, const idx_t, OutputIt) const noexcept;
+  
   simplex_t full_simplex(node_ptr, const idx_t depth = 0) const noexcept;
+  
+  
   
 	void remove_subtree2(simplex_t);
 
@@ -292,12 +313,6 @@ struct SimplexTree {
   std::string get_id_policy() const;
   void set_id_policy(std::string);
   
-  // Handle filtration w/ PIMPL
-  // private:
-  //   class Filtration;
-  //   std::unique_ptr< Filtration > filtr_ptr;
-  //   const Filtration* Pimpl() const { return filtr_ptr.get(); }
-  //   Filtration* Pimpl() { return filtr_ptr.get(); }
 };
 
 #include "simplextree/st_iterators.hpp"

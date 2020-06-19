@@ -2,13 +2,15 @@
 % Please edit documentation in R/simplex_tree.R
 \name{serialize}
 \alias{serialize}
-\alias{deserialize}
-\title{Serializes/Deserializes the simplex tree.}
+\title{Serializes/deserializes the simplex tree.}
+\usage{
+serialize(st)
+}
 \arguments{
-\item{x}{a list of simplices to insert into the tree.}
+\item{st}{a simplex tree.}
 }
 \description{
-Provides basic deserialization interface for the simplex tree.
+Provides basic serialization interface for the simplex tree.
 }
 \details{
 Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
@@ -25,3 +27,4 @@ st$clear()
 st$deserialize(tmp)
 st$print_tree()
 }
+\concept{serialization}

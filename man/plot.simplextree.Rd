@@ -16,6 +16,7 @@
   maximal = TRUE,
   by_dim = TRUE,
   add = FALSE,
+  clip_polygons = FALSE,
   ...
 )
 }
@@ -39,6 +40,8 @@
 \item{by_dim}{Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.}
 
 \item{add}{Whether to add to the plot or redraw. Defaults to false. See details.}
+
+\item{clip_polygons}{Whether to clip the polygons. Useful when visualizing large complexes. See details.}
 
 \item{...}{unused}
 }

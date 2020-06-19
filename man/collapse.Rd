@@ -3,6 +3,9 @@
 \name{collapse}
 \alias{collapse}
 \title{Elementary collapse}
+\usage{
+collapse(st, tau, sigma)
+}
 \arguments{
 \item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.}
 

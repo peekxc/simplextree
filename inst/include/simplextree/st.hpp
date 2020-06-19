@@ -187,16 +187,31 @@ inline void SimplexTree::remove_simplices(vector< vector< idx_t > > simplices){
 // First removes all the cofaces of a given simplex, including the simplex itself.
 inline void SimplexTree::remove_simplex(vector< idx_t > simplex){
   if (simplex.size() == 0){ return; }
-  std::sort(simplex.begin(), simplex.end()); // Demand that labels are sorted on insertion! 
+  std::sort(simplex.begin(), simplex.end()); // Demand that labels are sorted prior to removal  
   node_ptr cn = find_node(simplex);
   if (cn != nullptr && cn != root.get()){
     auto cr = st::coface_roots(this, cn);
     vector< node_ptr > co_v;
     std::transform(cr.begin(), cr.end(), std::back_inserter(co_v), [](auto& cn){ return(get< 0 >(cn)); });
-    // std::cout << "Removing simplices: " << std::flush << std::endl; 
     for (auto cn: co_v){
-      // print_simplex(cn, true);
-      if (cn != root.get()){ remove_subtree(cn); }
+      remove_subtree(cn);
+    }
+  }
+};
+
+// First removes all the cofaces of a given simplex, including the simplex itself.
+template < typename Iter >
+inline void SimplexTree::remove_it(Iter s, Iter e){
+  if (s == e){ return; }
+  node_ptr cn = find_it(s, e);
+  if (cn != nullptr && cn != root.get()){
+    auto cr = st::coface_roots(this, cn);
+    SmallVector< node_ptr >::allocator_type::arena_type arena;
+    SmallVector< node_ptr > co_v{ arena };
+    //vector< node_ptr > co_v;
+    std::transform(cr.begin(), cr.end(), std::back_inserter(co_v), [](auto& cn){ return(get< 0 >(cn)); });
+    for (auto co_n: co_v){
+      remove_subtree(co_n);
     }
   }
 };
@@ -216,8 +231,39 @@ inline void SimplexTree::insert_simplex(vector< idx_t > sigma){
   sigma.resize(std::distance(sigma.begin(), it)); 
   
   // Begin recursive routine
-  insert((idx_t*) &sigma[0], 0, sigma.size(), root.get(), 0); // start the recursion from the root
+  // insert((idx_t*) &sigma[0], 0, sigma.size(), root.get(), 0); // start the recursion from the root
+  insert_it(begin(sigma), end(sigma), root.get(), 0);
 }
+
+// Create a set of (i)-simplexes as children of the current node, if they don't already exist
+// depth == (depth of c_node)
+template< typename Iter >
+inline void SimplexTree::insert_it(Iter s, Iter e, node_ptr c_node, const idx_t depth){
+  if (s == e || c_node == nullptr){ return; }
+  
+  const idx_t child_depth = depth+1;
+  std::for_each(s, e, [this, &c_node, child_depth](auto label){
+    auto it = std::find_if(begin(node_children(c_node)), end(node_children(c_node)), [label](auto& cn){
+      return(cn->label == label);
+    });
+    if (it == end(c_node->children)){
+      auto new_it = c_node->children.emplace_hint(it, std::make_unique< node >(label, c_node));
+			record_new_simplexes(child_depth-1, 1);
+      if (child_depth > 1){ // keep track of nodes which share ids at the same depth
+        level_map[encode_node(label, child_depth)].push_back((*new_it).get());
+      }
+      if (child_depth > tree_max_depth){ tree_max_depth = child_depth; }
+    }
+  });
+  
+  // Recurse on the subtrees of the current node
+  idx_t j = 1;
+  std::for_each(s, e, [&](auto label){
+    insert_it(std::next(s, j), e, find_by_id(c_node->children, label), depth+1);
+    ++j;
+  });
+}
+
 
 // Create a set of (i)-simplexes as children of the current node, if they don't already exist
 inline void SimplexTree::insert(idx_t* labels, const size_t i, const size_t n_keys, node_ptr c_node, const idx_t depth){
@@ -258,16 +304,27 @@ inline size_t SimplexTree::vertex_index(const idx_t id) const{
 
 // Overloaded in the case where a single (1-length vector) label is given
 inline SimplexTree::node_ptr SimplexTree::find_by_id(const node_set_t& level, idx_t label) const{
-	const auto eq_node_id_lambda = [label](auto& cn){
-		return(label == node_label(cn));
-	};
-  auto it = std::find_if(begin(level), end(level), eq_node_id_lambda);
+	// const auto eq_node_id_lambda = [label](auto& cn){
+	// 	return(label == node_label(cn));
+	// };
+  auto it = std::find_if(begin(level), end(level), eq_node_id(label));
   return it != end(level) ? (*it).get() : nullptr; 
 }
 
 // Wrapper to find a vertex from the top nodes
 inline SimplexTree::node_ptr SimplexTree::find_vertex(const idx_t v_id) const{
   return find_by_id(root->children, v_id);
+}
+
+// Find iterator version
+template< typename Iter >
+inline SimplexTree::node_ptr SimplexTree::find_it(Iter s, Iter e) const{
+  node_ptr cn = root.get();
+  for (; s != e; ++s){
+    cn = find_by_id(cn->children, *s);
+    if (cn == nullptr){ return nullptr; }
+  }
+  return(cn);
 }
 
 // Given an integer label, searches the tree to see if the simplex exists. If so, the simplex
@@ -303,6 +360,17 @@ inline bool SimplexTree::find_simplex(vector< idx_t > sigma) const{
   }
 }
 
+// template< Iter >
+// inline bool SimplexTree::find_it(s, e) const{
+//   if (s == e){ return false;  }
+//   if (sigma.size() == 1){ 
+//     return(bool(find_vertex(sigma.at(0)))); 
+//   } 
+//   else {
+//     node_ptr res = find_node(sigma);
+//     return(bool(res)); // nullptr conversion to bool guarenteed to be false
+//   }
+// }
 
 // Returns the top node associated with a given node
 inline SimplexTree::node_ptr SimplexTree::top_node(node_ptr cn) const{
@@ -424,15 +492,16 @@ inline void SimplexTree::expansion(const idx_t k){
 inline void SimplexTree::expand(node_set_t& c_set, const idx_t k){
   if (k == 0){ return; }
   // Traverse the children
-  auto siblings = begin(c_set);
-  std::advance(siblings, 1);
-  vector< node_ptr > intersection;
+  auto siblings = ++begin(c_set);
+  SmallVector< node_ptr >::allocator_type::arena_type arena1;
+  SmallVector< node_ptr > intersection { arena1 };
   for (auto& cn: c_set){
     node_ptr top_v = find_vertex(cn->label);
     if (top_v != nullptr && (!top_v->children.empty())){
       
 			// Temporary 
-			vector< node_ptr > sib_ptrs;
+			SmallVector< node_ptr >::allocator_type::arena_type arena2;
+			SmallVector< node_ptr > sib_ptrs { arena2 } ;
 			std::transform(siblings, end(c_set), std::back_inserter(sib_ptrs), [](const auto& n){
 				return n.get();
 			});
@@ -441,7 +510,6 @@ inline void SimplexTree::expand(node_set_t& c_set, const idx_t k){
       intersection.clear();
       std::set_intersection(
         begin(sib_ptrs), end(sib_ptrs),
-				// siblings, end(c_set), 
         begin(top_v->children), end(top_v->children), 
         std::back_inserter(intersection), 
         [](auto& sib_n, auto& child_n) -> bool {
@@ -451,13 +519,10 @@ inline void SimplexTree::expand(node_set_t& c_set, const idx_t k){
     
       // Insert and recursively expand 
       if (intersection.size() > 0){
-        vector< idx_t > sigma = full_simplex(cn.get());
-        sigma.resize(sigma.size() + 1);
+        std::array< idx_t, 1 > int_label;
         for (auto& int_node: intersection){
-          sigma[sigma.size() - 1] = int_node->label;
-          // insert_simplex(sigma); // slowest version w/ sorting + checking 
-          // insert((idx_t*) &sigma[0], 0, sigma.size(), root, 0); // faster version w/o sorting
-        	insert((idx_t*) &sigma[0], sigma.size()-1, sigma.size(), cn.get(), sigma.size() - 1); // fastest version
+          int_label[0] = int_node->label;
+          insert_it(begin(int_label), end(int_label), cn.get(), depth(cn.get()));
         }
         expand(cn->children, k-1); // recurse
       }
@@ -626,91 +691,153 @@ inline vector< idx_t > SimplexTree::connected_components() const{
 }
 
 // Edge contraction 
-// TODO: fix
 inline void SimplexTree::contract(vector< idx_t > edge){
   set< node_ptr > to_remove;
-	// traverse_dfs(root.get(), [this, &edge, &to_remove](node_ptr sigma){
-  //   const idx_t va = edge[0], vb = edge[1];
-  //   if (sigma->label == vb){ // only consider simplices which contain v_lb
-  //     vector< idx_t > si = full_simplex(sigma);
-  //     bool includes_a = std::find(si.begin(), si.end(), va) != si.end();
-  //     if (includes_a){ // case 1: sigma includes both v_la and v_lb
-  //       to_remove.insert(sigma); // add whole simplex to remove list, and we're done.
-  //     } else { // case 2: sigma includes v_lb, but not v_la
-  //       // Insert new simplices with v_la --> v_lb, identity otherwise
-  //       std::for_each(begin_dfs(sigma), end_dfs(), [this, va, vb](node_ptr end){
-  //         vector< idx_t > to_insert = full_simplex(end);
-  //         std::replace(to_insert.begin(), to_insert.end(), vb, va);
-  //         insert_simplex(to_insert); // si will be sorted upon insertion
-  //       });
-  //       to_remove.insert(sigma);
-  //     }
-  //   }
-  // });
-  // std::for_each(begin_dfs(root.get()), end_dfs(), );
+  vector< simplex_t > to_insert; 
+  traverse(st::preorder< true >(this, root.get()), [this, edge, &to_remove, &to_insert](node_ptr np, idx_t depth, simplex_t sigma){
+    const idx_t va = edge[0], vb = edge[1];
+    if (np->label == vb){ // only consider simplices which contain v_lb
+      bool includes_a = std::find(sigma.begin(), sigma.end(), va) != sigma.end();
+      if (includes_a){ // case 1: sigma includes both v_la and v_lb
+        to_remove.insert(np); // add whole simplex to remove list, and we're done.
+      } else { // case 2: sigma includes v_lb, but not v_la
+        // Insert new simplices with v_la --> v_lb, identity otherwise
+        const auto local_preorder = st::preorder< true >(this, np);
+        traverse(local_preorder, [&to_insert, va, vb](node_ptr end, idx_t depth, simplex_t tau){
+          std::replace(tau.begin(), tau.end(), vb, va);
+          to_insert.push_back(tau); // si will be sorted upon insertion
+          return true; 
+        });
+        to_remove.insert(np);
+      }
+    }
+    return true; 
+  });
   // Remove the simplices containing vb
-	for (auto& edge: to_remove){
-		remove_subtree(edge);
-	}
+	for (auto& edge: to_remove){ remove_subtree(edge); }
+	for (auto& edge: to_insert){ insert_simplex(edge); }
 }
 
 // Recursive version
-template < size_t I >
-inline simplex_t SimplexTree::full_simplex_r(node_ptr cn) const noexcept {
-	if (cn == nullptr || cn->parent == nullptr){ return(simplex_t()); };
-	splex_alloc_t a; 
-	splex_t buffer{a};
+// template < size_t I >
+// inline simplex_t SimplexTree::full_simplex_r(node_ptr cn) const noexcept {
+// 	if (cn == nullptr || cn->parent == nullptr){ return(simplex_t()); };
+// 	splex_alloc_t a; 
+// 	splex_t buffer{a};
+// 	if constexpr(I > 0 && I <= array_threshold){
+// 		buffer.resize(I);
+// 		auto dispatcher = make_index_dispatcher< I >();
+// 		dispatcher([&buffer, &cn](auto idx) { buffer[idx] = node_label_r< (I - idx - 1) >(cn); });
+// 	} else {
+// 		auto out = std::back_inserter(buffer);
+// 		while (cn->parent != nullptr){
+// 			*(out)++ = cn->label;
+// 			cn = cn->parent;
+// 		}
+// 		std::reverse(begin(buffer), end(buffer));
+// 	}
+// 	simplex_t result; 
+// 	result.insert(end(result), std::make_move_iterator(begin(buffer)), std::make_move_iterator(end(buffer)));
+// 	return result;
+// }
+// 
+// // Run-time version that supports compile-time optimizations
+// inline simplex_t SimplexTree::full_simplex(node_ptr cn, const idx_t depth) const noexcept {
+// 	switch(depth){ 
+// 		case 1: 
+// 			return(full_simplex_r< 1 >(cn));
+// 			break; 
+// 		case 2: 
+// 			return(full_simplex_r< 2 >(cn));
+// 			break; 
+// 		case 3: 
+// 			return(full_simplex_r< 3 >(cn));
+// 			break; 
+// 		case 4: 
+// 			return(full_simplex_r< 4 >(cn));
+// 			break; 
+// 		case 5: 
+// 			return(full_simplex_r< 5 >(cn));
+// 			break; 
+// 		case 6: 
+// 			return(full_simplex_r< 6 >(cn));
+// 			break; 
+// 		case 7: 
+// 			return(full_simplex_r< 7 >(cn));
+// 			break; 
+// 		case 8: 
+// 			return(full_simplex_r< 8 >(cn));
+// 			break; 
+// 		case 9: 
+// 			return(full_simplex_r< 9 >(cn));
+// 			break; 
+// 		default:
+// 			return(full_simplex_r< 0 >(cn));
+// 			break;
+// 	}
+// }
+
+// Recursive version output 
+template < size_t I, typename OutputIt >
+inline void SimplexTree::full_simplex_r(node_ptr cn, OutputIt out) const noexcept {
+	if (cn == nullptr || cn->parent == nullptr){ return; };
 	if constexpr(I > 0 && I <= array_threshold){
-		buffer.resize(I);
 		auto dispatcher = make_index_dispatcher< I >();
-		dispatcher([&buffer, &cn](auto idx) { buffer[idx] = node_label_r< (I - idx - 1) >(cn); });
+		dispatcher([&out, &cn](auto idx) { *out = node_label_r< (I - idx - 1) >(cn); ++out; });
 	} else {
-		auto out = std::back_inserter(buffer);
+	  splex_alloc_t a; 
+	  splex_t buffer{a};
+		auto buffer_it = std::back_inserter(buffer);
 		while (cn->parent != nullptr){
-			*(out)++ = cn->label;
+			*(buffer_it)++ = cn->label;
 			cn = cn->parent;
 		}
-		std::reverse(begin(buffer), end(buffer));
+		std::move(buffer.rbegin(), buffer.rend(), out);
 	}
-	simplex_t result; 
-	result.insert(end(result), std::make_move_iterator(begin(buffer)), std::make_move_iterator(end(buffer)));
-	return result;
+	return;
 }
 
-// Run-time version that supports compile-time optimizations
-inline simplex_t SimplexTree::full_simplex(node_ptr cn, const idx_t depth) const noexcept {
+template< typename OutputIt >
+inline void SimplexTree::full_simplex_out(node_ptr cn, const idx_t depth, OutputIt out) const noexcept {
 	switch(depth){ 
 		case 1: 
-			return(full_simplex_r< 1 >(cn));
+			return(full_simplex_r< 1 >(cn, out));
 			break; 
 		case 2: 
-			return(full_simplex_r< 2 >(cn));
+			return(full_simplex_r< 2 >(cn, out));
 			break; 
 		case 3: 
-			return(full_simplex_r< 3 >(cn));
+			return(full_simplex_r< 3 >(cn, out));
 			break; 
 		case 4: 
-			return(full_simplex_r< 4 >(cn));
+			return(full_simplex_r< 4 >(cn, out));
 			break; 
 		case 5: 
-			return(full_simplex_r< 5 >(cn));
+			return(full_simplex_r< 5 >(cn, out));
 			break; 
 		case 6: 
-			return(full_simplex_r< 6 >(cn));
+			return(full_simplex_r< 6 >(cn, out));
 			break; 
 		case 7: 
-			return(full_simplex_r< 7 >(cn));
+			return(full_simplex_r< 7 >(cn, out));
 			break; 
 		case 8: 
-			return(full_simplex_r< 8 >(cn));
+			return(full_simplex_r< 8 >(cn, out));
 			break; 
 		case 9: 
-			return(full_simplex_r< 9 >(cn));
+			return(full_simplex_r< 9 >(cn, out));
 			break; 
 		default:
-			return(full_simplex_r< 0 >(cn));
+			return(full_simplex_r< 0 >(cn, out));
 			break;
 	}
+}
+
+inline simplex_t SimplexTree::full_simplex(node_ptr cn, const idx_t depth) const noexcept {
+  simplex_t result;
+  result.reserve(depth);
+  full_simplex_out(cn, depth, std::back_inserter(result));
+  return(result);
 }
 
 // Serialize the simplex tree

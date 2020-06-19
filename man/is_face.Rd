@@ -3,16 +3,19 @@
 \name{is_face}
 \alias{is_face}
 \title{Is face}
+\usage{
+is_face(st, tau, sigma)
+}
 \arguments{
-\item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+\item{tau}{a simplex which may contain \code{sigma} as a coface.}
 
-\item{sigma}{a l-length vector of vertex ids representing a (l-1)-simplex.}
+\item{sigma}{a simplex which may contain \code{tau} as a face.}
 }
 \value{
 boolean indicating whether \code{tau} is a face of \code{sigma}.
 }
 \description{
-Checks whether a simplex is a face of another simplex.
+Checks whether a simplex is a face of another simplex and is in the complex.
 }
 \details{
 A simplex \eqn{\tau} is a face of \eqn{\sigma} if \eqn{\tau \subset \sigma}. This function 

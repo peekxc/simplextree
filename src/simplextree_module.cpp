@@ -491,7 +491,8 @@ List cLists(List x, List y) {
 
 // The types of traversal supported
 enum TRAVERSAL_TYPE { 
-  PREORDER, LEVEL_ORDER, FACES, COFACES, COFACE_ROOTS, K_SKELETON, MAX_SKELETON, MAXIMAL, LINK
+  PREORDER = 0, LEVEL_ORDER = 1, FACES = 2, COFACES = 3, COFACE_ROOTS = 4, K_SKELETON = 5, 
+  MAX_SKELETON = 6, MAXIMAL = 7, LINK = 8
 }; 
 const size_t N_TRAVERSALS = 9;
 

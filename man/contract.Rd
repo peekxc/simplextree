@@ -3,6 +3,9 @@
 \name{contract}
 \alias{contract}
 \title{Edge contraction}
+\usage{
+contract(st, edge)
+}
 \arguments{
 \item{edge}{an edge to contract, as a 2-length vector.}
 }

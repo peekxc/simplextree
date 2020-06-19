@@ -117,14 +117,14 @@ public:
   // Internal helpers
   vector< size_t > simplex_idx(const size_t) const;
   
+  template< typename Lambda >
+  void apply_idx(size_t, Lambda&&) const;
+    
   // template < typename Iter > 
   // simplex_t expand_simplex(Iter, Iter) const;
   simplex_t expand_simplex(simplex_t) const; 
-
   
-  // void get_simplex(const size_t, SmallVector< size_t >&) const; 
-};
-
+}; // End filtration 
 
 // Given sorted vector 'ref', matches elements of 'x' with 'ref', returning
 // a vector of the same length as 'x' with the matched indices. 
@@ -236,6 +236,24 @@ inline void Filtration::flag(const vector< double >& D, const bool fixed){
   // Set state of the filtration to the max
   included = vector< bool >(fc.size(), true);
 }
+
+// Accepts lambda that takes iterator start and end
+template< typename Lambda >
+inline void Filtration::apply_idx(size_t idx, Lambda&& f) const {
+  if (idx >= fc.size()){ throw std::out_of_range("Bad simplex index"); }
+  
+  SmallVector< size_t >::allocator_type::arena_type arena;
+  SmallVector< size_t > indices{ arena };
+  indices.push_back(idx);
+  while (fc[idx].parent_idx != -1){
+    idx = fc[idx].parent_idx; 
+    indices.push_back(idx);
+  }
+  
+  std::for_each(indices.rbegin(), indices.rend(), [&f](size_t index){
+    f(index);
+  });
+} 
  
 // Returns the indices of where the labels that make up the simplex 
 // at index 'idx' are in the filtration in ascending order.
@@ -270,11 +288,46 @@ inline vector< size_t > Filtration::simplex_idx(size_t idx) const {
 //   }
 //   std::reverse(out.begin(), out.end());
 // }
+// template< typename Iter, typename OutputIt >
+// inline void Filtration::expand_it(Iter s, Iter e, OutputIt out) const {
+//   for(; s != e; ++s){
+//     *out = fc[*s].label;
+//   }
+// }
 
 inline simplex_t Filtration::expand_simplex(vector< size_t > indices) const {
   std::transform(begin(indices), end(indices), begin(indices), [this](auto i){ return(fc.at(i).label); });
   return(indices);
 }
+
+
+template < typename Lambda >
+inline void Filtration::traverse_filtration(size_t a, size_t b, Lambda&& f){
+  if (b > fc.size()) { b = fc.size(); };
+  if (a == b){ return; }
+  
+  SmallVector< size_t >::allocator_type::arena_type arena;
+  SmallVector< size_t > expanded{ arena };
+  expanded.reserve(tree_max_depth);
+
+  const auto apply_f = [this, &expanded, &f](const size_t i){
+    apply_idx(i, [this, &expanded](size_t index){ expanded.push_back(fc[index].label); });
+    f(i, expanded.begin(), expanded.end());
+    expanded.resize(0);
+  };
+  
+  if (a < b){
+    for (size_t i = a; i < b; ++i){ apply_f(i); }
+    // for (size_t i = a; i < b; ++i){ f(i, expand_simplex(simplex_idx(i))); }
+  }
+  if (a > b){
+    int i = a >= fc.size() ? fc.size() - 1 : a; // i possibly negative!
+    //for (; i >= b && i >= 0; --i){ f(i, expand_simplex(simplex_idx(i))); }
+    for (; i >= b && i >= 0; --i){ apply_f(i); }
+  }
+  return;
+}
+
 
 // Get index corresponding to eps (inclusive)
 inline void Filtration::threshold_value(double eps){
@@ -286,41 +339,15 @@ inline void Filtration::threshold_value(double eps){
   threshold_index(eps_idx);
 }
 
-template < typename Lambda >
-inline void Filtration::traverse_filtration(size_t a, size_t b, Lambda&& f){
-  if (b > fc.size()) { b = fc.size(); };
-  if (a == b){ return; }
-  
-  // SmallVector< size_t >::allocator_type::arena_type arena;
-  // SmallVector< size_t > expanded{ arena };
-  // expanded.reserve(tree_max_depth);
-
-  if (a < b){
-    // for (size_t i = a; i < b; ++i){
-    //   get_simplex(i, expanded);
-    //   f(i, expanded);
-    // }
-    for (size_t i = a; i < b; ++i){ f(i, expand_simplex(simplex_idx(i))); }
-  }
-  if (a > b){
-    int i = a >= fc.size() ? fc.size() - 1 : a; // i possibly negative!
-    for (; i >= b && i >= 0; --i){ f(i, expand_simplex(simplex_idx(i))); }
-    // for (; i >= b && i >= 0; --i){
-    //   get_simplex(i, expanded);
-    //   f(i, expanded);
-    // }
-  }
-  return;
-}
-
-
 inline void Filtration::threshold_index(size_t req_index){
   const size_t c_idx = current_index();
   const bool is_increasing = c_idx < req_index;
-  traverse_filtration(c_idx, req_index, [this, is_increasing](const size_t i, simplex_t&& sigma){
+  traverse_filtration(c_idx, req_index, [this, is_increasing](const size_t i, auto s, auto e){
     // for (auto label: sigma){ std::cout << label << ","; } std::cout << std::endl;
     included.at(i) = is_increasing; 
-    is_increasing ? insert_simplex(sigma) : remove_simplex(sigma);
+    is_increasing ? insert_it(s,e,root.get(),0) : remove_it(s,e);
+    // modify(s, e, is_increasing ? INSERT : REMOVE);
+    // is_increasing ? insert_simplex(sigma) : remove_simplex(sigma);
   });
 }
 

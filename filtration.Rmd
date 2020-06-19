@@ -5,6 +5,10 @@ output: html_notebook
 
 ```{r}
 
+
+
+
+
 xy <- replicate(2, rnorm(25))
 d <- dist(xy)
 st <- simplex_tree(t(combn(25,2))) %>% filtration(d)

@@ -2,10 +2,9 @@
 % Please edit documentation in R/simplex_tree.R
 \name{faces}
 \alias{faces}
-\alias{cofaces}
 \title{Generates a face traversal on the simplex tree.}
 \usage{
-cofaces(st, sigma)
+faces(st, sigma)
 }
 \arguments{
 \item{st}{the simplex tree to traverse.}

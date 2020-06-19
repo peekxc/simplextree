@@ -3,21 +3,22 @@
 \name{find}
 \alias{find}
 \title{Find simplices}
+\usage{
+find(st, simplices)
+}
 \arguments{
-\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.}
-
-\item{simplices}{a list of simplices.}
+\item{simplices}{a simplex or list of simplices.}
 }
 \value{
 boolean indicating whether or not \code{simplex} exists in the tree.
 }
 \description{
-Finds whether simplices exist the simplex tree.
+Returns whether supplied simplices exist in the complex.
 }
 \details{
 Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists.
 \code{simplex} can be specified as vector to represent a single simplex, and a list to represent a set of simplices. 
-\code{simplex} is sorted before traversing the trie.
+Each \code{simplex} is sorted before traversing the trie.
 }
 \section{Usage}{
 
@@ -26,5 +27,5 @@ st$find(simplices)
 }
 
 \seealso{
-find remove
+insert remove
 }

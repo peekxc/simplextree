@@ -2,10 +2,9 @@
 % Please edit documentation in R/simplex_tree.R
 \name{coface_roots}
 \alias{coface_roots}
-\alias{cofaces}
 \title{Generates a coface roots traversal on the simplex tree.}
 \usage{
-cofaces(st, sigma)
+coface_roots(st, sigma)
 }
 \arguments{
 \item{st}{the simplex tree to traverse.}
