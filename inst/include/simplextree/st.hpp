@@ -37,10 +37,9 @@ inline vector< idx_t > SimplexTree::generate_ids(size_t n){
   if (id_policy == 0){
     vector< idx_t > new_ids = vector< idx_t >();
     idx_t max = root->children.size() + n;
-    for (idx_t cc = 0; cc < max; ++cc){
+    for (idx_t cc = 0; cc < max && new_ids.size() < n; ++cc){
       if (find_by_id(root->children, cc) == nullptr){
         new_ids.push_back(cc);
-        if (new_ids.size() == n){ break; }
       }
     }
     return(new_ids);
@@ -75,27 +74,27 @@ inline size_t SimplexTree::degree(idx_t vid) const{
 }
 
 // Returns the degree of a node with a given id
-inline vector< size_t > SimplexTree::degree(vector< idx_t > vids) const{
-  vector< size_t > res = vector< size_t >();
-  for (auto id: vids){
-    node_ptr cn = find_by_id(root->children, id);
-    if (cn == nullptr) { res.push_back(0); }
-    else {
-      size_t res_deg = 0;
-      // auto it = level_map.find(std::to_string(id) + "-2"); // Labels with id > v 
-      auto it = level_map.find(encode_node(id, 2));
-      if (it != level_map.end()){ 
-				const auto& cousins = (*it).second;
-				for (const auto& ch: cousins){
-					res_deg += node_children(ch).size(); 
-				}
-			}
-      res_deg += node_children(cn).size(); // Labels with id < v 
-      res.push_back(res_deg);
-    }
-  }
-  return(res);
-}
+// inline vector< size_t > SimplexTree::degree(vector< idx_t > vids) const{
+//   vector< size_t > res = vector< size_t >();
+//   for (auto id: vids){
+//     node_ptr cn = find_by_id(root->children, id);
+//     if (cn == nullptr) { res.push_back(0); }
+//     else {
+//       size_t res_deg = 0;
+//       // auto it = level_map.find(std::to_string(id) + "-2"); // Labels with id > v 
+//       auto it = level_map.find(encode_node(id, 2));
+//       if (it != level_map.end()){ 
+// 				const auto& cousins = (*it).second;
+// 				for (const auto& ch: cousins){
+// 					res_deg += node_children(ch).size(); 
+// 				}
+// 			}
+//       res_deg += node_children(cn).size(); // Labels with id < v 
+//       res.push_back(res_deg);
+//     }
+//   }
+//   return(res);
+// }
 
 // Search the level map (cousins) to quickly get the adjacency relations. 
 // The set of adjacency relations are the 0-simplexes connected to a given vertex v. 
@@ -304,7 +303,10 @@ inline size_t SimplexTree::vertex_index(const idx_t id) const{
 
 // Overloaded in the case where a single (1-length vector) label is given
 inline SimplexTree::node_ptr SimplexTree::find_by_id(const node_set_t& level, idx_t label) const{
-  auto it = std::find_if(begin(level), end(level), eq_node_id(label));
+  // auto it = std::find_if(begin(level), end(level), eq_node_id(label));
+  auto it = std::lower_bound(begin(level), end(level), label, [](auto& np1, auto& id){
+    return np1->label < id;
+  });
   return it != end(level) ? (*it).get() : nullptr; 
 }
 

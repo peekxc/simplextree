@@ -9,11 +9,11 @@ There are many constructions which are represented by simplicial complexes. In t
 
 The Simplex Tree[^1] is a flexible and efficient data structure for representing and manipulating general simplicial complexes of any dimension. It can effectively be thought of as an ordered [Trie](https://en.wikipedia.org/wiki/Trie), a related tree-like data structure that has proven useful in storing and processing words/text corpora. Like a trie, the simplex tree stores just one 'character' per simplex (+ a constant number of extra pointers to maintain the adjacency structure), mapping each node with exactly one face in the complex. Unlike a trie, every subtree is ordered in the sense that children must have labels with values greater than their parents, and each level beyond dimension $0$ stores additional indexes mapping `cousins', or nodes at the the same label and depth. These additional constraints allow the data structure to scale relatively well in size and particularly in dimension---inline with the intrinsic complexity of construction needed---without restricting the type of construction represented. 
 
-Here's a picture (taken from the paper) of a simplicial 3-complex (left) and its corresponding Simplex Tree (right):
+The best and quickest way to understand the simplex tree structure is with a picture. Here's one (taken from the paper) depcisting a simplicial 3-complex (left) and its corresponding Simplex Tree (right). Notice the bijection between the nodes and the face in the complex: there exactly one node for each face, and each node stores exactly one label.
 
 ![simplex tree figure](man/figures/simplextree.png)
 
-In summary, the simplex tree provides an efficient data structure for manipulating simplicial complexes that balances scalability and generality. While other structures may more be better suited to specific families of complexes (e.g. the tidy set for flag complexes), the simplex tree lies at an abstraction scale in between the extremely specialized constructions and the universal (/naïve) approach of simply storing every face as-is in an unordered list.  
+In what follows, for those interested, I will outline 
 
 ## Getting started 
 
@@ -24,7 +24,7 @@ library(simplextree)
 st <- simplex_tree()
 print(st)
 ```
-Each $k$-simplex is represented as a $(k+1)$-length integer vector containing the labels of the simplex. Inserting simplices into the complex can be done one at a time or specified as a collection via a list, either through the `insert` function or at initialization time via `simplex_tree`. To obey the definition of being simplicial complex, if inserting `\sigma`, all faces of `\sigma` must also being inserted. Its sufficient to specify just the maximal faces, i.e. the simplices which are not themselves faces of any other simplex. For example, to construct the complex given by the figure above, all one needs to do is insert the simplices $\{1,2,3\}$, $\{2,3,4,5\}$, $\{6,7,9\}$, $\{7,8\}$, and $\{10\}$.
+Each $k$-simplex is represented as a $(k+1)$-length integer vector containing the labels of the simplex. Inserting simplices into the complex can be done one at a time or specified as a collection via a list, either through the `insert` function or at initialization time via `simplex_tree`. In inserting a simplex $\sigma$, to conform to the properties of being a (abstract) simplicial complex, all faces of $\sigma$ must also being inserted. Thus, its sufficient to specify just the maximal faces, i.e. the simplices which are not themselves faces of any other simplex. For example, the complex above has ten 0-simplices, twelve 1-simplices, six 2-simplices, and one 3-simplex, but to construct it all one needs to do is insert the simplices $\{1,2,3\}$, $\{2,3,4,5\}$, $\{6,7,9\}$, $\{7,8\}$, and $\{10\}$.
 
 ```{r}
 st <- simplex_tree()
@@ -36,12 +36,11 @@ insert(st, c(10))
 print(st)
 ```
 
-Another way of writing the above is by supplying the faces in a list at initialization
+Another way of writing the above is by supplying the faces in a list at initialization. 
 ```{r}
 st <- simplex_tree(list(1:3, 2:5, c(6,7,9), 7:8, 10))
 print(st)
 ```
-
 Note that `insert` inserts the given simplex(es), and then returns the complex invisibly. That is, `insert` (and many other functions) enact *side-effects*, wherein the underlying object is changed. No copies are made (for that, use `serialize`/`deserialize`). This can be surprising to some `R` users, who are used to each and every line effectively being independent from the last.
 
 ```{r}
@@ -50,7 +49,7 @@ insert(st, 11)
 print(st)
 print(st2)
 ```
-Notice that modifying `st` after also affects `st2`. This happens because `<-` does not create a copy in this case; `st` and `st2` refer to the same object. You can create a new copy with e.g. `st2 <- simplex_tree(st$serialize())`. Note this only copies the simplices themselves; nothing else. 
+Notice that modifying `st` after also affects `st2`. This happens because `<-` does not create a copy in this case; `st` and `st2` refer to the same object. You can create a new copy with e.g. `st2 <- simplex_tree(st$serialize())`. Note this only copies the simplices themselves; nothing else. This allows many operations which modify the complex to be chained, e.g. another way would've been to do something like `st %>% insert(c(1,2,3)) %>% remove(c(2,3)) %>% ...`, etc.
 
 You can use the `print_tree` and `print_cousins` methods to see the structure of the underlying simplex tree, the former showing the subtrees rooted at each vertex per line (top-down), and the latter showing how the simplices are stored per level (from the side):
 ```{r}
@@ -69,13 +68,102 @@ Other ways to modify or query the complex follow a similar interface, e.g. `remo
 
 If simplices are the atoms from which the simplex tree is created, then traversals are the building blocks from which higher order operations and algorithms on the complexes are formed. A *traversal* is an ordered path through a subset of the simplices in the simplex tree. As will be shown below, they form the foundation for many other auxiliary methods, and they often provide elegant starting point when one is tasked with writing an efficient algorithm involving a simplicial complex. 
 
-Each traversal requires as its first argument the complex through which to traverse. Some traversals support other arguments, e.g. where to start the traversal from, which simplices to include as 'part' of the traversal path, etc. Given a parameterized traversal, the `traverse` function accepts as its first argument the complex and as its second argument the function to invoke on each simplex. To get started, for example, consider the classical _preorder_ ("depth-first") and _level\_order_ ("breadth-first") traversals on the simplex tree, which can both be printed concisely with the `print_simplices` utility function. 
+Each traversal requires as its first argument the complex through which to traverse. Some traversals support other arguments, e.g. where to start the traversal from, which simplices to include as 'part' of the traversal path, etc. Given a parameterized traversal, the `traverse` function accepts as its first argument the complex and as its second argument the function to invoke on each simplex. To get started, for example, consider the classical _preorder_ ("depth-first") traversal.
+
+```
+preorder(node){
+  if (node == null)
+    return
+  visit(node)
+  for child_node of node.children
+    preorder(child_node)
+}
+```
+
+Straightforward. On the simplex tree, a preorder traversal can be printed concisely as shown below with the `print_simplices` utility function. 
 
 ```{r}
+## Prints the simplices of each traversal column-wise, i.e. each simplex is a column 
 print_simplices(preorder(st), format = "column")
-print_simplices(level_order(st), format = "column")
 ```
-Notice that, due to the naturally ordered structure of the simplex tree, the preorder corresponds to a [lexicographical ordering](https://en.wikipedia.org/wiki/Lexicographical_order) of the simplices in the complex, and similarly the level order corresponds with the [shortlex](https://en.wikipedia.org/wiki/Shortlex_order) order (i.e. lexicographical per dimension). Indeed, every ancestor simplex (a simplex with children) in the trie must be a face of any of its descendants, and similarly every descendant simplex must be a coface of its ancestors. This naturally constructive property can come in handy in crafting algorithms. Let's see an example of this in action. 
+Notice that, due to the naturally ordered structure of the simplex tree, the preorder corresponds to a [lexicographical ordering](https://en.wikipedia.org/wiki/Lexicographical_order) of the simplices in the complex. Similarly, the level order (not shown) corresponds with the [shortlex](https://en.wikipedia.org/wiki/Shortlex_order) order (i.e. lexicographical per dimension). A related property one can extract from this observation is that every ancestor simplex (a simplex with children) in the trie must be a face of any of its descendants, and similarly every descendant simplex must be a coface of its ancestors. This naturally constructive property can come in handy in crafting efficient algorithms for manipulating the complex. Let's see some examples of this in action. 
+
+
+### Fundamental building blocks
+
+As a warmup, consider the problem of enumerating all the simplices in the complex. If we have a list of simplices $L = \{ \sigma_1, \sigma_2, \dots, \sigma_m \}$, where each entry contains a an individual. For example, a 2-simplex $\{1, 2, 3\}$  as a full simplicial complex $\mathcal{K}$ might be represented with the list $L = \{1, 2, 3, \{1, 2\}, \{1, 3\}, \{2, 3\}, \{1, 2, 3\} \}$. Since the simplices are already formed, enumerating this list takes linear time $O(m)$, where $m$ is the number of simplices in the list; however, storing this list takes loosely $O(md)$ space, where $d = \mathrm{dim}(\mathcal{K})$ is the dimension of the largest face in the complex. 
+
+Alternatively, we might be in the situation as above where we happen to have the 'largest' simplices on hand whose union captures the full complex. The storage complexity (which is output sensitive) is obviously much lower now, but now enumerating every simplex in the complex require enumerating all lower order faces. For example, using the highly useful `combn` function: 
+
+```{r}
+simplices <- list(c(1,2,3), c(2,3,4,5), c(6,7,9), c(7,8), 10)
+for (simplex in simplices){
+  d <- length(simplex)
+  for (k in 1:d){
+    combn(d, k, function(i){ print(simplex[i]) })
+  }
+}
+```
+This is a nice, compact way of storing a complex, but it has some back assumes that ones has on hand these "largest" simplices. Additionally, there's little structure here: generating the actual vectors containing the labels of each simplex  is requires forming a new simplex at each iteration of the inner loop (via `simplex[i]`). For a $k$-simplex, this requires at least $(k+1)$ operations, leading to a loose complexity of $\approx O(md)$, where again $m = \lvert \mathcal{K} \rvert$ represents is the number of simplices in $\mathcal{K}$ and $d = \mathrm{dim}(\mathcal{K})$ the dimension. 
+So one approach uses $O(md)$ storage and then allows $O(m)$ complexity on enumeration, and then other compresses the complex to use $O(m)$ storage, but then requires $O(md)$ time to enumerate. The proverbial "you can't have your cake and eat it too" seems to ring true. 
+
+But now consider the following scenario: enumerating the simplices in the simplex tree in lexicographical order. As mentioned above, this corresponds to a preorder traversal on the trie structure.  
+```{r}
+## Prints the simplices of each traversal column-wise, i.e. each simplex is a column 
+print_simplices(preorder(st), format = "column")
+```
+Observe that in the sequence of simplices printed by the above _preorder_ traversal, at most one label and one dimension changes per visited node. Imagine keeping just one vector around in memory, which is to be populated with the labels of the current node. In going from a $k$-simplex to a $(k+1)$-simplex, the vector has a new label appended and increases in size by 1, but all other labels are unaffected (and are correct). Similarly, in traversing upwards from $(k+1)$-simplex to a $k$-simplex, the vector shrinks by 1 and has its last label modified. Regardless, the time it takes to form the labels corresponding to a simplex is constant: one size change, and one label change. Thus, enumerating the simplices with a preorder traversal takes linear time $\approx O(m)$ in the size of complex, and since each node stores only one label, we achieve an $\approx O(m)$ size as well.
+
+<!-- One could just write a new algorithm from scratch: visit each node in the trie (somehow), and at each node $\eta$, traverse upwards from $\eta$ towards the root, recording the individual labels for each node along the way to create the labels forming the full $k$-simplex.  -->
+
+### Building from the blocks
+
+Now consider a slightly modified version of the warmup above: create a function to enumerate the $k$-skeleton of $\mathcal{K}$: the set of simplices of dimension $\leq k$. How would you do it?  
+
+Easy way out: just enumerate all the simplices, keeping only those with dimension $\leq k$. 
+```{r}
+k <- 2
+skeleton <- list()
+traverse(preorder(st), function(simplex){
+  if (length(simplex) <= (k+1)){
+    skeleton <<- append(skeleton, list(simplex))
+  }
+})
+print_simplices(skeleton, format = "column")
+```
+The problem: what if $\mathrm{dim}(\mathcal{K}) >> k$? Since the majority of the simplices will have lengths $> k$, the majority of the time will be spent enumerating subtrees corresponding to simplices that will never be needed. This may seem like a trivial concern, but simplicial complexes are frequently built from representations that are inherently combinatorial. One of the unfortunate consequences of this is that they often scale exponentially in size.
+
+Consider the ever popular [Rips complex](https://en.wikipedia.org/wiki/Vietoris%E2%80%93Rips_complex). Say one samples 25 points from the unit square, and then connects these points pairwise with an edge if they are within distance $2 \epsilon$ of each other. The Rips complex is a geometric [flag complex](https://en.wikipedia.org/wiki/Clique_complex), i.e. a simplicial complex whose higher order simplices are determined by the $1$-skeleton entirely. We may recover the Rips up to any dimension by an _expansion_ to the highest order simplicial complex. How quickly does this scale, based on this parameter $\epsilon$?
+
+```{r}
+for (eps in seq(0.10, 0.50, by=0.10)){
+  set.seed(1234)
+  G <- igraph::sample_grg(nodes = 35, radius = eps)
+  st <- simplex_tree(as.list(seq(vcount(G)))) %>% insert(as_edgelist(G))
+  st %>% expand(k=max(st$degree(st$vertices)))
+  cat(sprintf("Parameter=%g:\n", eps))
+  print(structure(st$n_simplices, names=seq(0, st$dimension)))
+  cat("\n")
+}
+```
+Even though there are only 25 points, by the time the radius parameter is $0.5$, the complex already has over 130 thousand simplices (less than 2\% have dimension $\leq 2$!). 
+
+If one just wants the enumerate the 2-skeleton of the complex, filtering out higher-order simplices isn't enough: the traversal should simply recurse beyond a depth of 2. 
+
+```
+k = 2
+preorder(node, f){
+  if (node == null)
+    return
+  f(node)
+  if (node.dimension < k){
+    for child_node of node.children
+      preorder(child_node, f)
+  }
+}
+```
+
+### Enumerating cofaces 
 
 Recall that for any simplex $\sigma \in \mathcal{K}$, the set of simplices in $K$ to which $\sigma$ is a face of. And the faces of a simplex $\sigma$ are simply the simplices whose vertices form subset of the vertices of $\sigma$. That is, the set faces/cofaces of $\sigma$ are the simplices $\tau$ satisfying 
 $$ \text{faces}(\sigma) = \{\tau \in \mathcal{K}, \tau \subseteq \sigma \}$$
@@ -90,15 +178,15 @@ faces <- lapply(1:d, function(k){
 faces <- unlist(faces, recursive = FALSE) ## flatten one layer deep 
 print_simplices(faces, format = "column")
 ```
-This doesn't even require a simplex tree structure (after all, given $\sigma$, its faces _must_ be in the trie, by the definition of a simplicial complex). But now consider the problem of computing cofaces. How would you go about computing the cofaces of a simplex naively?
+This doesn't even require a simplex tree structure (after all, given $\sigma$, its faces _must_ be in the trie, by the definition of a simplicial complex). But now consider the problem of computing cofaces. How would you go about doing it naively, i.e. with just a list of simplices?
 
-One way, of course, is to just enumerate all the simplices in the complex, recording which ones contain $\sigma$ as a subset. But this takes $\approx O(2md)$ comparisons, where $m = \lVert \mathcal{K} \rVert$, and $d = \mathrm{dim}(\mathcal{K})$. There is a more efficient way. 
+One way, of course, is to just enumerate all the simplices in the complex, and just record which ones contain $\sigma$ as a subset. But this takes $\approx O(2md)$ comparisons, where $m = \lVert \mathcal{K} \rVert$, and $d = \mathrm{dim}(\mathcal{K})$. There is a more efficient way. 
 
-If one wants to find the cofaces of $\sigma = \{v_1 v_2 \dots v_k\}$, then any simplex $\tau \in \mathcal{K}$ with labels of the form $\{\ast v_0 \ast v_1 \ast \dots \ast v_k \ast \}$ counts, where $\ast$ is any vertex label (or empty) in $\mathcal{K}$. To decompose the problem into simpler steps, first consider finding simplices with labels $\{\ast v_0 \ast v_1 \ast \dots \ast v_k \}$. Since we are looking for cofaces, we only need consider simplices whose dimensions are greater than $\sigma$, and since these particular simplices end in $v_k$, they must be encoded in the adjacency relations linking 'cousins' at the same depth (in the picture shown above, the 'cousins' nodes recording the $5$ label are linked). 
+If one wants to find the cofaces of $\sigma = \{v_1 v_2 \dots v_k\}$, then any simplex $\tau \in \mathcal{K}$ with labels of the form $\{\ast v_0 \ast v_1 \ast \dots \ast v_k \ast \}$ counts as a coface, where $\ast$ is any vertex label (or empty) in $\mathcal{K}$. To decompose the problem into simpler steps, first consider finding simplices with labels $\{\ast v_0 \ast v_1 \ast \dots \ast v_k \}$. Since we are looking for cofaces, we only need consider simplices whose dimensions are greater than $\sigma$, and since these particular simplices end in $v_k$, they must be encoded in the adjacency relations linking 'cousins' at the same depth (in the picture shown above, the 'cousins' nodes recording the $5$ label are linked). 
 
 Now we exploit the face/coface property as before. If we explicitly look at dimensions higher than $\mathrm{dim}(\sigma)$, as every ancestor simplex is face of all of its descendants, at least one of these ancestor simplices will be a coface. And as every descendant simplex must be a coface of its ancestors, we need only capture the roots of subtrees to fully describe the cofaces of $\sigma$. 
 
-For example, consider computing the cofaces of the vertex $\sigma = \{3\}$. Every descendent of the subtree rooted at $\{3\}$ is a coface, so we need only record $3$. Then we check the cousins at a higher depth with the same label. Here's a print out of all the cousins and their corresponding keys (as pairs):
+For example, consider computing the cofaces of the vertex $\sigma = \{3\}$. Every descendant of the subtree rooted at $\{3\}$ is a coface, so we need only record $3$. Then we check the cousins at a higher depth with the same label. Here's a print out of all the cousins and their corresponding keys (as pairs):
 
 ```{r}
 st$print_cousins()
@@ -274,6 +362,10 @@ microbenchmark::microbenchmark({
 #  {     st$expand(2) } 63.03884 64.60097 65.9168 65.68367 66.79374 76.15908   100
 ```
 
+
+## Conclusion 
+
+In summary, the simplex tree provides an efficient data structure for manipulating simplicial complexes that balances scalability and generality. While other structures may more be better suited to specific families of complexes (e.g. the tidy set for flag complexes), the simplex tree lies at an abstraction scale in between the extremely specialized constructions and the universal (/naïve) approach of simply storing every face as-is in an unordered list.  
 
 ## References 
 [^1]: Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

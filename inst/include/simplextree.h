@@ -212,7 +212,7 @@ struct SimplexTree {
   
   size_t vertex_index(const idx_t) const;
   size_t degree(idx_t) const;
-  vector< size_t > degree(vector< idx_t >) const;
+  // vector< size_t > degree(vector< idx_t >) const;
   simplex_t adjacent_vertices(const idx_t) const;
   
   template< typename Iter >

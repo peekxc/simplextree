@@ -371,6 +371,27 @@ print_cousins <- function(st){
 }
 
 
+# setClass("Rcpp_SimplexTree")
+# .format_simplex_tree <- setMethod("format", "Rcpp_SimplexTree", function (object) {
+#   max_k <- length(object$n_simplices)
+#   if (max_k == 0){ return("< empty simplex tree >") }
+#   else {
+#     return(sprintf("Simplex Tree with (%s) (%s)-simplices\n", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")))
+#   }
+# })
+
+# format.Rcpp_SimplexTree <- function(x){
+#   max_k <- length(x$n_simplices)
+#   if (max_k == 0){ return("< empty simplex tree >") }
+#   else {
+#     return(sprintf("Simplex Tree with (%s) (%s)-simplices\n", paste0(x$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")))
+#   }
+# }
+# 
+# format.Rcpp_Filtration<- function(x){
+#   paste0(format.Rcpp_SimplexTree(x), sprintf("Current filtration index: %d", x$current_index), collapse = "\n")
+# }
+
 # ---- print.Rcpp_SimplexTree ----
 setClass("Rcpp_SimplexTree")
 .print_simplex_tree <- setMethod("show", "Rcpp_SimplexTree", function (object) {
@@ -384,11 +405,12 @@ setClass("Rcpp_SimplexTree")
 # ---- print.Rcpp_Filtration ----
 setClass("Rcpp_Filtration")
 .print_filtration <- setMethod("show", "Rcpp_Filtration", function (object) {
+  cat(format(object))
   max_k <- length(object$n_simplices)
   if (max_k == 0){ cat("< empty filtration >\n") }
   else {
     writeLines(c(
-      sprintf("Simplex Tree with (%s) (%s)-simplices", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")), 
+      sprintf("Simplex Tree with (%s) (%s)-simplices", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")),
       sprintf("Current filtration index: %d", object$current_index)
     ))
   }
@@ -441,24 +463,31 @@ clear <- function(st){
 #' @title Generates vertex ids.
 #' @param n the number of ids to generate. 
 #' @description Generates vertex ids representing 0-simplices not in the tree.
-#' @details This function generates new vertex ids for use in situations involving, e.g. insertions, 
-#' contractions, collapses, etc. There are two 'policies' which designate the generating mechansim  
-#' these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids sequentially, starting at 0.
-#' 'unique' tracks an incremental internal counter, which is updated on every call to \code{generate_ids}. 
-#' The new ids under the 'unique' policy generates the first sequential \code{n} ids that are strictly greater 
-#' \code{max}(\emph{counter}, \emph{max vertex id}). \cr
+#' @details This function generates new vertex ids for use in situations which involve generating new 
+#' new 0-simplices, e.g. insertions, contractions, collapses, etc. There are two 'policies' which designate 
+#' the generating mechanism of these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids 
+#' sequentially, starting at 0. 'unique' tracks an incremental internal counter, which is updated on every 
+#' call to \code{generate_ids}. The new ids under the 'unique' policy generates the first sequential \code{n} 
+#' ids that are strictly greater  \code{max}(\emph{counter}, \emph{max vertex id}). \cr
 #' \cr
 #' 
 #' @examples 
 #' st <- simplex_tree()
-#' st$generate_ids(3) ## 0 1 2
-#' st$insert(st$generate_ids(3))
+#' print(st$id_policy)
+#' ## "compressed"
+#' st$generate_ids(3) 
+#' ## 0 1 2
+#' st$generate_ids(3) 
+#' ## 0 1 2
+#' st$insert(as.list(1:3))
 #' print(st$vertices) ## 0 1 2
 #' st$insert(st$generate_ids(2))
 #' st$print_tree() 
 #' st$remove(4)
 #' st$generate_ids(1) # 4
-NULL
+generate_ids <- function(st){
+  
+}
 
 # ---- degree ----
 #' @name degree
@@ -466,9 +495,8 @@ NULL
 #' @param ids the vertex ids to check the degree of. 
 #' @description Returns the number of edges (degree) for each given vertex id. 
 degree <- function(st, vertices){
-  stopifnot(is.vector(vertices))
-  st_degree <- Vectorize(function(x){ st$degree(x) })
-  return(st_degree(vertices))
+  stopifnot(is.vector(vertices) && is.numeric(vertices))
+  return(st$degree(vertices))
 }
 
 # ---- expand ----
@@ -476,10 +504,11 @@ degree <- function(st, vertices){
 #' @title k-expansion.
 #' @param ids the vertex ids to check the degree of. 
 #' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
-#' if all combinations of edges are included. This operation implicitly assumes the complex 
+#' if all combinations of edges are included. Because this operation uses the edges alone to infer 
+#' the existence of higher order simplices, the expansion assumes the underlying complex
 #' is a flag complex. 
 #' @export
-expand <- function(st, k){
+expand <- function(st, k=2){
   stopifnot(is.numeric(k))
   st$expand(k)
   return(invisible(st))

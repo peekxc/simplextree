@@ -4,6 +4,9 @@
 \alias{generate_ids}
 \alias{id_policy}
 \title{Generates vertex ids.}
+\usage{
+generate_ids(st)
+}
 \arguments{
 \item{n}{the number of ids to generate.}
 }
@@ -11,18 +14,23 @@
 Generates vertex ids representing 0-simplices not in the tree.
 }
 \details{
-This function generates new vertex ids for use in situations involving, e.g. insertions, 
-contractions, collapses, etc. There are two 'policies' which designate the generating mechansim  
-these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids sequentially, starting at 0.
-'unique' tracks an incremental internal counter, which is updated on every call to \code{generate_ids}. 
-The new ids under the 'unique' policy generates the first sequential \code{n} ids that are strictly greater 
-\code{max}(\emph{counter}, \emph{max vertex id}). \cr
+This function generates new vertex ids for use in situations which involve generating new 
+new 0-simplices, e.g. insertions, contractions, collapses, etc. There are two 'policies' which designate 
+the generating mechanism of these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids 
+sequentially, starting at 0. 'unique' tracks an incremental internal counter, which is updated on every 
+call to \code{generate_ids}. The new ids under the 'unique' policy generates the first sequential \code{n} 
+ids that are strictly greater  \code{max}(\emph{counter}, \emph{max vertex id}). \cr
 \cr
 }
 \examples{
 st <- simplex_tree()
-st$generate_ids(3) ## 0 1 2
-st$insert(st$generate_ids(3))
+print(st$id_policy)
+## "compressed"
+st$generate_ids(3) 
+## 0 1 2
+st$generate_ids(3) 
+## 0 1 2
+st$insert(as.list(1:3))
 print(st$vertices) ## 0 1 2
 st$insert(st$generate_ids(2))
 st$print_tree() 

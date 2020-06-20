@@ -4,13 +4,14 @@
 \alias{expand}
 \title{k-expansion.}
 \usage{
-expand(st, k)
+expand(st, k = 2)
 }
 \arguments{
 \item{ids}{the vertex ids to check the degree of.}
 }
 \description{
 Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
-if all combinations of edges are included. This operation implicitly assumes the complex 
+if all combinations of edges are included. Because this operation uses the edges alone to infer 
+the existence of higher order simplices, the expansion assumes the underlying complex
 is a flag complex.
 }

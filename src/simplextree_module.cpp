@@ -117,13 +117,17 @@ void copy_trees(SEXP st1, SEXP st2){
 }
 
 
-// Workaround for internal const-member overloades
-int degree_1(SimplexTree* st, int id){
-  return st->degree(static_cast< idx_t >(id));
-}
+// // Workaround for internal const-member overloades
+// int degree_1(SimplexTree* st, int id){
+//   return ;
+// }
 
-IntegerVector degree_2(SimplexTree* st, vector< idx_t > ids){
-  return wrap(st->degree(ids));
+IntegerVector degree(SimplexTree* st, IntegerVector ids){
+  IntegerVector res(ids.size());
+  std::transform(begin(ids), end(ids), begin(res), [&st](int id){
+    return st->degree(static_cast< idx_t >(id));
+  });
+  return res;
 }
 
 // inline void SimplexTree::reindex(SEXP target_ids){
@@ -315,8 +319,7 @@ RCPP_MODULE(simplex_tree_module) {
     .const_method( "print_tree", &SimplexTree::print_tree )
     .const_method( "print_cousins", &SimplexTree::print_cousins )
     .method( "clear", &SimplexTree::clear)
-    .method( "degree", &degree_1)
-    .method( "degree", &degree_2)
+    .method( "degree", &degree)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert",  &insert)
@@ -407,8 +410,7 @@ RCPP_MODULE(filtration_module) {
     .const_method( "print_tree", &SimplexTree::print_tree )
     .const_method( "print_cousins", &SimplexTree::print_cousins )
     .method( "clear", &SimplexTree::clear)
-    .method( "degree", &degree_1)
-    .method( "degree", &degree_2)
+    .method( "degree", &degree)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert", &insert)
