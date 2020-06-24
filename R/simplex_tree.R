@@ -68,7 +68,7 @@
 simplex_tree <- function(simplices = NULL){
   st <- new(SimplexTree)
   # assign('insert', function(x, check=TRUE) { return(st$insert(x, check)) }, envir = st)
-  if (!missing(simplices)){ st$insert(simplices, TRUE) }
+  if (!missing(simplices)){ st %>% insert(simplices, TRUE) }
   return(st)
 }
 
@@ -547,7 +547,7 @@ adjacent <- function(st, vertices){
 #' @export
 insert <- function(st, simplices, check_valid = TRUE){
   stopifnot(class(st) %in% .st_classes)
-  st$insert(simplices, check_valid)
+  st$insert(simplices)
   return(invisible(st))
 }
 
@@ -565,7 +565,7 @@ insert <- function(st, simplices, check_valid = TRUE){
 #' @export
 remove <- function(st, simplices, check_valid = TRUE){
   stopifnot(class(st) %in% .st_classes)
-  st$remove(simplices, check_valid)
+  st$remove(simplices)
   return(invisible(st))
 }
 
@@ -667,12 +667,42 @@ is_face <- function(st, tau, sigma){
 #' # 4 (h = 1): .( 5 )
 #' # 5 (h = 0): 
 #' @export
-collapse <- function(st, tau, sigma){
+collapse <- function(st, pair, w=NULL){
   stopifnot(class(st) %in% .st_classes)
-  st$collapse(tau, sigma)
+  stopifnot(is.list(pair))
+  tau <- pair[[1]]
+  sigma <- pair[[2]]
+  if (missing(w)){
+    stopifnot(all(tau %in% sigma))
+    st$collapse(tau, sigma)
+  } else {
+    stopifnot(all(sapply(list(tau,sigma,w), length) == 1))
+    st$vertex_collapse(tau, sigma, w)
+  }
   return(invisible(st))
 }
 
+
+#' threshold
+#' @description Thresholds a given filtered simplicial complex.
+#' @param st simplex tree.
+#' @param index integer index to threshold to.
+#' @param value numeric index to threshold filtration. 
+#' @export
+threshold <- function(st, index = NULL, value = NULL){
+  stopifnot(class(st) %in% .st_classes)
+  if ("Rcpp_Filtration" %in% class(st)){
+    if (missing(index) && !missing(value)){
+      st$threshold_value(value)
+      return(invisible(st))
+    } else if (!missing(index) && missing(value)){
+      st$threshold_index(index)
+      return(invisible(st))
+    } else {
+      stop("Must supply either an integer index or numeric value.")
+    }
+  } else { return(invisible(st)) }
+}
 
 # ---- contract ----
 #' @name contract

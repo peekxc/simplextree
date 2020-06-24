@@ -12,66 +12,40 @@ SEXP as_XPtr(SimplexTree* st){
 }
 
 // Generic function to handle various vector types
-template < bool check_rng = false, typename Lambda >
+template < typename Lambda >
 void vector_handler(SEXP sigma, Lambda&& f){
   const unsigned int s_type = TYPEOF(sigma);
-  const auto check_valid = [](SEXP v) -> bool { 
-    IntegerVector iv = v;
-    return std::any_of(begin(iv), end(iv), [](int el) -> bool { 
-      return(el < 0 || el > std::numeric_limits< idx_t >::max()); 
-    });
-  };
+  
   if (!Rf_isNull(Rf_getAttrib(sigma, R_DimSymbol))){
     IntegerMatrix m = as< IntegerMatrix >(sigma);
-    const size_t n = m.nrow();
+    const size_t n = m.ncol();
     for (size_t i = 0; i < n; ++i){
-      IntegerVector cr = m(i,_);
-      if constexpr (check_rng) {
-        if (check_valid(sigma)){ stop("Only unsigned integer simplices are supported."); }
-      }
-      f(as< simplex_t >(cr));
+      IntegerMatrix::Column cc = m(_,i);
+      f(cc.begin(), cc.end());
     }
   } else if (s_type == INTSXP || s_type == REALSXP){
-    if constexpr (check_rng) {
-      if (check_valid(sigma)){ stop("Only unsigned integer simplices are supported."); }
-    }
-    f(as< simplex_t >(sigma));
+    simplex_t s = as< simplex_t >(sigma);
+    f(s.begin(), s.end());
   } else if (s_type == LISTSXP || s_type == VECSXP){
     List simplices = List(sigma);
-    const size_t n = simplices.size(); 
+    const size_t n = simplices.size();
     for (size_t i = 0; i < n; ++i){
-      if constexpr (check_rng) {
-        if (check_valid(simplices.at(i))){ stop("Only unsigned integer simplices are supported."); }
-      }
-      f(as< simplex_t >(simplices[i]));
+      simplex_t s = as< simplex_t >(simplices[i]);
+      f(s.begin(), s.end());
     }
   } else { stop("Unknown type passed, must be list type or vector type."); }
 }
 
 // R-facing Inserter 
-void insert(SimplexTree* st, SEXP x, const bool check_overflow=false){
-  if (check_overflow){
-    vector_handler< true >(x, [st](simplex_t&& sigma){
-      st->insert_simplex(sigma);
-    });
-  } else {
-    vector_handler< false >(x, [st](simplex_t&& sigma){
-      st->insert_simplex(sigma);
-    });
-  }
+void insert(SimplexTree* st, SEXP x){
+  SimplexTree& st_ref = *st; 
+  vector_handler(x, [&st_ref](auto b, auto e){ st_ref.insert_it(b, e, st_ref.root.get(), 0); });
 }
 
 // R-facing remover 
-void remove(SimplexTree* st, SEXP x, const bool check_overflow=false){
-  if (check_overflow){
-    vector_handler< true >(x, [st](simplex_t&& sigma){
-      st->remove_simplex(sigma);
-    });
-  } else {
-    vector_handler< false >(x, [st](simplex_t&& sigma){
-      st->remove_simplex(sigma);
-    });
-  }
+void remove(SimplexTree* st, SEXP x){
+  SimplexTree& st_ref = *st; 
+  vector_handler(x, [&st_ref](auto b, auto e){ st_ref.remove_it(b, e); });
 }
 
 // Creates a filtration from a neighborhood graph
@@ -179,8 +153,10 @@ inline void SimplexTree::reindex(vector< idx_t > target_ids){
 
 LogicalVector find_R(SimplexTree* st, SEXP simplices){
   LogicalVector v; 
-  vector_handler< false >(simplices, [st, &v](simplex_t&& sigma){
-    v.push_back(st->find_simplex(sigma));
+  vector_handler(simplices, [&st, &v](auto b, auto e){
+    node_ptr sigma = st->find_it(b, e);
+    // Rcout << sigma->label << std::endl;
+    v.push_back(sigma != st->root.get() && sigma != nullptr);
   });
   return(v);
 }
@@ -326,8 +302,8 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "remove",  &remove)
     .method( "find", &find_R)
     .method( "expand", &SimplexTree::expansion )
-    .method( "collapse", &SimplexTree::collapse)
-    .method( "collapse", &SimplexTree::vertex_collapseR)
+    .method( "collapse", (bool (SimplexTree::*)(simplex_t, simplex_t))(&SimplexTree::collapse))
+    .method( "vertex_collapse", (bool (SimplexTree::*)(idx_t, idx_t, idx_t))(&SimplexTree::vertex_collapse))
     .method( "contract", &SimplexTree::contract)
     .const_method( "is_tree", &SimplexTree::is_tree)
     .method( "as_adjacency_matrix", &as_adjacency_matrix)
@@ -417,8 +393,8 @@ RCPP_MODULE(filtration_module) {
     .method( "remove", &remove)
     .method( "find", &find_R)
     .method( "expand", &SimplexTree::expansion )
-    .method( "collapse", &SimplexTree::collapse)
-    .method( "collapse", &SimplexTree::vertex_collapseR)
+    .method( "collapse", (bool (SimplexTree::*)(simplex_t, simplex_t))(&SimplexTree::collapse))
+    .method( "vertex_collapse", (bool (SimplexTree::*)(idx_t, idx_t, idx_t))(&SimplexTree::vertex_collapse))
     .method( "contract", &SimplexTree::contract)
     .const_method( "is_tree", &SimplexTree::is_tree)
     .const_method( "serialize", &SimplexTree::serialize)

@@ -303,10 +303,11 @@ inline size_t SimplexTree::vertex_index(const idx_t id) const{
 
 // Overloaded in the case where a single (1-length vector) label is given
 inline SimplexTree::node_ptr SimplexTree::find_by_id(const node_set_t& level, idx_t label) const{
-  // auto it = std::find_if(begin(level), end(level), eq_node_id(label));
-  auto it = std::lower_bound(begin(level), end(level), label, [](auto& np1, auto& id){
-    return np1->label < id;
-  });
+  // level.find(label);
+  auto it = std::find_if(begin(level), end(level), eq_node_id(label));
+  // auto it = std::lower_bound(begin(level), end(level), label, [](auto& np1, auto& id){
+  //   return np1->label < id;
+  // });
   return it != end(level) ? (*it).get() : nullptr; 
 }
 
@@ -317,7 +318,7 @@ inline SimplexTree::node_ptr SimplexTree::find_vertex(const idx_t v_id) const{
 
 // Find iterator version
 template< typename Iter >
-inline SimplexTree::node_ptr SimplexTree::find_it(Iter s, Iter e) const{
+inline SimplexTree::node_ptr SimplexTree::find_it(Iter s, Iter e) const {
   node_ptr cn = root.get();
   for (; s != e; ++s){
     cn = find_by_id(cn->children, *s);
@@ -572,7 +573,7 @@ inline bool SimplexTree::is_face(vector< idx_t > tau, vector< idx_t > sigma) {
 //   return(faces);
 // }
 
-inline bool SimplexTree::vertex_collapseR(idx_t v1, idx_t v2, idx_t v3){
+inline bool SimplexTree::vertex_collapse(idx_t v1, idx_t v2, idx_t v3){
   node_ptr vp1 = find_vertex(v1), vp2 = find_vertex(v2), vt = find_vertex(v3);
   return vertex_collapse(vp1, vp2, vt); // collapse the free pair (vp1, vp2) --> vt
 }
@@ -628,7 +629,7 @@ inline bool SimplexTree::vertex_collapse(node_ptr vp1, node_ptr vp2, node_ptr vt
 // Elementary collapse - only capable of collapsing sigma through tau, and only if tau has sigma 
 // as its only coface. There are technically two cases, either tau and sigma are both leaves or 
 // tau contains sigma as its unique child. Both can be handled by removing sigma first, then tau.
-inline bool SimplexTree::collapse_(node_ptr tau, node_ptr sigma){
+inline bool SimplexTree::collapse(node_ptr tau, node_ptr sigma){
   // vector< node_ptr > cofaces = expand_subtrees(locate_cofaces(tau));
   // bool tau_is_coface = std::find(begin(cofaces), end(cofaces), tau) != end(cofaces);
   // bool sigma_is_coface = std::find(begin(cofaces), end(cofaces), sigma) != end(cofaces);
@@ -654,11 +655,11 @@ inline bool SimplexTree::collapse_(node_ptr tau, node_ptr sigma){
 
 }
 
-inline bool SimplexTree::collapse(vector< idx_t > tau, vector< idx_t > sigma){
+inline bool SimplexTree::collapse(simplex_t tau, simplex_t sigma){
   std::sort(tau.begin(), tau.end());
   std::sort(sigma.begin(), sigma.end());
   node_ptr t = find_node(tau), s = find_node(sigma);
-  if (t != nullptr && s != nullptr){ return collapse_(t, s); }
+  if (t != nullptr && s != nullptr){ return collapse(t, s); }
   return false; 
 }
 

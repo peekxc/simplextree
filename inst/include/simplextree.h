@@ -267,9 +267,9 @@ struct SimplexTree {
   // bool is_cycle(vector< idx_t > v); // Tests if vertex sequence has a cycle.
     
   // Modifying the complex w/ higher order operations
-  bool collapse_(node_ptr, node_ptr);
+  bool collapse(node_ptr, node_ptr);
   bool collapse(simplex_t, simplex_t);
-  bool vertex_collapseR(idx_t, idx_t, idx_t);
+  bool vertex_collapse(idx_t, idx_t, idx_t);
   bool vertex_collapse(node_ptr, node_ptr, node_ptr);
   void contract(simplex_t);
   void expansion(const idx_t k);

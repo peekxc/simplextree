@@ -4,9 +4,11 @@
 \alias{collapse}
 \title{Elementary collapse}
 \usage{
-collapse(st, tau, sigma)
+collapse(st, pair, w = NULL)
 }
 \arguments{
+\item{w}{a vertex id representing the target of the collapse.}
+
 \item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.}
 
 \item{sigma}{a n-length vector of vertex ids representing a (n-1)-simplex. Must be the only coface of \code{tau}.}
@@ -14,8 +16,6 @@ collapse(st, tau, sigma)
 \item{u}{a vertex id representing one of the vertices in the free pair.}
 
 \item{v}{a vertex id representing one of the vertices in the free pair.}
-
-\item{w}{a vertex id representing the target of the collapse.}
 }
 \value{
 boolean indicating whether the collapse was performed.
