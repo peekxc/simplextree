@@ -61,14 +61,14 @@ inline size_t SimplexTree::degree(idx_t vid) const{
   if (cn == nullptr) { return(0); }
   else {
     size_t res_deg = cn->children.size(); // Labels with id < v 
-    // auto it = level_map.find(std::to_string(vid) + "-2"); // Labels with id > v 
-    auto it = level_map.find(encode_node(vid, 2));
-    if (it != level_map.end()){ 
-			const auto& cousins = (*it).second;
-			for (const auto& ch: cousins){
-				res_deg += node_children(ch).size(); 
-			}
-		}
+    traverse_cousins(vid, 2, [&res_deg](node_ptr cousin){ res_deg += 1; });
+//     auto it = level_map.find(encode_node(vid, 2));
+//     if (it != level_map.end()){ 
+// 			const auto& cousins = (*it).second;
+// 			for (const auto& ch: cousins){
+// 				res_deg += node_children(ch).size(); 
+// 			}
+// 		}
     return(res_deg);
   }
 }
@@ -105,13 +105,16 @@ inline vector< idx_t > SimplexTree::adjacent_vertices(const size_t v) const {
   
   // First extract the vertices which labels > v by checking edges
   //std::string key = std::to_string(v) + "-2";
-  auto it = level_map.find(encode_node(v, 2));
-  if (it != level_map.end()){
-		const auto& cousins = (*it).second;
-    for (const auto& cn: cousins){ 
-			res.push_back(node_label(cn->parent)); 
-		}
-  }
+  traverse_cousins(v, 2, [&res](node_ptr cousin){
+    res.push_back(node_label(cousin->parent)); 
+  });
+//   auto it = level_map.find(encode_node(v, 2));
+//   if (it != level_map.end()){
+// 		const auto& cousins = (*it).second;
+//     for (const auto& cn: cousins){ 
+// 			res.push_back(node_label(cn->parent)); 
+// 		}
+//   }
   
   // Then get the vertices with labels < v
   node_ptr cn = find_by_id(root->children, v); 
@@ -146,13 +149,15 @@ inline void SimplexTree::remove_leaf(node_ptr parent, idx_t child_label){
   auto child_it = std::find_if(begin(parent->children), end(parent->children), eq_node_id_lambda);
 	if (child_it != end(parent->children)){ 
     // Remove from level map 
-    const size_t key = encode_node(child_label, child_depth);
-    auto& cousins = level_map[key];
-		auto child = (*child_it).get(); // copy regular node_ptr
-    cousins.erase(std::remove(begin(cousins), end(cousins), child), end(cousins));
+    auto child = (*child_it).get(); // copy regular node_ptr
+    remove_cousin(child, child_depth);
+    // const size_t key = encode_node(child_label, child_depth);
+    // auto& cousins = level_map[key];
+
+    // cousins.erase(std::remove(begin(cousins), end(cousins), child), end(cousins));
     
-    // If that was the last cousin in the map, erase the key
-    if (cousins.empty()){ level_map.erase(key); }
+    // // If that was the last cousin in the map, erase the key
+    // if (cousins.empty()){ level_map.erase(key); }
     
     // Remove from parents children
 		parent->children.erase(child_it);
@@ -236,22 +241,31 @@ inline void SimplexTree::insert_simplex(vector< idx_t > sigma){
 
 // Create a set of (i)-simplexes as children of the current node, if they don't already exist
 // depth == (depth of c_node)
-template< typename Iter >
+template< bool lex_order, typename Iter >
 inline void SimplexTree::insert_it(Iter s, Iter e, node_ptr c_node, const idx_t depth){
   if (s == e || c_node == nullptr){ return; }
   
   const idx_t child_depth = depth+1;
   std::for_each(s, e, [this, &c_node, child_depth](auto label){
-    auto it = std::find_if(begin(node_children(c_node)), end(node_children(c_node)), [label](auto& cn){
-      return(cn->label == label);
-    });
-    if (it == end(c_node->children)){
-      auto new_it = c_node->children.emplace_hint(it, std::make_unique< node >(label, c_node));
-			record_new_simplexes(child_depth-1, 1);
+    if constexpr (lex_order){
+      auto new_it = c_node->children.emplace_hint(c_node->children.end(), std::make_unique< node >(label, c_node));
       if (child_depth > 1){ // keep track of nodes which share ids at the same depth
-        level_map[encode_node(label, child_depth)].push_back((*new_it).get());
+        // level_map[encode_node(label, child_depth)].push_back((*new_it).get());
+        add_cousin((*new_it).get(), child_depth);
       }
-      if (child_depth > tree_max_depth){ tree_max_depth = child_depth; }
+      record_new_simplexes(child_depth-1, 1);
+    } else {
+      auto it = std::find_if(begin(node_children(c_node)), end(node_children(c_node)), [label](auto& cn){
+        return(cn->label == label);
+      });
+      if (it == end(c_node->children)){
+        auto new_it = c_node->children.emplace_hint(it, std::make_unique< node >(label, c_node));
+        if (child_depth > 1){ // keep track of nodes which share ids at the same depth
+          // level_map[encode_node(label, child_depth)].push_back((*new_it).get());
+          add_cousin((*new_it).get(), child_depth);
+        }
+        record_new_simplexes(child_depth-1, 1);
+      }
     }
   });
   
@@ -280,7 +294,8 @@ inline void SimplexTree::insert(idx_t* labels, const size_t i, const size_t n_ke
 			record_new_simplexes(depth, 1);
       if (child_depth > tree_max_depth){ tree_max_depth = child_depth; }
       if (child_depth > 1){ // keep track of nodes which share ids at the same depth
-        level_map[encode_node(labels[j], child_depth)].push_back((*new_it).get());
+        add_cousin((*new_it).get(), child_depth);
+        // level_map[encode_node(labels[j], child_depth)].push_back((*new_it).get());
       }
     }
   }
@@ -405,23 +420,34 @@ inline void SimplexTree::print_tree() const {
 }
 
 inline void SimplexTree::print_cousins() const {
-	idx_t c_depth = 1;
 	auto labels = get_vertices();
-	while(c_depth <= tree_max_depth){
+	for (idx_t c_depth = 2; c_depth <= tree_max_depth; ++c_depth){
 		for (auto &label: labels){
-			auto ni = level_map.find(encode_node(label, c_depth)); 
-			if (ni != level_map.end()){
-				std::cout << "(last=" << label << ", depth=" << c_depth << "): ";
-				for (auto& cousin_np: (*ni).second){
-					// std::cout << cousin_np->label << std::flush << std::endl; 
-					print_simplex(cousin_np, false);
-					std::cout << " ";
-				}
-				std::cout << std::endl;
-			}
+		  if (cousins_exist(label, c_depth)){
+		    std::cout << "(last=" << label << ", depth=" << c_depth << "): ";
+		    traverse_cousins(label, c_depth, [this](node_ptr cousin){
+  				print_simplex(cousin, false);
+  				std::cout << " ";
+  		  });
+  		  std::cout << std::endl;
+		  }
 		}
-		++c_depth;
 	}
+		  
+		  
+			// auto ni = level_map.find(encode_node(label, c_depth)); 
+			// if (ni != level_map.end()){
+			// 	std::cout << "(last=" << label << ", depth=" << c_depth << "): ";
+			// 	for (auto& cousin_np: (*ni).second){
+			// 		// std::cout << cousin_np->label << std::flush << std::endl; 
+			// 		print_simplex(cousin_np, false);
+			// 		std::cout << " ";
+			// 	}
+			// 	std::cout << std::endl;
+			// }
+	// 	}
+	// 	++c_depth;
+	// }
 };
 
 // Basic breadth-first printing. Each level is prefixed with '.' <level> number of times, followed by the 
@@ -494,6 +520,15 @@ inline void SimplexTree::expand(node_set_t& c_set, const idx_t k){
 			// Temporary 
 			SmallVector< node_ptr >::allocator_type::arena_type arena2;
 			SmallVector< node_ptr > sib_ptrs { arena2 } ;
+			
+			// Get bound on which siblings to check 
+			// const idx_t last_label = (*top_v->children.rbegin())->label;
+			// auto sib_ub = std::lower_bound(siblings, end(c_set), last_label, [](auto& np, idx_t label){
+			//   return np->label < label; 
+			// });
+			// std::transform(siblings, sib_ub, std::back_inserter(sib_ptrs), [](const auto& n){
+			// 	return n.get();
+			// });  
 			std::transform(siblings, end(c_set), std::back_inserter(sib_ptrs), [](const auto& n){
 				return n.get();
 			});

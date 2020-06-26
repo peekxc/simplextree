@@ -54,6 +54,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// nerve_cpp
+bool nerve_cpp(SEXP st, vector< vector< int > > cover, bool sorted);
+RcppExport SEXP _simplextree_nerve_cpp(SEXP stSEXP, SEXP coverSEXP, SEXP sortedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type st(stSEXP);
+    Rcpp::traits::input_parameter< vector< vector< int > > >::type cover(coverSEXP);
+    Rcpp::traits::input_parameter< bool >::type sorted(sortedSEXP);
+    rcpp_result_gen = Rcpp::wrap(nerve_cpp(st, cover, sorted));
+    return rcpp_result_gen;
+END_RCPP
+}
 // profile
 NumericVector profile(SEXP st);
 RcppExport SEXP _simplextree_profile(SEXP stSEXP) {
@@ -124,6 +137,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_simplextree_inv_choose_2_R", (DL_FUNC) &_simplextree_inv_choose_2_R, 1},
     {"_simplextree_to_subscript_R", (DL_FUNC) &_simplextree_to_subscript_R, 3},
     {"_simplextree_to_natural_R", (DL_FUNC) &_simplextree_to_natural_R, 2},
+    {"_simplextree_nerve_cpp", (DL_FUNC) &_simplextree_nerve_cpp, 3},
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},
     {"_simplextree_parameterize_R", (DL_FUNC) &_simplextree_parameterize_R, 4},
     {"_simplextree_traverse_R", (DL_FUNC) &_simplextree_traverse_R, 2},

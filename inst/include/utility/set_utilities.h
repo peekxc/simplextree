@@ -2,12 +2,18 @@
 // Contains utility functions related to the nerve construction
 
 #include <vector>
+#include <unordered_set>
+#include <unordered_map>
 #include <algorithm>
+#include <iostream>
 
 using std::vector; 
 using std::begin; 
 using std::end;
-using std::pair; 
+using std::pair;
+using std::unordered_map;
+using std::unordered_set;
+
 
 // Moves through two ordered sets, returning a boolean indicating if they are disjoint
 // returns true on first element found in both sets, otherwise iterates through both. 
@@ -111,15 +117,45 @@ bool nfold_nonempty_sorted(vector< pair< Iter, Iter > > ranges){
 // Higher order generalization of nonempty. Checks to see if any number of ranges all have a nonempty intersection.
 // The ranges are assumed not to be sorted apriori.
 template < typename Iter >
-bool n_nonempty(vector< pair< Iter, Iter > > ranges, const size_t k = 32){
+bool n_nonempty_unsorted(vector< pair< Iter, Iter > > ranges, const size_t k = 32){
   using T = typename Iter::value_type; 
   const size_t n_rngs = ranges.size();  
   vector< pair< Iter, Iter > > current_range;
   
   // todo: do minmax on each range, stuff into pairs w/ indices, sort, then check adjacency 
-  // to see if they are in non-overlapping ranges
+  // to see if there are any disjoint. they are in non-overlapping ranges
   // Also: remove ranges that *are* adjacent and not-enclosed by other ranges
   
+  // Do minmax on each range 
+  vector< std::pair< T, T > > minmaxes_idx;
+  T i = 0; 
+  for (auto& rng: ranges){
+    auto mm = std::minmax_element(rng.first, rng.second);
+    minmaxes_idx.push_back( std::make_pair(i, *mm.first) );
+    minmaxes_idx.push_back( std::make_pair(i, *mm.second) );
+    ++i;
+  }
+  
+  // Sort by the values of extrema  
+  std::stable_sort(begin(minmaxes_idx), end(minmaxes_idx), [](auto& p1, auto& p2){
+    return p1.second < p2.second; 
+  });
+
+  // Search for adjacent indices
+  auto adj = std::adjacent_find(begin(minmaxes_idx), end(minmaxes_idx), [](auto& p1, auto& p2){
+    return p1.first == p2.first;
+  });
+  
+  // If any adjacent elements were found, then there's at least one interval disjoint from the rest
+  if (adj != end(minmaxes_idx)){
+    bool is_disjoint = std::is_sorted(begin(minmaxes_idx), end(minmaxes_idx), [](auto& p1, auto& p2){
+      return p1.first == p2.first ? p1.second <= p2.second : p1.second < p2.second;
+    });
+    if (is_disjoint){ return(false); }
+  } 
+  
+  // Otherwise, sort by size, then fold a set_intersection 
+
   // Get range sizes 
   vector< size_t > rng_sizes(n_rngs);
   std::transform(begin(ranges), end(ranges), begin(rng_sizes), [](auto& rng){
@@ -130,74 +166,69 @@ bool n_nonempty(vector< pair< Iter, Iter > > ranges, const size_t k = 32){
   vector< size_t > offsets(n_rngs, 0);
   
   // Use lambda to determine when finished
-  // TODO: fix this! 
-  const auto finished = [&offsets, &ranges](){
-    size_t i = 0; 
-    std::any_of(begin(offsets), end(offsets), [&i, &ranges](auto s){
-      bool finished_rng = s >= rng_sizes[i];
-      if (finished_rng){
-        auto tail_it = std::prev(ranges[i].second);
-        size_t j = 0;
-        bool is_disjoint = std::any_of(begin(ranges), end(ranges), [i, &tail_it, &j](auto& rng){
-          return *tail_it < *rng.first  && j++ != i;
-        });
-        return(is_disjoint);
-      }
-      i++;
-      return(finished_rng);
-    });
-    
-    
-    // std::equal(begin(rng_sizes), end(rng_sizes), begin(offsets), std::less_equal());
-    // size_t i = 0; 
-    // std::all_of(begin(offsets), end(offsets), [&i](auto s){ 
-    //   return s >= rng_sizes[i++]; 
-    // });
+  const auto finished = [&offsets, &rng_sizes, n_rngs](){
+    size_t n_finished = 0; 
+    for (size_t i = 0; i < n_rngs; ++i){
+      n_finished += size_t(offsets[i] >= rng_sizes[i]);
+    }
+    std::cout << "n_finished: " << n_finished << std::endl;
+    return n_finished >= 2; 
   };
   
-  // TODO: nth element (b, b+1, e) before loop 
-  
   // Scan each range in sequence, adding ids to the multiset
-  vector< pair< T, size_t > > id_counts; 
+  const T t_inf = std::numeric_limits< T >::infinity();
+  auto id_counts = vector< pair< T, size_t > >(); 
   const auto first_less = [](auto& p1, auto& p2){ return p1.first < p2.first; };
   while(!finished()){
-    size_t j = 0; 
-    auto rng_it = std::min_element(begin(ranges), end(ranges), [&j](auto& rng){ 
-      return *(rng.first + offsets[j++]); 
-    });
-    const size_t i = std::distance(begin(ranges), rng_it);
+    
+    std::cout << "getting min" << std::endl;
+    size_t j = 0, i = 0; 
+    T min_elem = t_inf;
+    for (auto& rng: ranges){
+      T c_elem = offsets[j] >= rng_sizes[j] ? t_inf : *std::next(rng.first, offsets[j]);
+      if (c_elem < min_elem){
+        min_elem = c_elem;
+        i = j;
+      }
+      ++j;
+    }
     
     // Get subrange begin + end 
     auto b = ranges[i].first + offsets[i];
     auto e = ranges[i].second;
 
     // move partially sorted elements around offsetted pivot 
-    auto inc = std::min(std::distance(b, e), k);
+    auto inc = std::distance(b, e) < k ? std::distance(b, e) : k;
     std::nth_element(b, b + inc, e);
     
     // Add those less than the pivot to the id counts, checking for intersections
-    const auto last = end(id_counts);
+    // The pivot element represents elements already checked.  
+    // const size_t id_size = std::distance(begin(id_counts), end(id_counts));
     for (auto it = b; it != b + inc; ++it){
-      auto id_it = std::lower_bound(begin(id_counts), last, *it);
-      if (id_it == last){
+      auto id_it = std::lower_bound(begin(id_counts), end(id_counts), *it, [](auto& p, const auto val){
+        return(p.first < val);
+      });
+      if (id_it == end(id_counts)){
+        std::cout << "emplacing " << *it << std::endl;
         id_counts.emplace_back(*it, 1); // element not found 
+      } else if (id_it->second+1 >= n_rngs){
+        return true; // found an element in all the ranges!
       } else {
-        if (id_it->second+1 >= n_rngs){
-          return true; // found an element in all the ranges!
-        }
+        std::cout << "found " << *it << " with count " << id_it->second << std::endl;
+        ++id_it->second;
       }
     }
     
     // Keep the vector sorted
-    std::sort(last, end(id_counts), first_less);
-    std::inplace_merge(begin(id_counts), last, end(id_counts));
-    // std::sort(begin(id_counts), end(id_counts), [](auto& p1, auto& p2){
-    //   return p1.first < p2.first;
-    // });
-    
+    std::sort(begin(id_counts), end(id_counts), first_less);
+    // std::sort(begin(id_counts) + id_size, end(id_counts), first_less);
+    // std::inplace_merge(begin(id_counts), begin(id_counts) + id_size, end(id_counts));
+
     // otherwise increase the offset range 
     offsets[i] = std::min(offsets[i]+k, rng_sizes[i]);
-  }  
+  }
+  return false; 
+}
     
   //   for (size_t i = 0; i < n_rngs; ++i){
   //     auto b = ranges[i].first;

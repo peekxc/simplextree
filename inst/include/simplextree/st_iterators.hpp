@@ -395,24 +395,27 @@ namespace st {
   		
   		// Finds the next coface of a given face starting at some offset + key, or nullptr if there is none
   		std::pair< node_ptr, bool > next_coface(simplex_t face, size_t offset, idx_t depth){
-  		  const size_t key = encode_level(depth);
+  		  // const size_t key = encode_level(depth);
   		  auto& st = trie();
-  		  auto& lm = trie().level_map; 
-  		  auto cousin_it = lm.find(key);
+  		  // auto& lm = trie().level_map; 
+  		  // auto cousin_it = lm.find(key);
+  		  bool has_cousins = st.cousins_exist(base().init->label, depth);
   		  
   		  // If the key doesn't exist or the cousins are empty, return the end
-  		  if (cousin_it == lm.end() || lm.at(key).size() == 0 || offset >= lm.at(key).size()){
+  		  if (!has_cousins || offset >= st.cousins(base().init->label, depth).size()){
   		    return std::make_pair(nullptr, false);
   		  }
   		  
   		  // Else the cousins exist; see if any of the are a coface
-  		  const auto cousins = cousin_it->second;
-  		  auto coface_it = std::find_if(cousins.begin() + offset, cousins.end(), [&st, &face, depth](node_ptr np){
+  		  const auto& c_cousins = st.cousins(base().init->label, depth); 
+  		  auto it = c_cousins.cbegin(); //+ offset
+  		  std::advance(it, offset);
+  		  const auto coface_it = std::find_if(it, c_cousins.cend(), [&st, &face, depth](const node_ptr np){
   		    return st.is_face(face, st.full_simplex(np, depth));
   		  });
   		  
   		  // If it exists, return it, otherwise return sentinel
-  		  return coface_it != cousins.end() ? std::make_pair(*coface_it, true) : std::make_pair(nullptr, false);
+  		  return coface_it != c_cousins.end() ? std::make_pair(*coface_it, true) : std::make_pair(nullptr, false);
   		}
   		
   		// Encodes the key at a specific level to find cousins

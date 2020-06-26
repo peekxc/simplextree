@@ -39,13 +39,32 @@ void vector_handler(SEXP sigma, Lambda&& f){
 // R-facing Inserter 
 void insert(SimplexTree* st, SEXP x){
   SimplexTree& st_ref = *st; 
-  vector_handler(x, [&st_ref](auto b, auto e){ st_ref.insert_it(b, e, st_ref.root.get(), 0); });
+  
+  vector_handler(x, [&st_ref](auto b, auto e){ 
+    std::sort(b, e);          // Demand sorted labels
+    e = std::unique(b, e);    // Demand unique labels
+    st_ref.insert_it(b, e, st_ref.root.get(), 0); 
+  });
+}
+
+// R-facing Inserter for lexicographically-sorted column matrix
+void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
+  SimplexTree& st_ref = *st; 
+  const size_t m = simplices.ncol();
+  for (size_t i = 0; i < m; ++i){
+    IntegerMatrix::ConstColumn cc = simplices(_,i);
+    st_ref.insert_it< true >(cc.begin(), cc.end(), st_ref.root.get(), 0);
+  }
 }
 
 // R-facing remover 
 void remove(SimplexTree* st, SEXP x){
   SimplexTree& st_ref = *st; 
-  vector_handler(x, [&st_ref](auto b, auto e){ st_ref.remove_it(b, e); });
+  vector_handler(x, [&st_ref](auto b, auto e){ 
+    std::sort(b, e);          // Demand sorted labels
+    e = std::unique(b, e);    // Demand unique labels
+    st_ref.remove_it(b, e); 
+  });
 }
 
 // Creates a filtration from a neighborhood graph
@@ -299,6 +318,7 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert",  &insert)
+    .method( "insert_lex", &insert_lex)
     .method( "remove",  &remove)
     .method( "find", &find_R)
     .method( "expand", &SimplexTree::expansion )
@@ -390,6 +410,7 @@ RCPP_MODULE(filtration_module) {
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert", &insert)
+    .method( "insert_lex", &insert_lex)
     .method( "remove", &remove)
     .method( "find", &find_R)
     .method( "expand", &SimplexTree::expansion )

@@ -17,6 +17,10 @@ to_natural_R <- function(m, n) {
     .Call(`_simplextree_to_natural_R`, m, n)
 }
 
+nerve_cpp <- function(st, cover, sorted) {
+    .Call(`_simplextree_nerve_cpp`, st, cover, sorted)
+}
+
 profile <- function(st) {
     .Call(`_simplextree_profile`, st)
 }

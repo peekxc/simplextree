@@ -11,11 +11,17 @@ addons:
     packages:
       - libxml2-dev
       - gfortran
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
+      - g++-7
   homebrew:
     packages:
       - libxml2
       - gcc
     update: true
+
+before_install:
+  - mkdir -p ~/.R
+  - echo 'CXX17 = g++-7 -std=gnu++17 -fPIC' > ~/.R/Makevars
 
 # Run on both linux and OS X
 os:

@@ -44,6 +44,17 @@ test_that("Can add and remove edges", {
   rm(st)
 })
 
+test_that("Cofaces traversal works", {
+  st <- simplex_tree(1:5)
+  full_test <- straverse(preorder(st), function(simplex){
+    cofaces_sigma <- as.list(st %>% cofaces(simplex))
+    testthat::expect_true(all(sapply(cofaces_sigma, function(coface){
+      all(simplex %in% coface)
+    })))
+  })
+  testthat::expect_true(all(full_test))
+})
+
 test_that("Export types work", {
   st <- simplex_tree()
   n_vertices <- sample(2:25, size = 1)

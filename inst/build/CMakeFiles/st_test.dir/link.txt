@@ -1,1 +1,0 @@
-/usr/bin/clang++   -Wall -pedantic -g -Wl,-search_paths_first -Wl,-headerpad_max_install_names -L/usr/local/opt/llvm/lib:-L/usr/local/opt/readline/lib CMakeFiles/st_test.dir/st_test.cpp.o  -o st_test 

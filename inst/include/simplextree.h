@@ -21,7 +21,9 @@
 #include "utility/discrete.h"
 #include "utility/combinations.h"
 #include "utility/delegate.hpp"
+#include "utility/set_utilities.h"
 
+// #include <iostream>
 
 // Type for simplex labels
 typedef std::size_t idx_t;
@@ -56,6 +58,7 @@ struct SimplexTree {
 	using node_uptr = u_ptr< node >; 
 	using node_set_t = set< node_uptr, less_ptr< node_uptr > >;
   using simplex_t = vector< idx_t >; 
+  using cousin_map_t = std::map< idx_t, set< node_ptr > >;
   // using simplex_t = splex_t;
   using difference_type = std::ptrdiff_t;
   using size_type = std::size_t;
@@ -63,7 +66,8 @@ struct SimplexTree {
   
   // Fields 
   node_uptr root; 															// empty face; initialized to id = 0, parent = nullptr
-  map< size_t, vector< node_ptr > > level_map; 	// adjacency map between cousins
+  // map< size_t, vector< node_ptr > > level_map; 	// adjacency map between cousins
+  vector< cousin_map_t > level_map;
   vector< size_t > n_simplexes; 								// tracks the number of simplices if each order
   size_t tree_max_depth; 												// maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
   size_t max_id;										 						// maximum vertex id used so far. Only needed by the id generator. 
@@ -152,10 +156,59 @@ struct SimplexTree {
 		return szudzik_pair< idx_t, size_t >(label, depth);
 	}
 
-	auto node_cousins(node_ptr cn, const idx_t depth) const {
-		auto ni = level_map.find(encode_node(node_label(cn), depth)); 
-		return ni != level_map.end() ? (*ni).second : vector< node_ptr >();
+	static constexpr auto depth_index(const idx_t depth) noexcept {
+	  return(depth - 2);
 	}
+	
+	// Adds node ptr to cousin map
+	void add_cousin(node_ptr cn,  const idx_t depth){
+	  if (depth_index(depth) >= level_map.size()){
+	    level_map.resize(depth_index(depth) + 1);
+	  }
+	  level_map[depth_index(depth)][cn->label].insert(cn);
+	}
+	
+	// Removes node ptr from cousin map
+	void remove_cousin(node_ptr cn, const idx_t depth){
+	  if (depth_index(depth) >= level_map.size()){ return; }
+	  
+	  auto& c_cousins = level_map[depth_index(depth)].at(cn->label);
+	  c_cousins.erase(cn);
+	  // auto it = std::remove(begin(c_cousins), end(c_cousins), cn);
+    // c_cousins.erase(it, end(c_cousins));
+    
+    // If that was the last cousin in the map, erase the key
+    if (c_cousins.empty()){ level_map[depth_index(depth)].erase(cn->label); }
+	}
+	
+	// Checks if cousins exist 
+	bool cousins_exist(const idx_t label, const idx_t depth) const noexcept {
+	  if (depth_index(depth) >= level_map.size()){ return false; }
+	  return level_map[depth_index(depth)].find(label) != end(level_map[depth_index(depth)]);
+	}
+	
+	const auto& cousins(const idx_t label, const idx_t depth) const {
+	  return level_map[depth_index(depth)].at(label);
+	}
+	
+	
+	template < typename Lambda >
+	void traverse_cousins(const idx_t label, const idx_t depth, Lambda f) const {
+	  if (depth_index(depth) >= level_map.size()){ return; }
+	  const auto& c_cousins = level_map[depth_index(depth)].at(label);
+	  std::for_each(begin(c_cousins), end(c_cousins), f);
+	};
+	
+	
+	// auto& node_cousins(node_ptr cn, const idx_t depth) const {
+	//   if (depth_index(depth) >= level_map.size()){ return std::set< node_ptr >(); }
+	// 	auto ni = level_map.find(encode_node(node_label(cn), depth)); 
+	// 	return ni != level_map.end() ? (*ni).second : vector< node_ptr >();
+	// }
+	// auto node_cousins(node_ptr cn, const idx_t depth) const {
+	// 	auto ni = level_map.find(encode_node(node_label(cn), depth)); 
+	// 	return ni != level_map.end() ? (*ni).second : vector< node_ptr >();
+	// }
 
 	// Generates a node id equality predicate 
 	// inline std::function<bool(const node_ptr)> SimplexTree::eq_node_id(const idx_t label) const{ 
@@ -215,7 +268,7 @@ struct SimplexTree {
   // vector< size_t > degree(vector< idx_t >) const;
   simplex_t adjacent_vertices(const idx_t) const;
   
-  template< typename Iter >
+  template< bool use_lex = false, typename Iter >
   void insert_it(Iter, Iter, node_ptr, const idx_t);
     
   template< typename Iter >
