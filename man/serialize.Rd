@@ -10,16 +10,16 @@ serialize(st)
 \item{st}{a simplex tree.}
 }
 \description{
-Provides basic serialization interface for the simplex tree.
+Provides a compressed serialization interface for the simplex tree.
 }
 \details{
-Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
-simplices which have themselves as a unique coface are saved.
+The serialize/deserialize commands can be used to compress/uncompress the complex into 
+smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
+The serialization
 }
 \examples{
-st <- simplex_tree()
-st$insert(c(1, 2, 3))
-tmp <- st$serialize()
+st <- simplex_tree(list(1:5, 7:9))
+tmp <- serialize(st)
 print(tmp)
 # [[1]]
 # [1] 1 2 3

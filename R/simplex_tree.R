@@ -72,17 +72,40 @@ simplex_tree <- function(simplices = NULL){
   return(st)
 }
 
-#' filtration
-#' @description Creates a filtration. 
+#' flag
+#' @description Creates a filtration of flag complexes
 #' @param st a simplicial complex, either as a simplex tree or an ordered list of simplices. See details. 
 #' @param d a vector of edge weights, or a 'dist' object. 
+#' @details A flag complex is a simplicial complex whose k-simplices for k >= 2 are completely determined 
+#' by edges/graph of the complex. This function creates filtered simplicial complex using the supplied edge 
+#' weights. The resulting complex is a simplex tree object endowed with additional structure; see. 
+#' Vertices have their weights set to 0, and k-simplices w/ k >= 2 have their weights set to the maximum
+#' weight of any of its edges. 
 #' @export
-filtration <- function(st, d){
+flag <- function(st, d){
   # stopifnot(length(d) != )
   fi <- new(Filtration)
   fi$init_tree(st$as_XPtr())
-  fi$flag(d)
+  fi$flag_filtration(d)
   return(fi)
+}
+
+#' rips
+#' @description Constructs a Vietoris-Rips complex. 
+#' @param d a numeric 'dist' vector. 
+#' @param eps diameter parameter. 
+#' @param filtered whether to construct the filtration. Defaults to false. See details. 
+#' @export
+rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
+	stopifnot(is.numeric(d) || 'dist' %in% class(d))
+	n <- inv_nchoose2(length(d))
+	ind_to_insert <- which(d <= eps)
+	st <- simplex_tree() %>% 
+			insert(as.list(seq(n))) %>% 
+			insert(nat_to_sub(ind_to_insert, n, 2), check_valid = FALSE) %>% 
+			expand(k = dim)
+	if (filtered){ st <- st %>% flag(d[ind_to_insert]) }
+	return(st)
 }
 
 # ---- empty_face ----
@@ -299,42 +322,6 @@ link <- function(st, sigma){
   parameterize_R(st$as_XPtr(), sigma, "link", NULL)
 }
 
-# ---- print_simplices ----
-#' @name print_simplices
-#' @title Prints simplices in a formatted way 
-#' @description Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
-#' options to customize how the simplices are printed. 
-#' @export
-print_simplices <- function(x, format=c("short", "column", "row")){
-  if (is.list(x)){
-    stopifnot(all(sapply(x, is.numeric)))
-    simplex_str <- lapply(x, as.character)
-  } else if ("st_traversal" %in% class(x)){
-    simplex_str <- straverse(x, as.character)
-  } else if (class(x) %in% .st_classes){
-    simplex_str <- straverse(level_order(x), as.character)
-  } else {
-    stop("Unknown type of 'x' passed in.")
-  }
-  if (missing(format) || format == "short"){
-    format_simplex <- function(sigma){ paste0(sigma, collapse = " ") }
-    writeLines(paste0(sapply(simplex_str, format_simplex), collapse = ", "))
-  } else if (format == "column"){
-    d <- max(sapply(simplex_str, length))
-    simplices_str <- sapply(seq(d), function(i){
-      paste0(sapply(simplex_str, function(labels){ 
-        width <- max(sapply(labels, nchar))
-        ifelse(length(labels) < i, paste0(rep(" ", width), collapse=""), labels[i])
-      }), collapse = " ")
-    })
-    writeLines(simplices_str)
-  } else if (format == "row"){
-    writeLines(sapply(simplex_str, function(sigma){ paste0(sigma, collapse = " ") }))
-  } else {
-    stop("Unknown format specified.")
-  }
-}
-
 # ---- print_tree ----
 #' @name print_tree
 #' @title Prints the simplex tree
@@ -352,22 +339,6 @@ print_simplices <- function(x, format=c("short", "column", "row")){
 print_tree <- function(st){
   stopifnot(class(st) %in% .st_classes)
   st$print_tree()
-}
-
-# ---- print_cousins ----
-#' @name print_cousins
-#' @title Prints the cousins in the simplex tree
-#' @description Prints the nodes grouped by the same last label and indexed by depth to standard out. 
-#' By default, this is set to R's buffered output, which is shown in the R console. 
-#' The printed format is: \cr 
-#' \cr
-#' (last=[label], depth=[depth of label]): [simplex] \cr
-#' \cr
-#' This function is useful for understanding how the simplex tree is stored, and for debugging purposes. 
-#' @export
-print_cousins <- function(st){
-  stopifnot(class(st) %in% .st_classes)
-  st$print_cousins()
 }
 
 
@@ -391,6 +362,57 @@ print_cousins <- function(st){
 # format.Rcpp_Filtration<- function(x){
 #   paste0(format.Rcpp_SimplexTree(x), sprintf("Current filtration index: %d", x$current_index), collapse = "\n")
 # }
+
+## One printer to rule them all
+# ----- print method ------
+#' @name print_simplices
+#' @title Prints simplices in a formatted way 
+#' @description Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
+#' options to customize how the simplices are printed. 
+#' Prints the nodes grouped by the same last label and indexed by depth to standard out. 
+#' By default, this is set to R's buffered output, which is shown in the R console. 
+#' The printed format is: \cr 
+#' \cr
+#' (last=[label], depth=[depth of label]): [simplex] \cr
+#' \cr
+#' This function is useful for understanding how the simplex tree is stored, and for debugging purposes. 
+#' @export
+print_simplices <- function (st, format=c("summary", "tree", "cousins", "short", "column", "row")){
+  if (missing(format)){ format <- "short" } 
+  if (format == "summary" && (class(st) %in% .st_classes)){ show(st) }
+  else if (format == "tree" && (class(st) %in% .st_classes)){ st$print_tree() }
+  else if (format == "cousins" && (class(st) %in% .st_classes)){ st$print_cousins()}
+  else {
+    if (is.list(st)){
+      stopifnot(all(sapply(st, is.numeric)))
+      simplex_str <- lapply(st, as.character)
+    } else if ("st_traversal" %in% class(st)){
+      simplex_str <- straverse(st, as.character)
+    } else if (class(st) %in% .st_classes){
+      simplex_str <- straverse(level_order(st), as.character)
+    } else {
+      stop("Unknown type of 'st' passed in.")
+    }
+    
+    if (format == "short"){
+      format_simplex <- function(sigma){ paste0(sigma, collapse = " ") }
+      writeLines(paste0(sapply(simplex_str, format_simplex), collapse = ", "))
+    } else if (format == "column"){
+      d <- max(sapply(simplex_str, length))
+      simplices_str <- sapply(seq(d), function(i){
+        paste0(sapply(simplex_str, function(labels){ 
+          width <- max(sapply(labels, nchar))
+          ifelse(length(labels) < i, paste0(rep(" ", width), collapse=""), labels[i])
+        }), collapse = " ")
+      })
+      writeLines(simplices_str)
+    } else if (format == "row"){
+      writeLines(sapply(simplex_str, function(sigma){ paste0(sigma, collapse = " ") }))
+    } else {
+      stop("Unknown format specified.")
+    }
+  } 
+}
 
 # ---- print.Rcpp_SimplexTree ----
 setClass("Rcpp_SimplexTree")
@@ -743,31 +765,68 @@ contract <- function(st, edge){
 # ---- serialize / deserialize ----
 #' @name serialize
 #' @title Serializes/deserializes the simplex tree. 
-#' @description Provides basic serialization interface for the simplex tree.
+#' @description Provides a compressed serialization interface for the simplex tree.
 #' @param st a simplex tree.
 #' @family serialization
-#' @details Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
-#' simplices which have themselves as a unique coface are saved. 
+#' @details The serialize/deserialize commands can be used to compress/uncompress the complex into 
+#' smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
+#' The serialization 
 #' @examples 
-#' st <- simplex_tree()
-#' st$insert(c(1, 2, 3))
-#' tmp <- st$serialize()
+#' st <- simplex_tree(list(1:5, 7:9))
+#' tmp <- serialize(st)
 #' print(tmp)
 #' # [[1]]
 #' # [1] 1 2 3
 #' st$clear()
 #' st$deserialize(tmp)
 #' st$print_tree()
+#' @export
 serialize <- function(st){
   stopifnot(class(st) %in% .st_classes)
-  st$serialize()
+  n <- st$n_simplices[1]
+  complex <- local({
+    ids <- st$vertices
+    minimal <- straverse(maximal(st), function(simplex){ 
+      c(length(simplex), sub_to_nat(match(simplex, ids), n)) 
+    })
+    minimal <- minimal[,order(minimal[1,])]
+    ids <- structure(rle(diff(ids)), head=ids[1])
+    list(ids = ids, dims = rle(minimal[1,]), maps = minimal[2,])
+  })
+  return(complex)
+
 }
 
 #' @family serialization
 #' @export
-deserialize <- function(st){
+deserialize <- function(complex, st = NULL){
+  if (is.null(complex)){ return(simplex_tree()) }
+  stopifnot(all(c("ids", "dims", "maps") %in% names(complex)))
+  if (missing(st) || is.null(st)){ st <- simplex_tree() } 
+  else { stopifnot(st %in% .st_classes) }
+  with(complex, {
+    ids <- c(attr(ids, "head"), cumsum(inverse.rle(ids))+attr(ids, "head"))
+    st %>% insert(as.list(ids))
+    d <- inverse.rle(dims)
+    n <- st$n_simplices[1]
+    for (di in unique(d)){
+      d_simplices <- nat_to_sub(maps[d == di], n, k = di)
+      st %>% insert(matrix(ids[d_simplices], ncol = ncol(d_simplices), nrow = nrow(d_simplices), byrow = FALSE))
+    }
+  })
+  return(st)
+}
+
+# ---- clone ----
+#' @name clone 
+#' @title Clones the given simplex tree.
+#' @description Performs a deep-copy on the supplied simplicial complex. 
+#' @export
+clone <- function(st){
   stopifnot(class(st) %in% .st_classes)
-  st$serialize()
+  new_st <- simplextree() 
+  new_st$deserialize(st$serialize())
+  return(new_st)
 }
 
 # ---- save ----
@@ -797,14 +856,11 @@ NULL
 # ---- reindex ----
 #' @name reindex 
 #' @title reindexes vertex ids
-#' @param ids Either a vector of new ids, or a named list mapping olds ids to new ids. See details. 
+#' @param ids vector of new vertex ids. See details. 
 #' @description This function allows one to 'reorder' or 'reindex' vertex ids.  
-#' @details The \code{ids} parameter can either be an integer vector or a list. If it's an integer
-#' vector, it must be the same length as the number of vertices. The simplex tree is then modified 
-#' to replace the vertex label at index \code{i} with \code{ids}[i]. See examples. \cr
-#' \cr
-#' Alternatively, a named list whose names yield the vertex ids to map from and whose values yield the vertex
-#' ids to map to. 
+#' @details The \code{ids} parameter must be a sorted integer vector of new ids with length matching the 
+#' number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with 
+#' \code{ids}[i]. See examples.
 #' @examples 
 #' st <- simplex_tree()
 #' st$insert(1:3)
@@ -816,11 +872,13 @@ NULL
 #' # 4 (h = 2): .( 5 6 )..( 6 )
 #' # 5 (h = 1): .( 6 )
 #' # 6 (h = 0):
-#' st$reindex(list("5"=7))
-#' # 4 (h = 2): .( 6 7 )..( 7 )
-#' # 6 (h = 1): .( 7 )
-#' # 7 (h = 0): 
-NULL
+#' @export
+reindex <- function(st, ids){
+  stopifnot(class(st) %in% .st_classes)
+  stopifnot(is.numeric(ids) && all(order(ids) == seq(length(ids))))
+  st$reindex(ids)
+  return(invisible(st))
+}
 
 
 # ---- is_tree ----

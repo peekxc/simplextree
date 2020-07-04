@@ -4,9 +4,19 @@
 \alias{print_simplices}
 \title{Prints simplices in a formatted way}
 \usage{
-print_simplices(x, format = c("short", "column", "row"))
+print_simplices(
+  st,
+  format = c("summary", "tree", "cousins", "short", "column", "row")
+)
 }
 \description{
 Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
-options to customize how the simplices are printed.
+options to customize how the simplices are printed. 
+Prints the nodes grouped by the same last label and indexed by depth to standard out. 
+By default, this is set to R's buffered output, which is shown in the R console. 
+The printed format is: \cr 
+\cr
+(last=[label], depth=[depth of label]): [simplex] \cr
+\cr
+This function is useful for understanding how the simplex tree is stored, and for debugging purposes.
 }

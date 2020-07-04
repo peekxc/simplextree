@@ -54,17 +54,43 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// nerve_cpp
-bool nerve_cpp(SEXP st, vector< vector< int > > cover, bool sorted);
-RcppExport SEXP _simplextree_nerve_cpp(SEXP stSEXP, SEXP coverSEXP, SEXP sortedSEXP) {
+// nfold_intersection
+bool nfold_intersection(vector< vector< int > > x, const size_t n);
+RcppExport SEXP _simplextree_nfold_intersection(SEXP xSEXP, SEXP nSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type st(stSEXP);
-    Rcpp::traits::input_parameter< vector< vector< int > > >::type cover(coverSEXP);
-    Rcpp::traits::input_parameter< bool >::type sorted(sortedSEXP);
-    rcpp_result_gen = Rcpp::wrap(nerve_cpp(st, cover, sorted));
+    Rcpp::traits::input_parameter< vector< vector< int > > >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(nfold_intersection(x, n));
     return rcpp_result_gen;
+END_RCPP
+}
+// nerve_expand
+void nerve_expand(SEXP stx, vector< size_t > ids, vector< vector< int > > cover, const size_t k, const size_t threshold);
+RcppExport SEXP _simplextree_nerve_expand(SEXP stxSEXP, SEXP idsSEXP, SEXP coverSEXP, SEXP kSEXP, SEXP thresholdSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type stx(stxSEXP);
+    Rcpp::traits::input_parameter< vector< size_t > >::type ids(idsSEXP);
+    Rcpp::traits::input_parameter< vector< vector< int > > >::type cover(coverSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type threshold(thresholdSEXP);
+    nerve_expand(stx, ids, cover, k, threshold);
+    return R_NilValue;
+END_RCPP
+}
+// nerve_expand_f
+void nerve_expand_f(SEXP stx, vector< size_t > ids, Function include_f, const size_t k);
+RcppExport SEXP _simplextree_nerve_expand_f(SEXP stxSEXP, SEXP idsSEXP, SEXP include_fSEXP, SEXP kSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type stx(stxSEXP);
+    Rcpp::traits::input_parameter< vector< size_t > >::type ids(idsSEXP);
+    Rcpp::traits::input_parameter< Function >::type include_f(include_fSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type k(kSEXP);
+    nerve_expand_f(stx, ids, include_f, k);
+    return R_NilValue;
 END_RCPP
 }
 // profile
@@ -137,7 +163,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_simplextree_inv_choose_2_R", (DL_FUNC) &_simplextree_inv_choose_2_R, 1},
     {"_simplextree_to_subscript_R", (DL_FUNC) &_simplextree_to_subscript_R, 3},
     {"_simplextree_to_natural_R", (DL_FUNC) &_simplextree_to_natural_R, 2},
-    {"_simplextree_nerve_cpp", (DL_FUNC) &_simplextree_nerve_cpp, 3},
+    {"_simplextree_nfold_intersection", (DL_FUNC) &_simplextree_nfold_intersection, 2},
+    {"_simplextree_nerve_expand", (DL_FUNC) &_simplextree_nerve_expand, 5},
+    {"_simplextree_nerve_expand_f", (DL_FUNC) &_simplextree_nerve_expand_f, 4},
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},
     {"_simplextree_parameterize_R", (DL_FUNC) &_simplextree_parameterize_R, 4},
     {"_simplextree_traverse_R", (DL_FUNC) &_simplextree_traverse_R, 2},

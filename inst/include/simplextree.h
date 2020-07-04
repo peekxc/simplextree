@@ -58,7 +58,17 @@ struct SimplexTree {
 	using node_uptr = u_ptr< node >; 
 	using node_set_t = set< node_uptr, less_ptr< node_uptr > >;
   using simplex_t = vector< idx_t >; 
-  using cousin_map_t = std::map< idx_t, set< node_ptr > >;
+	
+  // struct less_parent_label {
+  //   bool operator() (const node_ptr& lhs, const node_ptr& rhs) const { 
+  //     if (lhs->parent->label < rhs->parent->label){
+  //       return true; 
+  //     }
+  // 		return lhs != rhs;
+  // 	}
+  // };
+	
+  using cousin_map_t = std::map< idx_t, vector< node_ptr > >;
   // using simplex_t = splex_t;
   using difference_type = std::ptrdiff_t;
   using size_type = std::size_t;
@@ -89,41 +99,10 @@ struct SimplexTree {
 		} 
 		bool operator< (const node& rhs) const { return (label < rhs.label); } // order by label
 	};
+	
+	SimplexTree(const SimplexTree&);
+	SimplexTree& operator=(const SimplexTree&);
 
-	// template< size_t I = 0 >
-	// constexpr idx_t node_label(node_ptr cn){
-	// 	if constexpr (I == 0){
-	// 		return(cn->label);
-	// 	} else {
-	// 		return(node_label< I - 1 >(cn->parent));
-	// 	}
-	// 	//return I == 0 ? cn->label : node_label< I - 1 >(cn->parent);
-	// }
-
-	// template < size_t I, typename Func>
-	// void node_labels(const node_ptr cn, Func&& f) {
-	// 	auto dispatcher = make_index_dispatcher< I >();
-	// 	dispatcher([&](auto idx) { f(node_label< (I - idx - 1) >(cn)); });
-	// }
-
-	// TODO: fix noexcept for vector case
-	// template < size_t I >
-	// v_t< I > full_simplex(const node_ptr cn) noexcept {
-	// 	if constexpr(I <= 16){
-	// 		v_t< I > result;
-	// 		auto dispatcher = make_index_dispatcher< I >();
-	// 		dispatcher([&result, &cn](auto idx) { result[idx] = node_label< (I - idx - 1) >(cn); });
-	// 		return result;
-	// 	} else {
-	// 		v_t< I > result;
-	// 		if (cn == nullptr){ return; }
-	// 		else {
-	// 			v_t< I - 1 > r_result = full_simplex3< I - 1 >(cn->parent);
-	// 			result.push_back(cn->label);
-	// 			result.insert(result.end(), r_result.begin(), r_result.end());
-	// 		}
-	// 	}
-	// }
 	template< size_t I = 0 >
 	constexpr static idx_t node_label_r(node_ptr cn){
 		if constexpr (I == 0){
@@ -151,10 +130,10 @@ struct SimplexTree {
 		else { return cn.children; }
 	}
 	
-	// Encoding to convert a label + depth into a key
-	static constexpr auto encode_node(const idx_t label, const idx_t depth) noexcept {
-		return szudzik_pair< idx_t, size_t >(label, depth);
-	}
+	// // Encoding to convert a label + depth into a key
+	// static constexpr auto encode_node(const idx_t label, const idx_t depth) noexcept {
+	// 	return szudzik_pair< idx_t, size_t >(label, depth);
+	// }
 
 	static constexpr auto depth_index(const idx_t depth) noexcept {
 	  return(depth - 2);
@@ -165,20 +144,35 @@ struct SimplexTree {
 	  if (depth_index(depth) >= level_map.size()){
 	    level_map.resize(depth_index(depth) + 1);
 	  }
-	  level_map[depth_index(depth)][cn->label].insert(cn);
+	  auto& label_map = level_map[depth_index(depth)][cn->label];
+	  auto it = std::find(begin(label_map), end(label_map), cn);
+	  if (it == end(label_map)){
+	    label_map.push_back(cn);
+	  } // insert 
 	}
 	
 	// Removes node ptr from cousin map
 	void remove_cousin(node_ptr cn, const idx_t depth){
 	  if (depth_index(depth) >= level_map.size()){ return; }
+	  auto& depth_map = level_map[depth_index(depth)];
+	  auto cousin_it = depth_map.find(cn->label);
+	  if (cousin_it != end(depth_map)){
+	    auto& v = cousin_it->second; 
+	    v.erase(std::remove(v.begin(), v.end(), cn), v.end());
+	  }
+
 	  
-	  auto& c_cousins = level_map[depth_index(depth)].at(cn->label);
-	  c_cousins.erase(cn);
-	  // auto it = std::remove(begin(c_cousins), end(c_cousins), cn);
-    // c_cousins.erase(it, end(c_cousins));
-    
-    // If that was the last cousin in the map, erase the key
-    if (c_cousins.empty()){ level_map[depth_index(depth)].erase(cn->label); }
+	  // auto& depth_map = level_map[depth_index(depth)];
+	  // auto it = depth_map.find(cn->label);
+	  // if (it != depth_map.end()){
+	  //   it->second.erase(cn);
+	  //   if (it->second.size() == 0){
+	  //     depth_map.erase(cn->label);
+	  //   }
+	  // }
+    // 	  auto& c_cousins = level_map[depth_index(depth)][cn->label];
+    // 	  c_cousins.erase(cn);
+    //     if (c_cousins.empty()){ level_map[depth_index(depth)].erase(cn->label); }
 	}
 	
 	// Checks if cousins exist 
@@ -236,24 +230,6 @@ struct SimplexTree {
   //   std::vector<idx_t>().swap(n_simplexes);
   // };
   
-  // Copy constructor
-  SimplexTree(const SimplexTree& st) : root(new node(-1, nullptr)), tree_max_depth(0), max_id(0), id_policy(0) {
-    deserialize(st.serialize());
-    id_policy = st.id_policy;
-    // included = st.included;
-    // fc.reserve(st.fc.size()); 
-    // std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
-  };
-  
-  // Assignment operator
-  SimplexTree& operator=(const SimplexTree& st) {
-    deserialize(st.serialize());
-    id_policy = st.id_policy;
-    // included = st.included;
-    // fc.reserve(st.fc.size()); 
-    // std::copy(begin(st.fc), end(st.fc), back_inserter(fc));
-    return *this;
-  };
   void record_new_simplexes(const idx_t k, const idx_t n);// record keeping
   
   constexpr idx_t dimension() const {
@@ -272,7 +248,7 @@ struct SimplexTree {
   void insert_it(Iter, Iter, node_ptr, const idx_t);
     
   template< typename Iter >
-  node_ptr find_it(Iter, Iter) const; 
+  node_ptr find_it(Iter, Iter, node_ptr cn) const; 
   
   template < typename Iter >
   void remove_it(Iter, Iter);
@@ -326,7 +302,14 @@ struct SimplexTree {
   bool vertex_collapse(node_ptr, node_ptr, node_ptr);
   void contract(simplex_t);
   void expansion(const idx_t k);
-  void expand(node_set_t&, const idx_t);
+  // void expand(node_set_t&, const idx_t);
+  
+  template < typename Lambda >
+  void expansion_f(const idx_t, Lambda&&);
+  
+  template < typename Lambda >
+  void expand_f(node_set_t&, const idx_t, size_t, Lambda&&);
+  
   void get_cousins() const;
 
   // Constructs the full simplex from a given node, recursively
@@ -341,24 +324,19 @@ struct SimplexTree {
   void full_simplex_out(node_ptr, const idx_t, OutputIt) const noexcept;
   
   simplex_t full_simplex(node_ptr, const idx_t depth = 0) const noexcept;
-  
-  
+
   
 	void remove_subtree2(simplex_t);
 
 	
 	vector< idx_t > get_vertices() const;
   
-  // Serialization/unserialization + saving/loading the complex
-  vector< simplex_t > serialize() const;
-  void deserialize(vector< simplex_t >);  // void deserializeR(List simplices)
-  
   // Printing 
-  void print_tree() const;
-  void print_cousins() const;
-  void print_level(node_ptr, idx_t) const;
-  void print_subtree(node_ptr) const;
-  void print_simplex(node_ptr, bool newline = true) const;
+  template < typename OutputStream > void print_tree(OutputStream&) const;
+  template < typename OutputStream > void print_cousins(OutputStream&) const;
+  template < typename OutputStream > void print_level(OutputStream&, node_ptr, idx_t) const;
+  template < typename OutputStream > void print_subtree(OutputStream&, node_ptr) const;
+  template < typename OutputStream > void print_simplex(OutputStream&, node_ptr, bool newline = true) const;
 
 	void clear();
 

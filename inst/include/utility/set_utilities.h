@@ -15,31 +15,70 @@ using std::unordered_map;
 using std::unordered_set;
 
 
+// Safely advance iterator to prevent passing the end
+template <class Iter, class Incr>
+auto safe_advance(const Iter& curr, const Iter& end, Incr n) {
+  size_t remaining(std::distance(curr, end));
+  if (remaining < n) { n = remaining; }
+  return std::next(curr, n);
+}
+
 // Moves through two ordered sets, returning a boolean indicating if they are disjoint
 // returns true on first element found in both sets, otherwise iterates through both. 
-template <typename SetA, typename SetB>
-bool disjoint_sorted(const SetA &a, const SetB &b) {
-  auto it_a = a.begin();
-  auto it_b = b.begin();
-  while (it_a != a.end() && it_b != b.end()) {
+template <typename Iter>
+bool disjoint_sorted(Iter it_a, const Iter a_end, Iter it_b, const Iter b_end) {
+  while (it_a != a_end && it_b != b_end) {
     switch (*it_a == *it_b ? 0 : *it_a < *it_b ? -1 : 1) {
     case 0:
       return false;
     case -1:
-      it_a = std::lower_bound(++it_a, a.end(), *it_b);
+      it_a = std::lower_bound(++it_a, a_end, *it_b);
       break;
     case 1:
-      it_b = std::lower_bound(++it_b, b.end(), *it_a);
+      it_b = std::lower_bound(++it_b, b_end, *it_a);
       break;
     }
   }
   return true;
 }
 
+// Given a set of intervals as pairs, checks if any of them are disjoint from the others
+template < typename T >
+bool intervals_disjoint(vector< pair< T, T > > intervals){
+  if (intervals.size() <= 1){ return(true); }
+  
+  auto interval_ids = vector< std::pair< T, T > >();
+  T i = 0; 
+  for (auto& interval: intervals){
+    interval_ids.push_back( std::make_pair(i, interval.first) );
+    interval_ids.push_back( std::make_pair(i, interval.second) );
+    ++i;
+  }
+  
+  // Sort by the values of value types  
+  std::stable_sort(begin(interval_ids), end(interval_ids), [](auto& p1, auto& p2){
+    return p1.second < p2.second; 
+  });
+  
+  auto front = begin(interval_ids);
+  auto front1 = std::next(front); 
+  auto back = rbegin(interval_ids);
+  auto back1 = std::next(back); 
+  
+  if (((front->first == front1->first) || (back->first == back1->first)) && front1->second != back1->second){
+    // std::cout << front->first << ", " << front->second << std::endl;
+    // std::cout << front1->first << ", " << front1->second << std::endl;
+    // std::cout << back->first << ", " << back->second << std::endl;
+    // std::cout << back1->first << ", " << back1->second << std::endl;
+    return true; 
+  }
+  return false; 
+}
+
 // Given two random-access iterator ranges, (a1, a2), (b1, b2), return a boolean indicating 
 // whether or not they have a non-empty intersection. Does not assumes either is sorted.
 template <typename Iter>
-bool nonempty(Iter a1, Iter a2, Iter b1, Iter b2){
+bool intersects_nonempty(Iter a1, Iter a2, Iter b1, Iter b2){
   using it_cat = typename std::iterator_traits<Iter>::iterator_category;
   static_assert(std::is_same<it_cat, std::random_access_iterator_tag>::value, "Iterator type must be random-access."); 
   using T = typename std::iterator_traits<Iter>::value_type;
@@ -75,240 +114,125 @@ bool nonempty(Iter a1, Iter a2, Iter b1, Iter b2){
   return !disjoint_sorted(a_sort, b_sort);
 }
 
-
+// Checks if there are at least n elements common to all given sorted ranges
 template < typename Iter >
-bool nfold_nonempty_sorted(vector< pair< Iter, Iter > > ranges){
+bool n_intersects_sorted(vector< pair< Iter, Iter > > ranges, const size_t n){
   using T = typename Iter::value_type; 
-  const size_t n_rngs = ranges.size(); 
+  if (n == 0){ return(true); }
+  if (ranges.size() <= 1){ return(false); }
   
-  // Predicate to indicate if all ranges have been exhausted
+  // Sort by size, then fold a set_intersection
+  std::sort(begin(ranges), end(ranges), [](auto& p1, auto& p2){
+    return std::distance(p1.first, p1.second) < std::distance(p2.first, p2.second);
+  });
+ 
+  // Fold a sorted intersection 
+  auto common = vector< T >();
+  std::set_intersection(ranges[0].first, ranges[0].second, ranges[1].first, ranges[1].second, std::back_inserter(common));
+  for (size_t i = 2; i < ranges.size(); ++i){
+    auto aux = vector< T >();
+    std::set_intersection(begin(common), end(common), ranges[i].first, ranges[i].second, std::back_inserter(aux));
+    if (aux.size() < n){
+      return(false);
+    }
+    common.resize(aux.size());
+    std::move(begin(aux), end(aux), begin(common));
+  }
+  return(common.size() >= n);
+}
+
+// Checks if there are at least n elements common to all given unsorted ranges
+template < typename Iter >
+bool n_intersects_unsorted(vector< pair< Iter, Iter > > ranges, const size_t n, const size_t k=32){
+  using T = typename Iter::value_type; 
+  
+  // Use lambda to determine when finished
   const auto finished = [&ranges](){
-    bool all_ended = std::all_of(begin(ranges), end(ranges), [](auto& rng){
-      return rng.first == rng.second;
-    });
-    return all_ended;
+    size_t n_finished = std::accumulate(begin(ranges), end(ranges), (size_t) 0, [](size_t val, auto& p){ return p.first == p.second; });
+    return(n_finished >= 2);
   };
   
-  // Advance the iterator pointing to the smallest element 
-  std::multiset< T > ids; 
+  auto mv = std::set< T >();          // the values mutally common to all the ranges
+  auto vc = std::map< T, size_t >();  // values counts; i.e. values -> the # times they've been seen
+  const auto m = ranges.size(); 
   while(!finished()){
-    auto smallest_elem = std::min_element(begin(ranges), end(ranges), [](auto& rng1, auto& rng2){
-      if (rng1.first == rng1.second){ return false; }
-      if (rng2.first == rng2.second){ return true; }
-      return(*rng1.first < *rng2.first);
-    });
-    const size_t idx = std::distance(begin(ranges), smallest_elem);
-    
-    // Get the current valid id with the smallest value
-    T id = *ranges[idx].first; 
-    ids.insert(id);
-    
-    // If the id just inserted has appeared at least 'n_rngs' times, then we've found a nonempty intersection
-    if (ids.count(id) >= n_rngs){
-      return(true);
+
+    // Partial sort to put minimum element at the beginning of each range
+    for (auto& rng: ranges){
+      std::nth_element(rng.first, safe_advance(rng.first, rng.second, 1), rng.second);
     }
     
-    // otherwise increment the smallest iterator 
-    std::advance(ranges[idx].first, 1);
+    // Extract range with minimum first element
+    auto rng_it = std::min_element(begin(ranges), end(ranges), [](auto& p1, auto &p2){
+      if (p1.first == p1.second){ return false; }
+      if (p2.first == p2.second){ return true; }
+      return(*p1.first < *p2.first);
+    });
+    
+    // If the range with the minimum element is an empty range, no candidate ranges available
+    if (rng_it->first == rng_it->second){ return(false); }
+    const size_t min_idx = std::distance(begin(ranges), rng_it); 
+    auto rng = ranges[min_idx];
+    
+    // Partial sort up to the end
+    std::nth_element(rng.first, safe_advance(rng.first, rng.second, k), rng.second);
+
+    // Go through the current range 
+    const auto e = safe_advance(rng.first, rng.second, k);
+    for (auto b = rng.first; b != e; ++b){
+      // auto value_it = std::lower_bound(begin(vc), end(vc), *b, [](auto& p, auto v){ return p.first < v; });
+      auto value_it = vc.find(*b);
+      if (value_it != end(vc) && ++(value_it->second) == m){
+        mv.insert(value_it->first); // Increase number of things found in mutual
+      } else {
+        vc.emplace_hint(value_it, *b, 1);
+      }
+    }
+    
+    // If the common intersection grows to threshold, we're done
+    if (mv.size() >= n){ return true;  }
+    
+    // Always replace beginning range with it's next beginning
+    ranges[min_idx].first = e;
   }
   return(false);
 }
 
-// Higher order generalization of nonempty. Checks to see if any number of ranges all have a nonempty intersection.
-// The ranges are assumed not to be sorted apriori.
+
+// Tests a set of ranges to see if they all have at least n elements in their intersection.
 template < typename Iter >
-bool n_nonempty_unsorted(vector< pair< Iter, Iter > > ranges, const size_t k = 32){
+bool n_intersects(const vector< pair< Iter, Iter > >& ranges, const size_t n){
   using T = typename Iter::value_type; 
-  const size_t n_rngs = ranges.size();  
-  vector< pair< Iter, Iter > > current_range;
   
-  // todo: do minmax on each range, stuff into pairs w/ indices, sort, then check adjacency 
-  // to see if there are any disjoint. they are in non-overlapping ranges
-  // Also: remove ranges that *are* adjacent and not-enclosed by other ranges
+  // Check if any of the ranges don't even have n elements
+  const bool too_small = std::any_of(begin(ranges), end(ranges), [n](auto& rng){ return std::distance(rng.first, rng.second) < n; });
+  if (too_small){ return(false); }
   
-  // Do minmax on each range 
-  vector< std::pair< T, T > > minmaxes_idx;
-  T i = 0; 
-  for (auto& rng: ranges){
-    auto mm = std::minmax_element(rng.first, rng.second);
-    minmaxes_idx.push_back( std::make_pair(i, *mm.first) );
-    minmaxes_idx.push_back( std::make_pair(i, *mm.second) );
-    ++i;
+  // Do linear O(n) scan to determine if everything is sorted
+  const bool is_sorted = std::all_of(begin(ranges), end(ranges), [](auto& rng){ return std::is_sorted(rng.first, rng.second); });
+  
+  // Collect (min,max) of each range
+  auto minmaxes = vector< std::pair< T, T > >();
+  minmaxes.reserve(ranges.size());
+  std::transform(begin(ranges), end(ranges), std::back_inserter(minmaxes), [is_sorted](auto& rng){
+    if (is_sorted){ 
+      auto min = *rng.first;
+      auto max = std::distance(rng.first, rng.second) == 1 ? *rng.first : *std::prev(rng.second);
+      return std::make_pair(min,max); 
+    } else {
+      auto mm = std::minmax_element(rng.first, rng.second);
+      return std::make_pair(*mm.first, *mm.second);
+    }
+  });
+  
+  // Do initial check to see if they are all disjoint
+  if (intervals_disjoint(minmaxes)){ return(false); }
+
+  // Use the appropriate intersection check
+  if (is_sorted && n == 1 && ranges.size() == 2){
+    bool disjoint = disjoint_sorted(ranges[0].first, ranges[0].second, ranges[1].first, ranges[1].second);
+    return(!disjoint);
+  } else {
+    return is_sorted ? n_intersects_sorted(ranges, n) : n_intersects_unsorted(ranges, n);
   }
-  
-  // Sort by the values of extrema  
-  std::stable_sort(begin(minmaxes_idx), end(minmaxes_idx), [](auto& p1, auto& p2){
-    return p1.second < p2.second; 
-  });
-
-  // Search for adjacent indices
-  auto adj = std::adjacent_find(begin(minmaxes_idx), end(minmaxes_idx), [](auto& p1, auto& p2){
-    return p1.first == p2.first;
-  });
-  
-  // If any adjacent elements were found, then there's at least one interval disjoint from the rest
-  if (adj != end(minmaxes_idx)){
-    bool is_disjoint = std::is_sorted(begin(minmaxes_idx), end(minmaxes_idx), [](auto& p1, auto& p2){
-      return p1.first == p2.first ? p1.second <= p2.second : p1.second < p2.second;
-    });
-    if (is_disjoint){ return(false); }
-  } 
-  
-  // Otherwise, sort by size, then fold a set_intersection 
-
-  // Get range sizes 
-  vector< size_t > rng_sizes(n_rngs);
-  std::transform(begin(ranges), end(ranges), begin(rng_sizes), [](auto& rng){
-    return std::distance(rng.first, rng.second);
-  });
-  
-  // Create a set of initial offsets giving beginnings
-  vector< size_t > offsets(n_rngs, 0);
-  
-  // Use lambda to determine when finished
-  const auto finished = [&offsets, &rng_sizes, n_rngs](){
-    size_t n_finished = 0; 
-    for (size_t i = 0; i < n_rngs; ++i){
-      n_finished += size_t(offsets[i] >= rng_sizes[i]);
-    }
-    std::cout << "n_finished: " << n_finished << std::endl;
-    return n_finished >= 2; 
-  };
-  
-  // Scan each range in sequence, adding ids to the multiset
-  const T t_inf = std::numeric_limits< T >::infinity();
-  auto id_counts = vector< pair< T, size_t > >(); 
-  const auto first_less = [](auto& p1, auto& p2){ return p1.first < p2.first; };
-  while(!finished()){
-    
-    std::cout << "getting min" << std::endl;
-    size_t j = 0, i = 0; 
-    T min_elem = t_inf;
-    for (auto& rng: ranges){
-      T c_elem = offsets[j] >= rng_sizes[j] ? t_inf : *std::next(rng.first, offsets[j]);
-      if (c_elem < min_elem){
-        min_elem = c_elem;
-        i = j;
-      }
-      ++j;
-    }
-    
-    // Get subrange begin + end 
-    auto b = ranges[i].first + offsets[i];
-    auto e = ranges[i].second;
-
-    // move partially sorted elements around offsetted pivot 
-    auto inc = std::distance(b, e) < k ? std::distance(b, e) : k;
-    std::nth_element(b, b + inc, e);
-    
-    // Add those less than the pivot to the id counts, checking for intersections
-    // The pivot element represents elements already checked.  
-    // const size_t id_size = std::distance(begin(id_counts), end(id_counts));
-    for (auto it = b; it != b + inc; ++it){
-      auto id_it = std::lower_bound(begin(id_counts), end(id_counts), *it, [](auto& p, const auto val){
-        return(p.first < val);
-      });
-      if (id_it == end(id_counts)){
-        std::cout << "emplacing " << *it << std::endl;
-        id_counts.emplace_back(*it, 1); // element not found 
-      } else if (id_it->second+1 >= n_rngs){
-        return true; // found an element in all the ranges!
-      } else {
-        std::cout << "found " << *it << " with count " << id_it->second << std::endl;
-        ++id_it->second;
-      }
-    }
-    
-    // Keep the vector sorted
-    std::sort(begin(id_counts), end(id_counts), first_less);
-    // std::sort(begin(id_counts) + id_size, end(id_counts), first_less);
-    // std::inplace_merge(begin(id_counts), begin(id_counts) + id_size, end(id_counts));
-
-    // otherwise increase the offset range 
-    offsets[i] = std::min(offsets[i]+k, rng_sizes[i]);
-  }
-  return false; 
-}
-    
-  //   for (size_t i = 0; i < n_rngs; ++i){
-  //     auto b = ranges[i].first;
-  //     auto e = ranges[i].second; 
-  //     
-  //     // partial sort around a pivot 
-  //     std::nth_element(b, b + std::min(offsets[i], rng_sizes[i]), e);
-  //     
-  //     // Add those less than the pivot to the multiset, checking for intersections
-  //     for (auto it = b; it != b + offsets[i]; ++it){
-  //       const size_t m = ids.count(*it);
-  //       if ((m+1) >= n_rngs){
-  //         return true; // found an element in all the ranges!
-  //       }
-  //     }
-  //     // otherwise increase the offset range 
-  //     offsets[i] += k;
-  //   }
-  // }
-// }
-
-// Higher order generalization of nonempty. Checks to see if any number of ranges all have a nonempty intersection.
-template <typename Iter>
-bool nfold_nonempty(vector< std::pair< Iter, Iter > > ranges){
-  using it_cat = typename std::iterator_traits<Iter>::iterator_category;
-  static_assert(std::is_same<it_cat, std::random_access_iterator_tag>::value, "Iterator type must be random-access.");
-  using T = typename std::iterator_traits<Iter>::value_type;
-
-  // Either empty == they do not have an intersection
-  const size_t n_rng = ranges.size();
-  vector< size_t > rng_sizes = vector< size_t >(n_rng);
-  std::transform(begin(ranges), end(ranges), begin(rng_sizes), [](const std::pair<Iter, Iter> rng){
-    return std::distance(rng.first, rng.second);
-  });
-  bool any_empty = std::any_of(begin(rng_sizes), end(rng_sizes), [](const size_t sz){ return sz == 0; });
-  if (any_empty){ return(false); };
-
-  // Use multiset to track number of ids
-  std::multiset<T> ids; 
-  const auto insert_rng = [&ids](Iter a, Iter b){ 
-    std::for_each(a, b, [&ids](T elem){ ids.insert(elem); }); 
-  };
-  for (auto rng: ranges){ insert_rng(rng.first, rng.second); };
-  
-  // If any ids appeared k times, there's a nonempty intersection between them all 
-  bool nonempty_int = std::any_of(ids.begin(), ids.end(), [&ids, &n_rng](const T id){
-    return (ids.count(id) == n_rng);
-  });
-  return nonempty_int;
-}
-
-template <typename Iter>
-auto intersection(Iter a1, Iter a2, Iter b1, Iter b2) 
-  -> vector< typename std::iterator_traits<Iter>::value_type > {
-  using T = typename std::iterator_traits<Iter>::value_type;
-  std::unordered_set< T > c;
-  for (; a1 != a2; ++a1) {
-    if (std::find(b1, b2, *a1) != b2) { 
-      c.insert(*a1); 
-    }
-  }
-  vector< T > res(begin(c), end(c));
-  return(res);
-}
-
-template <typename Iter>
-vector< int > nfold_intersection(vector< std::pair< Iter, Iter > > ranges){
-  using it_cat = typename std::iterator_traits<Iter>::iterator_category;
-  static_assert(std::is_same<it_cat, std::random_access_iterator_tag>::value, "Iterator type must be random-access.");
-  using T = typename std::iterator_traits<Iter>::value_type;
-  vector< T > res;
-  const size_t n_pairs = ranges.size()-1; 
-  for (size_t i = 0; i < n_pairs; ++i){
-    const std::pair< Iter, Iter > rng1 = ranges[i];
-    const std::pair< Iter, Iter > rng2 = ranges[i+1];
-    vector< T > c_int = intersection(rng1.first, rng1.second, rng2.first, rng2.second);
-    res.insert(res.end(), begin(c_int), end(c_int));
-    if (res.size() == 0){
-      return(res);
-    }
-  }
-  return(res);
 }

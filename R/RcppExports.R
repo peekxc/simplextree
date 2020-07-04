@@ -17,8 +17,16 @@ to_natural_R <- function(m, n) {
     .Call(`_simplextree_to_natural_R`, m, n)
 }
 
-nerve_cpp <- function(st, cover, sorted) {
-    .Call(`_simplextree_nerve_cpp`, st, cover, sorted)
+nfold_intersection <- function(x, n) {
+    .Call(`_simplextree_nfold_intersection`, x, n)
+}
+
+nerve_expand <- function(stx, ids, cover, k, threshold) {
+    invisible(.Call(`_simplextree_nerve_expand`, stx, ids, cover, k, threshold))
+}
+
+nerve_expand_f <- function(stx, ids, include_f, k) {
+    invisible(.Call(`_simplextree_nerve_expand_f`, stx, ids, include_f, k))
 }
 
 profile <- function(st) {

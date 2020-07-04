@@ -229,7 +229,9 @@ namespace st {
   };
   // https://eli.thegreenplace.net/2011/05/17/the-curiously-recurring-template-pattern-in-c
   
-  
+  template < class T, std::size_t BufSize = 64 >
+  using small_vec = std::vector<T, short_alloc<T, BufSize, alignof(T)>>;
+    		
   // Preorder traversal iterator
   template < bool ts = false > 
   struct preorder : TraversalInterface< ts, preorder > {
@@ -252,8 +254,13 @@ namespace st {
   		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
   
   		// DFS specific data structures
-  		std::stack< typename B::d_node > node_stack;  
-  
+  		using dn_t = typename B::d_node;
+  		std::stack< typename B::d_node > node_stack;
+  		
+    	// 	small_vec< dn_t >::allocator_type::arena_type a;
+    	//   small_vec< dn_t > v = {a};
+    	// 	std::stack< dn_t, small_vec< dn_t > > node_stack = {v};
+
   		// Iterator constructor
   		iterator(preorder& dd, node_ptr cn = nullptr) : TraversalInterface< ts, preorder >::iterator(dd){
   			const idx_t d = dd.st->depth(cn);
@@ -537,6 +544,110 @@ namespace st {
   	auto end(){ return iterator(*this, nullptr); };
   }; // cofaces
   
+  // ---- expansion iterator ------
+  // template < bool ts = false > 
+  // struct expansion : TraversalInterface< ts, expansion > {
+  // 	using B = TraversalInterface< ts, expansion >;
+  // 	using B::init, B::st, B::p1, B::p2, B::NP, B::DEPTH, B::LABELS;
+  // 	using d_node = typename TraversalInterface< ts, expansion >::d_node;
+  // 
+  // 	expansion(const SimplexTree* st, node_ptr start) : TraversalInterface< ts, expansion >(st, start){ }
+  // 
+  // 	struct iterator : public TraversalInterface< ts, expansion >::iterator {
+  // 		using Bit = typename B::iterator;
+  // 		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
+  // 
+  // 		// expansion-specific structures 
+  // 		const size_t k;
+  // 		std::reference_wrapper< node_set_t > c_set; 
+  // 	  node_set_t::iterator c_sib;
+  // 	  node_set_t::iterator c_node;
+  //     vector< node_ptr > intersection; 
+  // 		
+  // 		// Iterator constructor
+  // 		iterator(expansion& dd, node_set_t& exp_set, size_t dim) : TraversalInterface< ts, expansion >::iterator(dd), k(dim) {
+  // 			// current = std::make_tuple(cn, dd.st->depth(cn));
+  // 		  // update_simplex();
+  // 		  // node_set_t& c_set, const idx_t k
+  // 		  c_set = std::ref(exp_set);
+  // 		  c_node = begin(c_set);
+  // 		  c_sib = std::next(c_set.begin(), 1);
+  // 		   
+  // 		}
+  // 		
+  // 		node_ptr next_top_node() {
+  // 		  if (c_node == end(c_node)){ return(nullptr); }
+  // 		  node_ptr top_v = find_vertex((*c_node)->label);
+  // 		  while (top_v != nullptr && c_node != end(c_node) && top_v->children.empty()){
+  // 		    std::advance(c_node,1);
+  // 		    if (c_node == end(c_node)){
+  // 		      top_v <- nullptr; 
+  // 		    } else {
+  // 		      top_v = find_vertex((*c_node)->label);
+  // 		    }
+  // 		  }
+  // 		  return(top_v);
+  // 		}
+  // 		
+  // 		// Increment operator is all that is needed by default
+  // 		auto& operator++(){
+  // 			// Postcondition: iterator is incremented by one, returns the result
+  // 	    node_ptr top_v = next_top_node();
+  // 		  node_ptr cn = (*c_node).get(); 
+  // 		  
+  // 		  if (cn != nullptr && top_v != nullptr){
+  // 		    vector< node_ptr > sib_ptrs; 
+  //   			std::transform(c_sib, end(c_set), std::back_inserter(sib_ptrs), [](const auto& n){
+  //   				return n.get();
+  //   			});
+  // 
+  //         // Get the intersection
+  //         intersection.clear();
+  //         std::set_intersection(
+  //           begin(sib_ptrs), end(sib_ptrs),
+  //           begin(top_v->children), end(top_v->children), 
+  //           std::back_inserter(intersection), 
+  //           [](auto& sib_n, auto& child_n) -> bool {
+  //             return node_label(sib_n) < node_label(child_n); 
+  //           }
+  //         );
+  //         
+  //         // Insert and recursively expand 
+  //         if (intersection.size() > 0){
+  //           std::array< idx_t, 1 > int_label;
+  //           for (auto& int_node: intersection){
+  //             int_label[0] = int_node->label;
+  //             auto np = find_it(begin(int_label), end(int_label), cn);
+  //             if (np == nullptr){ // not found, need to insert it 
+  //               current = { cn, depth(cn) };
+  //               
+  //             }
+  //           }
+  //           
+  //           expand(cn->children, k-1); // recurse
+  //         }
+  //         if (siblings != end(c_set)){ ++siblings; }
+  //         
+  // 		  }
+  // 		  
+  // 			update_simplex();
+  // 			return(*this);
+  // 		};
+  // 		
+  // 		// Doesn't work with regular update method, so override
+  //   	constexpr void update_simplex(){
+  //   		if constexpr (ts){
+  //   		  labels = get< LABELS >(*c_node);
+  //   		}
+  //   	};
+  // 	}; // iterator
+  // 	
+  // 	// Only start at a non-root node, else return the end
+  // 	auto begin(){ return iterator(*this, init); };
+  // 	auto end(){ return iterator(*this, nullptr); };
+  // }; // expansion
+  
+  
   // K-skeleton iterator
   template < bool ts = false > 
   struct k_skeleton : preorder< ts > {
@@ -551,7 +662,7 @@ namespace st {
   };
   
   template < bool ts = false > 
-  struct max_skeleton : preorder< ts > {
+  struct k_simplices : preorder< ts > {
   	using t_node = typename TraversalInterface< ts, preorder >::t_node;
   	//using d_node = tuple< node_ptr, idx_t >;
   	static constexpr auto valid_eval = [](const size_t k) constexpr { 
@@ -560,7 +671,7 @@ namespace st {
   	static constexpr auto valid_children = [](const size_t k) constexpr { 
   		return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
   	};
-  	max_skeleton(const SimplexTree* st, node_ptr start, const size_t k) : preorder< ts >(st, start, valid_eval(k), valid_children(k)){}
+  	k_simplices(const SimplexTree* st, node_ptr start, const size_t k) : preorder< ts >(st, start, valid_eval(k), valid_children(k)){}
   };
   
   
@@ -650,8 +761,12 @@ namespace st {
   	};
   	// Constructor is all that is needed
   	faces(const SimplexTree* st, node_ptr start) : 
-  		level_order< ts >(st, start, valid_eval(st, start), valid_children(st, start)){}
+  		level_order< ts >(st, st->root.get(), valid_eval(st, start), valid_children(st, start)){}
   };
+  
+  
+  
+  
   
   // Generic traversal function which unpacks the tuple and allows for early termination of the iterable
   template <class Iterable, class Lambda> 
@@ -700,6 +815,8 @@ namespace st {
   // 		if (!should_continue){ break; }
   // 	}
   // }
+  
+  
   
 }; // end namespace st 
 

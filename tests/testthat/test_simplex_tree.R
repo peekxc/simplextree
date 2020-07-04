@@ -3,6 +3,7 @@ library("simplextree")
 library("testthat")
 testthat::context("Testing Simplex Tree")
 
+## ---- can_construct ----
 test_that("Can construct and deconstruct a Simplex Tree object", {
   st <- simplex_tree()
   expect_is(st, "Rcpp_SimplexTree")
@@ -11,6 +12,7 @@ test_that("Can construct and deconstruct a Simplex Tree object", {
   expect_silent({ rm(st); invisible(gc(verbose = FALSE)) })
 })
 
+## ---- can_remove ----
 test_that("Can add and remove vertices", {
   st <- simplex_tree()
   invisible(sapply(seq(5L), function(i) insert(st, i)))
@@ -20,6 +22,7 @@ test_that("Can add and remove vertices", {
   rm(st)
 })
 
+## ---- can_add_remove ----
 test_that("Can add and remove edges", {
   st <- simplex_tree()
   n_vertices <- sample(5L:25L, size = 1)
@@ -44,6 +47,22 @@ test_that("Can add and remove edges", {
   rm(st)
 })
 
+## ---- can_insert_bulk ----
+test_that("Bulk matrix insertion and removal works", {
+  st <- simplex_tree()
+  testthat::expect_silent(st %>% insert(combn(10,4)))
+  testthat::expect_equal(st$n_simplices, choose(10,1:4))
+  testthat::expect_silent(st %>% remove(combn(10,4)))
+  testthat::expect_equal(st$n_simplices, choose(10, seq(3)))
+  testthat::expect_silent(st %>% remove(combn(10,3)))
+  testthat::expect_equal(st$n_simplices, choose(10, seq(2)))
+  testthat::expect_silent(st %>% remove(combn(10,2)))
+  testthat::expect_equal(st$n_simplices, choose(10, seq(1)))
+  testthat::expect_silent(st %>% remove(combn(10,1)))
+  testthat::expect_equal(st$n_simplices, numeric(0L))
+})
+
+## ---- cofaces traversal ----
 test_that("Cofaces traversal works", {
   st <- simplex_tree(1:5)
   full_test <- straverse(preorder(st), function(simplex){
@@ -55,6 +74,15 @@ test_that("Cofaces traversal works", {
   testthat::expect_true(all(full_test))
 })
 
+## ---- cousin map ----
+test_that("Cousins works", {
+  st <- simplex_tree(1:5)
+  testthat::expect_equal(st$n_simplices, c(5,10,10,5,1))
+  testthat::expect_silent(st %>% remove(5))
+  testthat::expect_equal(st$n_simplices, c(4,6,4,1))
+})
+
+## ---- export types ----
 test_that("Export types work", {
   st <- simplex_tree()
   n_vertices <- sample(2:25, size = 1)
@@ -81,15 +109,14 @@ test_that("Export types work", {
   expect_equal(dim(el), c(choose(n_vertices, 2), 2L))
 })
 
+## ---- serialization ----
 test_that("serialization/deserialization works", {
   st <- simplex_tree()
-  testthat::expect_silent(st %>% insert(list(1:3, 4:5, 6)))
-  testthat::expect_equal(list(1:3, 4:5, 6), st$serialize())
-  st2 <- simplex_tree()
-  testthat::expect_silent(st2$deserialize(st$serialize()))
-  testthat::expect_equal(st, st2)
+  testthat::expect_silent(st %>% insert(list(2:5, 7:12, 15:20)))
+  testthat::expect_equal(st, deserialize(serialize(st)))
 })
 
+## ---- vertex collapse ----
 ## Example from simplicial maps paper (after converting letters to numbers)
 test_that("vertex collapse works", {
   st <- simplex_tree()
@@ -114,17 +141,123 @@ test_that("vertex collapse works", {
   st2 %>% collapse(list(1, 6), 5) # {u,v} -> {w}
   all.equal(st1$as_list(), st2$as_list())
 })
-# 
-# testthat::test_that("reindexing work", {
-#   st <- simplex_tree()
-#   st$insert(list(c(1,2), c(2,3), c(1,3), c(1,4), c(2,5), c(2,6), c(3,7), c(3,8), c(3,9)))
-#   st2 <- simplex_tree()
-#   st2$deserialize(st$serialize())
-#   st$reindex(c(3,1,2,4:9))  
-#   st2$reindex(list("1"=3, "2"=1, "3"=2))
-#   expect_equal(st$serialize(), st2$serialize())
+
+## ---- edge contractions ----
+# testthat::test_that("edge contractions work", {
+#   simplextree::traverse()
 # })
-# 
+
+## ---- reindexing ----
+testthat::test_that("reindexing work", {
+  st <- simplex_tree(1:5)
+  st %>% reindex(6:10)
+  expect_equal(st$vertices, 6:10)
+})
+
+## ---- clear ----
+testthat::test_that("clear works", {
+  st <- simplex_tree(combn(5,3))
+  testthat::expect_true(all(st$n_simplices == choose(5,1:3)))
+  testthat::expect_silent(st$clear())
+  testthat::expect_equal(st$dimension, 0)
+  testthat::expect_equal(st$n_simplices, numeric(0L))
+})
+
+## ---- preorder traversal ----
+testthat::test_that("preorder traversal works", {
+  st <- simplex_tree(list(2:5))
+  testthat::expect_is(preorder(st), "st_traversal")
+  testthat::expect_equal(capture.output(preorder(st)), "Preorder traversal @ { empty face }")
+  testthat::expect_equal(
+    capture.output(print_simplices(preorder(st), "short")), 
+    "2, 2 3, 2 3 4, 2 3 4 5, 2 3 5, 2 4, 2 4 5, 2 5, 3, 3 4, 3 4 5, 3 5, 4, 4 5, 5"
+  )
+  testthat::expect_is(as.list(preorder(st)), "list")
+})
+
+## ---- level order traversal ----
+testthat::test_that("level order traversal works", {
+  st <- simplex_tree(list(2:5))
+  testthat::expect_is(level_order(st), "st_traversal")
+  testthat::expect_equal(capture.output(level_order(st)), "Level order traversal @ { empty face }")
+  testthat::expect_equal(
+    capture.output(print_simplices(level_order(st), "short")), 
+    "2, 3, 4, 5, 2 3, 2 4, 2 5, 3 4, 3 5, 4 5, 2 3 4, 2 3 5, 2 4 5, 3 4 5, 2 3 4 5"
+  )
+  testthat::expect_is(as.list(level_order(st)), "list")
+})
+
+
+## ---- maximal traversal ----
+testthat::test_that("maximal traversal works", {
+  st <- simplex_tree(list(2:5, 8:12))
+  testthat::expect_is(maximal(st), "st_traversal")
+  testthat::expect_equal(capture.output(maximal(st)), "Maximal simplex traversal @ { empty face }")
+  testthat::expect_equal(
+    capture.output(print_simplices(maximal(st), "short")), 
+    "2 3 4 5, 8 9 10 11 12"
+  )
+  testthat::expect_is(as.list(maximal(st)), "list")
+})
+
+
+## ---- link traversal ----
+testthat::test_that("link traversal works", {
+  st <- simplex_tree(list(c(1,2,3), c(1,3,4), c(1,4,5), c(1,5,6), c(1,6,7), c(1,2,7)))
+  testthat::expect_is(link(st, 1), "st_traversal")
+  testthat::expect_equal(capture.output(link(st, 1)), "Link traversal @ { 1 }")
+  testthat::expect_equal(
+    capture.output(print_simplices(link(st, 1), "short")), 
+    "2, 2 3, 2 7, 3, 3 4, 4, 4 5, 5, 5 6, 6, 6 7, 7"
+  )
+  testthat::expect_is(as.list(link(st, 1)), "list")
+})
+
+
+## ---- face traversal ----
+testthat::test_that("face traversal works", {
+  st <- simplex_tree(list(1:5))
+  testthat::expect_is(faces(st, 3:5), "st_traversal")
+  testthat::expect_equal(capture.output(faces(st, 3:5)), "Face traversal @ { 3 4 5 }")
+  testthat::expect_equal(
+    capture.output(print_simplices(faces(st, 3:5), "short")), 
+    "3, 4, 5, 3 4, 3 5, 4 5, 3 4 5"
+  )
+  testthat::expect_is(as.list(faces(st, 3:5)), "list")
+})
+
+
+## ---- k simplices traversal ----
+testthat::test_that("k simplices traversal works", {
+  st <- simplex_tree(list(1:5))
+  testthat::expect_is(k_simplices(st, 2), "st_traversal")
+  testthat::expect_equal(capture.output(k_simplices(st, 2)), "K-simplices traversal @ { empty face }")
+  testthat::expect_equal(
+    capture.output(print_simplices(k_simplices(st, 2), "short")), 
+    "1 2 3, 1 2 4, 1 2 5, 1 3 4, 1 3 5, 1 4 5, 2 3 4, 2 3 5, 2 4 5, 3 4 5"
+  )
+  testthat::expect_is(as.list(k_simplices(st, 2)), "list")
+})
+
+## ---- k skeleton traversal ----
+testthat::test_that("k skeleton traversal works", {
+  st <- simplex_tree(list(1:5))
+  testthat::expect_is(k_skeleton(st, 2), "st_traversal")
+  testthat::expect_equal(capture.output(k_skeleton(st, 2)), "K-skeleton traversal @ { empty face }")
+  testthat::expect_equal(
+    capture.output(print_simplices(k_skeleton(st, 2), "short")), 
+    "1, 1 2, 1 2 3, 1 2 4, 1 2 5, 1 3, 1 3 4, 1 3 5, 1 4, 1 4 5, 1 5, 2, 2 3, 2 3 4, 2 3 5, 2 4, 2 4 5, 2 5, 3, 3 4, 3 4 5, 3 5, 4, 4 5, 5"
+  )
+  testthat::expect_is(as.list(k_skeleton(st, 2)), "list")
+})
+
+## ---- traversal returns ----
+testthat::test_that("traversal returns work", {
+  st <- simplex_tree(list(1:4))
+  testthat::expect_equal(straverse(k_simplices(st, 2), identity), combn(4,3))
+  testthat::expect_equal(ltraverse(k_simplices(st, 2), identity), combn(4,3,simplify=FALSE))
+})
+
 ## Testing k-expansion
 testthat::test_that("K-expansion works", {
   base_complex <- function(){
@@ -137,21 +270,41 @@ testthat::test_that("K-expansion works", {
   st <- base_complex()
   testthat::expect_true(methods::is(st, "Rcpp_SimplexTree"))
   testthat::expect_equal(st$dimension, 1)
-  testthat::expect_silent(st$expand(2))
+  testthat::expect_silent(st %>% expand(2))
   testthat::expect_equal(st$dimension, 2)
-  testthat::expect_true(all(st$find(list(1:3, 4:6, c(4, 5, 7), c(4, 6, 7)))))
-  testthat::expect_false(st$find(4:7))
+  testthat::expect_true(all(st %>% find(list(1:3, 4:6, c(4, 5, 7), c(4, 6, 7)))))
+  testthat::expect_false(st %>% find(4:7))
   st <- base_complex()
-  testthat::expect_silent(st$expand(3))
+  testthat::expect_silent(st %>% expand(3))
   testthat::expect_equal(st$dimension, 3)
-  testthat::expect_true(st$find(4:7))
-
-  ## More tests
-  # st <- simplextree::simplex_tree()
-  # st$insert(list(c(1,2),c(1,3),c(1,4),c(2,3),c(2,4),c(3,4),c(3,5),c(4,5),c(5,6),c(5,7),c(5,8),c(6,7,8,9)))
-  # st$expand(k=2)
-
+  testthat::expect_true(st %>% find(4:7))
 })
+
+# testthat::test_that("combinadics work", {
+#   testthat::expect_error(nat_to_sub(0, 10, 10))
+#   testthat::expect_equal(nat_to_sub(1, 10, 10), matrix(seq(10), ncol=1))
+#   testthat::expect_equal(nat_to_sub(1, 10, 1), matrix(seq(10), ncol=1))
+#   simplextree::traverse()
+# })
+# 
+# testthat::test_that("flag construction works", {
+#   simplextree::traverse()
+# })
+# 
+# testthat::test_that("rips filtration works", {
+#   simplextree::traverse()
+# })
+# 
+# 
+# testthat::test_that("intersection testing works", {
+#   
+# })
+# testthat::test_that("nerve construction works", {
+#   simplextree::traverse()
+# })
+
+
+
 # 
 # 
 # testthat::test_that("Facet traversal works", {

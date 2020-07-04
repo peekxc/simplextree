@@ -19,7 +19,8 @@
 #' @export  
 nat_to_sub  <- function(x, n, k){
 	if (length(x) == 0){ return(matrix(integer(0), ncol = k)) }
-	stopifnot(all(x >= 1 && x <= choose(n,k)))
+	stopifnot(all(x >= 1 & x <= choose(n,k)))
+	if (choose(n, k) > ((2^64) - 2)){ stop("(n,k) combination too big; combinadics limited to 64-bit integer arithmetic.") }
 	return(to_subscript_R(as.integer(x)-1L, n, k)+1L)
 }
 
@@ -34,5 +35,6 @@ nat_to_sub  <- function(x, n, k){
 sub_to_nat  <- function(x, n){
 	if (length(x) == 0){ return(integer(0)) }
 	if (is.null(dim(x))){ x <- matrix(x, ncol = 1L) }
+  if (choose(n, nrow(x)) > ((2^64) - 2)){ stop("(n,k) combination too big; combinadics limited to 64-bit integer arithmetic.") }
 	return(to_natural_R(x-1L, n)+1L)
 }

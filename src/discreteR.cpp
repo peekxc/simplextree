@@ -31,7 +31,7 @@ IntegerVector to_natural_R(IntegerMatrix m, const size_t n){
   const size_t k = m.nrow();
   IntegerVector result = Rcpp::no_init_vector(m.ncol());
   size_t i = 0;
-  to_natural(m.begin(), m.end(), k, n, [&i, &result](size_t cc){
+  to_natural(m.begin(), m.end(), n, k, [&i, &result](size_t cc){
     result[i++] = cc;
   });
   return(result);

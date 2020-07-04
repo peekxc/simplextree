@@ -91,13 +91,17 @@ public:
   Filtration() : SimplexTree() {}
   
   // copy over the simplex tree
-  void initialize(const SimplexTree& st){
-    deserialize(st.serialize());
-    id_policy = st.id_policy;
+  void initialize(const SimplexTree& sc){
+    auto max_tr = st::maximal< true >(&sc, sc.root.get());
+    traverse(max_tr, [this](node_ptr cn, idx_t depth, simplex_t sigma){
+      insert_it(begin(sigma), end(sigma), root.get(), 0);
+      return true; 
+    });
+    id_policy = sc.id_policy;
   }
   
   // Filtration building methods
-  void flag(const vector< double >&, const bool fixed=false);
+  void flag_filtration(const vector< double >&, const bool fixed=false);
 
   // Iterating through the filtration
   template < typename Lambda >
@@ -146,7 +150,7 @@ struct sorted_edges {
 
   sorted_edges(Filtration* st, const vector< double >& weights) : values(weights), vertices(st->get_vertices()) {
     const size_t n = vertices.size(); 
-    auto edge_traversal = st::max_skeleton< true >(static_cast< SimplexTree* >(st), st->root.get(), 1);
+    auto edge_traversal = st::k_simplices< true >(static_cast< SimplexTree* >(st), st->root.get(), 1);
     st::traverse(edge_traversal, [this, n](node_ptr np, idx_t depth, simplex_t edge){
       auto eid = match(edge, vertices);
       keys.push_back(to_natural_2(eid[0], eid[1], n)); 
@@ -174,7 +178,7 @@ struct sorted_edges {
 // Given a dimension k and set of weighted edges (u,v) representing the weights of the ordered edges in the trie, 
 // constructs a std::function object which accepts as an argument some weight value 'epsilon' and 
 // returns the simplex tree object.  
-inline void Filtration::flag(const vector< double >& D, const bool fixed){
+inline void Filtration::flag_filtration(const vector< double >& D, const bool fixed){
   if (this->n_simplexes.size() <= 1){ return; }
   if (D.size() != this->n_simplexes.at(1)){ throw std::invalid_argument("Must have one weight per edge."); }
   
@@ -188,7 +192,6 @@ inline void Filtration::flag(const vector< double >& D, const bool fixed){
 
 	size_t i = 0; 
 	traverse(st::level_order< true >(this), [&w_simplices, &D, &i, &se](node_ptr cn, idx_t d, simplex_t sigma){
-    // const double NEG_INF = -std::numeric_limits< double >::infinity(); 
     double c_weight = d == 1 ? 0.0 : (d == 2 ? D.at(i++) : se.max_weight(sigma));
     weighted_simplex ws = { cn, d, c_weight };
     w_simplices.push_back(ws); 
@@ -197,11 +200,6 @@ inline void Filtration::flag(const vector< double >& D, const bool fixed){
 
   // 2. Sort simplices by weight to create the filtration
   std::sort(begin(w_simplices), end(w_simplices), ws_lex_less(this));
-  // size_t ii = 0; 
-  // for (auto& ws: w_simplices){
-  //   std::cout << ii << ": label=" << ws.np->label << ", depth=" << ws.depth << ", weight=" << ws.weight << std::endl;
-  //   ii++;
-  // }
     
   // 3. Index the simplices
   fc.clear();
@@ -226,12 +224,6 @@ inline void Filtration::flag(const vector< double >& D, const bool fixed){
     }
     fc.push_back(tau);
   }
-  // size_t jj = 0; 
-  // for (auto& is: fc){
-  //   std::cout << jj << ": label=" << is.label << ", value=" << is.value << ", parent index=" << is.parent_idx << std::endl;
-  //   jj++;
-  // }
-  
   
   // Set state of the filtration to the max
   included = vector< bool >(fc.size(), true);

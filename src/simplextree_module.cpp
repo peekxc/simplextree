@@ -47,15 +47,63 @@ void insert(SimplexTree* st, SEXP x){
   });
 }
 
-// R-facing Inserter for lexicographically-sorted column matrix
+R-facing Inserter for lexicographically-sorted column matrix
 void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
-  SimplexTree& st_ref = *st; 
+  SimplexTree& st_ref = *st;
   const size_t m = simplices.ncol();
   for (size_t i = 0; i < m; ++i){
     IntegerMatrix::ConstColumn cc = simplices(_,i);
     st_ref.insert_it< true >(cc.begin(), cc.end(), st_ref.root.get(), 0);
   }
 }
+// void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
+//   SimplexTree& st_ref = *st;
+//   const size_t m = simplices.ncol();
+//   const size_t d = simplices.nrow();
+//   
+//   splex_alloc_t a; 
+//   splex_t k_simplex{ a };
+//   k_simplex.resize(d);
+//   
+//   // Start the search 
+//   IntegerMatrix::ConstColumn cc = simplices(_,0);
+//   // node_ptr np = st_ref.find_it(cc.begin(), cc.end(), st_ref.root.get());
+//   
+//   // Get the initial simplex
+//   st_ref.full_simplex_out(st_ref.root.get(), d-1, begin(cc)));
+//   // std::copy(k_simplex.begin(), k_simplex.end(), k_p1_simplex.begin());
+//   
+//   while(std::equal(begin(cc), end(cc), begin(cc)) && i < m){
+//     if (np != nullptr){
+//       auto new_it = np->children.emplace_hint(np->children.end(), std::make_unique< node >(label, np));
+//       auto child_np = (*new_it).get();
+//       if (d > 1){ // keep track of nodes which share ids at the same depth
+//         if (depth_index(d+1) >= level_map.size()){ level_map.resize(depth_index(d+1) + 1); }
+// 	      auto& label_map = level_map[depth_index(d+1)][child_np->label];
+//   	    label_map.push_back(child_np);
+//       }
+//       record_new_simplexes(d, 1);
+//     }
+//     cc = simplices(_,++i);
+//     
+//   }
+//   
+//       
+//   for (size_t i = 1; i < m; ++i){
+//     
+//     
+//     if (np != nullptr){
+//       auto new_it = np->children.emplace_hint(np->children.end(), std::make_unique< node >(label, np));
+//       auto child_np = (*new_it).get();
+//       if (d > 1){ // keep track of nodes which share ids at the same depth
+//         if (depth_index(d+1) >= level_map.size()){ level_map.resize(depth_index(d+1) + 1); }
+// 	      auto& label_map = level_map[depth_index(d+1)][child_np->label];
+//   	    label_map.push_back(child_np);
+//       }
+//       record_new_simplexes(d, 1);
+//     }
+//   }
+// }
 
 // R-facing remover 
 void remove(SimplexTree* st, SEXP x){
@@ -66,6 +114,17 @@ void remove(SimplexTree* st, SEXP x){
     st_ref.remove_it(b, e); 
   });
 }
+
+LogicalVector find_R(SimplexTree* st, SEXP simplices){
+  LogicalVector v; 
+  vector_handler(simplices, [&st, &v](auto b, auto e){
+    node_ptr sigma = st->find_it(b, e, st->root.get());
+    // Rcout << sigma->label << std::endl;
+    v.push_back(sigma != st->root.get() && sigma != nullptr);
+  });
+  return(v);
+}
+
 
 // Creates a filtration from a neighborhood graph
 // void rips(SimplexTree* st, vector< double > edge_weights, const size_t k){
@@ -123,69 +182,11 @@ IntegerVector degree(SimplexTree* st, IntegerVector ids){
   return res;
 }
 
-// inline void SimplexTree::reindex(SEXP target_ids){
-//   const unsigned int s_type = TYPEOF(target_ids);
-//   if (s_type == INTSXP || s_type == REALSXP){
-//     vector< idx_t > t_ids = as< vector< idx_t > >(target_ids);
-//     reindex(t_ids);
-//   } else if (s_type == LISTSXP || s_type == VECSXP){
-//     List t_ids_lst = as< List >(target_ids); 
-//     CharacterVector nm = t_ids_lst.names();
-//     if (Rf_isNull(nm) || Rf_length(nm) == 0){ stop("target ids must be named if given as a list."); }
-//     
-//     // Do the mapping, then send to regular reindexing function
-//     const vector< idx_t > base_vids = get_vertices();
-//     vector< idx_t > new_vids = vector< idx_t >(begin(base_vids), end(base_vids));
-//     for (size_t i = 0; i < nm.size(); ++i){
-//       idx_t src_id = std::stoi(as< std::string >(nm.at(i)));
-//       idx_t tgt_id = as< idx_t >(t_ids_lst.at(i));
-//       const size_t idx = std::distance(begin(base_vids), std::lower_bound(begin(base_vids), end(base_vids), src_id));
-//       new_vids.at(idx) = tgt_id;
-//     }
-//     reindex(new_vids);
-//   }
-// }
-// 
-inline void SimplexTree::reindex(vector< idx_t > target_ids){
-  if (n_simplexes.at(0) != target_ids.size()){ stop("target id vector must match the size of the number of 0-simplices."); }
-  vector< vector< idx_t > > minimal = serialize();
-  vector< idx_t > vids = get_vertices();
-
-  // Check the target ids are unique
-  vector< idx_t > v_check(begin(target_ids), end(target_ids));
-  std::sort(begin(v_check), end(v_check));
-  auto it = std::unique(begin(v_check), end(v_check));
-  if (std::distance(begin(v_check), it) != vids.size()){
-    stop("target ids must all unique.");
-  }
-
-  clear(); // clear the tree now that it's been serialized
-  for (simplex_t sigma: minimal){
-    const size_t n = sigma.size();
-    for (size_t i = 0; i < n; ++i){
-      const size_t idx = std::distance(begin(vids), std::lower_bound(begin(vids), end(vids), sigma.at(i)));
-      sigma.at(i) = target_ids.at(idx);
-    }
-    insert_simplex(sigma);
-  }
-}
-
-LogicalVector find_R(SimplexTree* st, SEXP simplices){
-  LogicalVector v; 
-  vector_handler(simplices, [&st, &v](auto b, auto e){
-    node_ptr sigma = st->find_it(b, e);
-    // Rcout << sigma->label << std::endl;
-    v.push_back(sigma != st->root.get() && sigma != nullptr);
-  });
-  return(v);
-}
-
-
 IntegerMatrix get_k_simplices(SimplexTree* st, const size_t k) {
   if (st->n_simplexes.size() <= k){ return IntegerMatrix(0, k+1); }
   IntegerMatrix res = IntegerMatrix(st->n_simplexes.at(k), k+1);
   size_t i = 0; 
-  auto tr = st::max_skeleton< true >(st, st->root.get(), k);
+  auto tr = st::k_simplices< true >(st, st->root.get(), k);
   traverse(tr, [&res, &i](node_ptr cn, idx_t depth, simplex_t sigma){
     res(i++, _) = IntegerVector(sigma.begin(), sigma.end());
     return true; 
@@ -274,28 +275,31 @@ List as_list(SimplexTree* st){
   return res;
 }
 
-void load(SimplexTree* st, std::string filename){
-  Function readRDS = Function("readRDS");
-  List st_lst = readRDS(_["file"] = filename);
-  const size_t n = st_lst.size();
-  for (size_t i = 0; i < n; ++i){
-    IntegerVector si = st_lst.at(i);
-    simplex_t sigma(si.begin(), si.end());
-    st->insert_simplex(sigma);
-  }
-}
-
-void save(SimplexTree* st, std::string filename){
-  using simplex_t = vector< idx_t >;
-  Function saveRDS = Function("saveRDS");
-  vector< simplex_t > minimal = st->serialize();
-  List res = wrap(minimal);
-  saveRDS(_["object"] = res, _["file"] = filename);
-}
+// void load(SimplexTree* st, std::string filename){
+//   Function readRDS = Function("readRDS");
+//   List st_lst = readRDS(_["file"] = filename);
+//   const size_t n = st_lst.size();
+//   for (size_t i = 0; i < n; ++i){
+//     IntegerVector si = st_lst.at(i);
+//     simplex_t sigma(si.begin(), si.end());
+//     st->insert_simplex(sigma);
+//   }
+// }
+// 
+// void save(SimplexTree* st, std::string filename){
+//   using simplex_t = vector< idx_t >;
+//   Function saveRDS = Function("saveRDS");
+//   vector< simplex_t > minimal = st->serialize();
+//   List res = wrap(minimal);
+//   saveRDS(_["object"] = res, _["file"] = filename);
+// }
 // 
 // void print_cousins(SimplexTree* st){
 //   st->print_cousins();
 // }
+
+void print_tree(SimplexTree* st){ st->print_tree(Rcout); }
+void print_cousins(SimplexTree* st){ st->print_cousins(Rcout); }
 
 // Exposed Rcpp Module 
 RCPP_MODULE(simplex_tree_module) {
@@ -311,11 +315,12 @@ RCPP_MODULE(simplex_tree_module) {
     .property("triangles", &get_triangles, "Returns the 2-simplices as an integer matrix.")
     .property("quads", &get_quads, "Returns the 3-simplices as an integer matrix.")
     .property("connected_components", &SimplexTree::connected_components)
-    .const_method( "print_tree", &SimplexTree::print_tree )
-    .const_method( "print_cousins", &SimplexTree::print_cousins )
+    .method( "print_tree", &print_tree )
+    .method( "print_cousins", &print_cousins )
     .method( "clear", &SimplexTree::clear)
     .method( "degree", &degree)
     .method( "generate_ids", &SimplexTree::generate_ids)
+    .method( "reindex", &SimplexTree::reindex)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert",  &insert)
     .method( "insert_lex", &insert_lex)
@@ -330,10 +335,6 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "as_adjacency_list", &as_adjacency_list)
     .method( "as_edge_list", &as_edge_list)
     .method( "as_list", &as_list)
-    .const_method( "serialize", &SimplexTree::serialize)
-    .method( "deserialize", &SimplexTree::deserialize)
-    .method( "save", &save)
-    .method( "load", &load)
     ;
 }
 
@@ -351,16 +352,16 @@ List get_simplices(Filtration* st){
   return results;
 }
 
-void make_filtration(Filtration* st, const NumericVector& D){
+void make_flag_filtration(Filtration* st, const NumericVector& D){
   if (st->n_simplexes.size() <= 1){ return; }
   const size_t ne = st->n_simplexes.at(1);
   const auto v = st->get_vertices();
   const size_t N = BinomialCoefficient(v.size(), 2);
   if (ne == D.size()){
     vector< double > weights(D.begin(), D.end());
-    st->flag(weights, false);
+    st->flag_filtration(weights, false);
   } else if (D.size() == N){ // full distance vector passed in
-    auto edge_iter = st::max_skeleton< true >(st, st->root.get(), 1);
+    auto edge_iter = st::k_simplices< true >(st, st->root.get(), 1);
     vector< double > weights;
     weights.reserve(ne);
     st::traverse(edge_iter, [&weights, &D, &v](node_ptr np, idx_t depth, simplex_t sigma){
@@ -369,11 +370,9 @@ void make_filtration(Filtration* st, const NumericVector& D){
       auto idx2 = std::distance(begin(v), std::lower_bound(begin(v), end(v), v2));
       auto dist_idx = to_natural_2(idx1, idx2, v.size());
       weights.push_back(D[dist_idx]);
-      Rcout << D[dist_idx] << ", ";
       return true; 
     });
-    Rcout << std::endl;
-    st->flag(weights, false);
+    st->flag_filtration(weights, false);
   } else {
     throw std::invalid_argument("Flag filtrations require a vector of distances for each edge or a 'dist' object");
   }
@@ -403,11 +402,12 @@ RCPP_MODULE(filtration_module) {
     .property("triangles", &get_triangles, "Returns the 2-simplices as an integer matrix.")
     .property("quads", &get_quads, "Returns the 3-simplices as an integer matrix.")
     .property("connected_components", &SimplexTree::connected_components)
-    .const_method( "print_tree", &SimplexTree::print_tree )
-    .const_method( "print_cousins", &SimplexTree::print_cousins )
+    .method( "print_tree", &print_tree )
+    .method( "print_cousins", &print_cousins )
     .method( "clear", &SimplexTree::clear)
     .method( "degree", &degree)
     .method( "generate_ids", &SimplexTree::generate_ids)
+    .method( "reindex", &SimplexTree::reindex)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
     .method( "insert", &insert)
     .method( "insert_lex", &insert_lex)
@@ -418,14 +418,10 @@ RCPP_MODULE(filtration_module) {
     .method( "vertex_collapse", (bool (SimplexTree::*)(idx_t, idx_t, idx_t))(&SimplexTree::vertex_collapse))
     .method( "contract", &SimplexTree::contract)
     .const_method( "is_tree", &SimplexTree::is_tree)
-    .const_method( "serialize", &SimplexTree::serialize)
-    .method( "deserialize", &SimplexTree::deserialize)
     .method( "as_adjacency_matrix", &as_adjacency_matrix)
     .method( "as_adjacency_list", &as_adjacency_list)
     .method( "as_edge_list", &as_edge_list)
     .method( "as_list", &as_list)
-    .method( "save", &save)
-    .method( "load", &load)
     ;
   Rcpp::class_< Filtration >("Filtration")
     .derives< SimplexTree >("SimplexTree")
@@ -437,7 +433,7 @@ RCPP_MODULE(filtration_module) {
     .property("simplices", &get_simplices, "Returns the simplices in the filtration")
     .property("weights", &Filtration::weights, "Returns the weights in the filtration")
     .property("dimensions", &Filtration::dimensions, "Returns the dimensions of the simplices in the filtration")
-    .method("flag", &make_filtration, "Constructs a flag filtration")
+    .method("flag_filtration", &make_flag_filtration, "Constructs a flag filtration")
     .method("threshold_value", &Filtration::threshold_value)
     .method("threshold_index", &Filtration::threshold_index)
     ;
@@ -491,7 +487,7 @@ List cLists(List x, List y) {
 // The types of traversal supported
 enum TRAVERSAL_TYPE { 
   PREORDER = 0, LEVEL_ORDER = 1, FACES = 2, COFACES = 3, COFACE_ROOTS = 4, K_SKELETON = 5, 
-  MAX_SKELETON = 6, MAXIMAL = 7, LINK = 8
+  K_SIMPLICES = 6, MAXIMAL = 7, LINK = 8
 }; 
 const size_t N_TRAVERSALS = 9;
 
@@ -506,7 +502,7 @@ List parameterize_R(SEXP st, IntegerVector sigma, std::string type, Rcpp::Nullab
   else if (type == "coface_roots") { param_res["traversal_type"] = int(COFACE_ROOTS); }
   else if (type == "link"){ param_res["traversal_type"] = int(LINK); }
   else if (type == "k_skeleton" || type == "skeleton"){ param_res["traversal_type"] = int(K_SKELETON); }
-  else if (type == "k_simplices" || type == "maximal-skeleton"){ param_res["traversal_type"] = int(MAX_SKELETON); }
+  else if (type == "k_simplices" || type == "maximal-skeleton"){ param_res["traversal_type"] = int(K_SIMPLICES); }
   else if (type == "maximal"){ param_res["traversal_type"] = int(MAXIMAL); }
   else if(type == "faces"){ param_res["traversal_type"] = int(FACES); }
   else { stop("Iteration 'type' is invalid. Please use one of: preorder, level_order, faces, cofaces, star, link, skeleton, or maximal-skeleton"); }
@@ -555,10 +551,10 @@ void traverse_switch(param_pack&& pp, List args, Lambda&& f){
       traverse(tr, f);
       break; 
     }
-    case MAX_SKELETON: {
+    case K_SIMPLICES: {
       if (!contains_arg(args_str, "k")){ stop("Expecting dimension 'k' to be passed."); }
       idx_t k = args["k"];
-      auto tr = st::max_skeleton< true >(st, init, k);
+      auto tr = st::k_simplices< true >(st, init, k);
       traverse(tr, f);
       break; 
     }

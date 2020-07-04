@@ -87,7 +87,7 @@ void for_each_combination_idx(I n, I k, Function&& f) {
   using It = typename std::vector< I >::iterator;
   std::vector< I > seq_n(n);
   std::iota(begin(seq_n), end(seq_n), 0);
-  for_each_combination(begin(seq_n), begin(seq_n)+k, end(seq_n), [k, &f](It a, It b) -> bool {
+  for_each_combination(begin(seq_n), begin(seq_n)+k, end(seq_n), [&f](It a, It b) -> bool {
     std::vector< I > cc(a, b);
     f(cc);
     return false; 

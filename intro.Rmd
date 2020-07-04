@@ -5,43 +5,62 @@ output: html_notebook
 
 ## Introduction 
 
-In the realm of Topological Data Analysis (TDA), the beginning of a sometimes large mathematical pipeline is to represent the data as a (abstract) [simplicial complex](https://en.wikipedia.org/wiki/Simplicial_complex). There are many constructions provide either certain theoretical guarentees or computational guarentees, and the choice of construction generally depends on the goal of data analysis: for example, the Čech and Rips are complexes are often used in studying Persistent Homology, nerve complexes (such as the Mapper) and Witness complexes are often used to group areas of the space together to yield computationally simpler representation. Each construction admits a certain intrinsic complexity: for example, the Rips complex at parameter $\epsilon$ admits a face for every subset of points which have diameter less than $\epsilon$, the Witness complex[^2] scales according to the number of specified landmarks, etc. It would be nice to have a simple and elegant data structure for representing each construction efficiently, without being tied to any specific construction. 
+In the realm of Topological Data Analysis (TDA), often the foundational starting point in moving from a "data set" to some type of analysis of that data set is the construction of an (abstract) [simplicial complex](https://en.wikipedia.org/wiki/Simplicial_complex). There are many constructions provide either certain theoretical or computational guarentees, and the choice of construction generally depends on the goal of analysis: for example, the Čech and Rips are complexes are often used in studying Persistent Homology, Nerve complexes (such as the Mapper) are often used to group areas of the space together to yield computationally simpler representations, Delaunay complexes are generally used in mesh-generation, etc. Each construction admits a certain intrinsic complexity: for example, the Rips complex at parameter $\epsilon$ admits a face for every subset of points which have diameter less than $\epsilon$, the Witness complex[^2] scales according to the number of specified landmarks, etc. Although these constructions are in practice very different from each other, they all satisfy the general definitions of being simplicial complexes: they are all higher order graph like representations that are closed under taking faces. It would be nice to have a simple, elegant data structure capable of representing any simplicial complex, without being tied to a specific construction process. 
 
-Enter the _simplex tree_[^1]: a flexible and efficient data structure for representing and manipulating general simplicial complexes of any dimension. It can effectively be thought of as an ordered [Trie](https://en.wikipedia.org/wiki/Trie), a related tree-like data structure that has proven useful in storing and processing words/text corpora. Like a trie, the simplex tree stores just one 'character' per simplex (+ a constant number of extra pointers to maintain the adjacency structure), associating each node with exactly one face in the complex. Unlike a traditional trie, however, the simplex tree respects a certain ordering requirement wherein children must have labels with values greater than their parents. Additionally, each level beyond dimension $0$ stores additional indexes mapping `cousins', or nodes at the the same label and depth. These relatively simple constraints allow the data structure to scale relatively well in size and particularly in dimension---inline with the intrinsic complexity of construction needed---without restricting the type of construction represented. 
-
-The best and quickest way to understand the simplex tree structure is with a picture. Here's one (taken from the paper) depicting a simplicial 3-complex (left) and its corresponding Simplex Tree (right). Notice the bijection between the nodes and the face in the complex: there exactly one node for each face, and each node stores exactly one label.
+Enter the _simplex tree_[^1]: a flexible and efficient data structure for representing and manipulating general simplicial complexes of any dimension. The best and quickest way to understand the simplex tree structure is with a picture. Here's one (taken from the paper) depicting a simplicial 3-complex (left) and its corresponding Simplex Tree (right). Each node is in bijection with the faces in the complex: there exactly one node for each face, and each node stores exactly one label.
 
 ![simplex tree figure\label{st_pic}](man/figures/simplextree.png)
 
-In what follows, for those interested, I will discuss some of the basic algorithms on the simplex tree, their associated complexities, and how to use them with the `simplextree` package. Also, I will outline various aspects of the simplex tree which I've found useful in developing my own algorithms.
+The simplex tree can be effectively be thought of as an ordered [Trie](https://en.wikipedia.org/wiki/Trie), a related tree-like data structure that has proven useful in storing and processing words/text corpora. Like a trie, the simplex tree stores just one 'character' per node (+ a constant number of extra pointers to maintain the adjacency structure), and each node is associated with with exactly one face in the complex. Unlike a traditional trie, however, the simplex tree respects a certain ordering requirement wherein children must have labels with values greater than their parents. Additionally, each level beyond dimension $0$ stores additional indexes mapping `cousins', or nodes at the the same label and depth. These relatively simple constraints allow the data structure to scale relatively well in size and dimension---inline with the intrinsic complexity of construction needed---without restricting the type of construction represented. 
+
+In what follows, for those interested, I will discuss how some common operations used in tandem with simplicial complexes can be greatly simplified using the simplex tree. I'll also discuss their associated complexities, and give examples of how to execute such operations using the `simplextree` package. 
 
 ## Getting started 
 
-To get started with the `simplextree` package, one needs a way of constructing a simplicial complex. One option is to start with an empty complex and build it manually.
+To get started with the `simplextree` package, one needs a method of constructing a simplicial complex. One option is to start with an empty complex and build it manually.
 
 ```{r}
 library(simplextree)
 st <- simplex_tree()
 print(st)
 ```
-in _R_, Each $k$-simplex is represented as a $(k+1)$-length integer vector containing the labels of the simplex. Inserting simplices into the complex can be done one at a time or specified as a collection via a list, either through the `insert` function or at initialization time via `simplex_tree`. In inserting a simplex $\sigma$, to conform to the properties of being a simplicial complex, all faces of $\sigma$ must also being inserted. Thus, its sufficient to specify just the maximal faces, i.e. the simplices which are not themselves faces of any other simplex. For example, the complex above has ten 0-simplices, twelve 1-simplices, six 2-simplices, and one 3-simplex, but to construct it all one needs to do is insert the simplices $\{1,2,3\}$, $\{2,3,4,5\}$, $\{6,7,9\}$, $\{7,8\}$, and $\{10\}$.
+
+On the _R_ side, each $k$-simplex is represented as a $(k+1)$-length integer vector containing the labels of the simplex. Inserting simplices into the complex can be done one at a time or specified as a collection via a list, either through the `insert` function or at initialization time via `simplex_tree`. For example, one way to build the triangle $\{1,2,3\}$ is to insert each simplex one-by-one:
 
 ```{r}
 st <- simplex_tree()
+insert(st, 1)
+insert(st, 2)
+insert(st, 3)
+insert(st, c(1,2))
+insert(st, c(1,3))
+insert(st, c(2,3))
 insert(st, c(1,2,3))
-insert(st, c(2,3,4,5))
-insert(st, c(6,7,9))
-insert(st, c(7,8))
-insert(st, c(10))
+```
+
+In inserting a simplex $\sigma$, to conform to the properties of being a simplicial complex, all faces of $\sigma$ must also being inserted. Thus, its sufficient to specify just the maximal faces, i.e. the simplices which are not themselves faces of any other simplex. The same code above reduces to: 
+```{r}
+st <- simplex_tree()
+insert(st, c(1,2,3))
+```
+
+For example, the complex above has ten 0-simplices, twelve 1-simplices, six 2-simplices, and one 3-simplex, but to construct it all one needs to do is insert the simplices $\{1,2,3\}$, $\{2,3,4,5\}$, $\{6,7,9\}$, $\{7,8\}$, and $\{10\}$.
+
+```{r}
+st <- simplex_tree()
+insert(st, list(c(1,2,3), c(2,3,4,5), c(6,7,9), c(7,8), c(10)))
 print(st)
 ```
 
-Another way of writing the above is by supplying the faces in a list at initialization. 
+You can also supply the simplices at initialization. 
 ```{r}
 st <- simplex_tree(list(1:3, 2:5, c(6,7,9), 7:8, 10))
 print(st)
 ```
-Note that `insert` inserts the given simplex(es), and then returns the complex invisibly. That is, `insert` (and many other functions) enact *side-effects*, wherein the underlying object is changed. No copies are made (for that, use `serialize`/`deserialize`). This can be surprising to some `R` users, who are used to each and every line effectively being independent from the last.
+
+### Detour: Side-effects
+
+note that `insert` inserts the given simplex(es), and then returns the complex invisibly. That is, `insert` (and many other functions) enact *side-effects*, wherein the underlying object is changed. No copies are made. This can be surprising to some `R` users, who are used to each and every line effectively being independent from the last.
 
 ```{r}
 st2 <- st
@@ -49,7 +68,9 @@ insert(st, 11)
 print(st)
 print(st2)
 ```
-Notice that modifying `st` after also affects `st2`. This happens because `<-` does not create a copy in this case; `st` and `st2` refer to the same object. You can create a new copy with e.g. `st2 <- simplex_tree(st$serialize())`. Note this only copies the simplices themselves; nothing else. This allows many operations which modify the complex to be chained, e.g. another way would've been to do something like `st %>% insert(c(1,2,3)) %>% remove(c(2,3)) %>% ...`, etc.
+Notice that modifying `st` after also affects `st2`. This happens because `<-` does not create a copy in this case; `st` and `st2` are references to the same underlying object. You can create a new copy with e.g. `st2 <- clone(st)`. Note this only copies the simplices themselves; nothing else. 
+
+Methods which modify the underlying `simplextree` object follow the same pattern: the first argument is always the complex, and the function always returns the modified object invisibly. This allows many operations which modify the complex to be chained, e.g. yet another way of achieving the insertions above would be to do something like `st %>% insert(c(1,2,3)) %>% insert(c(2,3,4,5)) %>% ...`, etc. This pattern is known as [method chaining](https://adv-r.hadley.nz/r6.html#method-chaining), and has grown commonplace in the [tidyverse](https://www.tidyverse.org/) collection of packages. 
 
 You can use the `print_tree` and `print_cousins` methods to see the structure of the underlying simplex tree, the former showing the subtrees rooted at each vertex per line (top-down), and the latter showing how the simplices are stored per level (from the side):
 ```{r}
@@ -177,10 +198,11 @@ Concluding this warmup, we've seen that in starting with some very standard algo
 
 ### Enumerating cofaces 
 
-Recall that for any simplex $\sigma \in \mathcal{K}$, the set of simplices in $K$ to which $\sigma$ is a face of. And the faces of a simplex $\sigma$ are simply the simplices whose vertices form subset of the vertices of $\sigma$. That is, the set faces/cofaces of $\sigma$ are the simplices $\tau$ satisfying 
+Recall the any abstract simplicial complex $\mathcal{K}$ is closed under taking faces: for every $\sigma \in \mathcal{K}$, if $\tau \subseteq \sigma$, then $\tau$ must also be in $mathcal{K}$. If $\tau \subseteq \sigma$, $\tau$ is said to be a _face_ of $\sigma$. This definitions has a dual as well: if $\tau \subseteq \sigma$, then $\sigma$ is said to be a _coface_ of $\tau$. That is, the set faces/cofaces of $\sigma$ are the simplices $\tau$ satisfying, respectively:  
 $$ \text{faces}(\sigma) = \{\tau \in \mathcal{K}, \tau \subseteq \sigma \}$$
 $$ \text{cofaces}(\sigma) = \{ \, \tau \in \mathcal{K}, \, \sigma \subseteq \tau \, \}$$
-In this definition, $\sigma$ is itself both face and coface of itself. As shown above, enumerating the faces of a simplex is easy enough: given a $(d+1)$-simplex, one can enumerate all $k$-length combinations where $k \leq d + 1$ with `combn`: 
+In both definitions, $\sigma$ is itself both face and coface of itself. As shown above, enumerating the faces of a simplex is easy enough: given a $(d+1)$-simplex, one can enumerate all $k$-length combinations where $k \leq d + 1$ with `combn`: 
+
 ```{r}
 sigma <- c(1,2,3,4)
 d <- length(sigma)
@@ -190,13 +212,14 @@ faces <- lapply(1:d, function(k){
 faces <- unlist(faces, recursive = FALSE) ## flatten one layer deep 
 print_simplices(faces, format = "column")
 ```
+
 This doesn't even require a simplex tree structure (after all, given $\sigma$, its faces _must_ be in the trie, by the definition of a simplicial complex). But now consider the problem of computing cofaces. How would you go about doing it naively, i.e. with just a list of simplices?
 
 One way, of course, is to just enumerate all the simplices in the complex, and just record which ones contain $\sigma$ as a subset. But this takes $\approx O(2md)$ comparisons, where $m = \lVert \mathcal{K} \rVert$, and $d = \mathrm{dim}(\mathcal{K})$. There is a more efficient way. 
 
 If one wants to find the cofaces of $\sigma = \{v_1 v_2 \dots v_k\}$, then any simplex $\tau \in \mathcal{K}$ with labels of the form $\{\ast v_0 \ast v_1 \ast \dots \ast v_k \ast \}$ counts as a coface, where $\ast$ is any vertex label (or empty) in $\mathcal{K}$. To decompose the problem into simpler steps, first consider finding simplices with labels $\{\ast v_0 \ast v_1 \ast \dots \ast v_k \}$. Since we are looking for cofaces, we only need consider simplices whose dimensions are greater than $\sigma$, and since these particular simplices end in $v_k$, they must be encoded in the adjacency relations linking 'cousins' at the same depth (in the picture shown above, the 'cousins' nodes recording the $5$ label are linked). 
 
-We now exploit the face/coface property, as before. Since every coface $\tau$ of a given simplex $\sigma$ must include $\sigma$ itself, we explicitly look at dimensions higher than $\mathrm{dim}(\sigma)$. Similarly, since every ancestor is face of its descendants, all of the descendants of $\sigma$ are cofaces of $\sigma$, and thus only the nodes representing the roots of these subtrees are needed to fully describe the cofaces. 
+We now exploit the face/coface property, as before. Since every coface $\tau$ of a given simplex $\sigma$ must include $\sigma$ itself, we explicitly look at dimensions higher than $\mathrm{dim}(\sigma)$. Similarly, since every ancestor is face of its descendants, all of the descendants of $\sigma$ are cofaces of $\sigma$. Thus, only the nodes representing the roots of these subtrees are needed to fully describe the cofaces. 
 
 For example, consider computing the cofaces of the vertex $\sigma = \{3\}$. Every descendant of the subtree rooted at $\{3\}$ is a coface, so to start we need only record $3$. Then we check the _cousins_ at a higher depth with the same label. Here's a print out of all the cousins and their corresponding keys (as pairs):
 
@@ -243,15 +266,21 @@ traverse(preorder(st), function(sigma){
 })
 print_simplices(maximal_faces)
 ```
-Sure enough, this works! In fact, we can even shortcut this to make it more efficient: for each $\sigma \in \mathcal{K}$, rather than enumerating all the cofaces, it is enough to just check whether $\sigma$ has _any_ cofaces aside from itself. If $\sigma$ has any children, it is not maximal, otherwise one just need to check if the label of $\sigma$ exists at a depth greater than $\mathrm{depth}(\sigma)$. If $\mathrm{dim}(\mathcal{K}) = d$ and $\mathrm{dim}(\sigma) = k$, this takes $O((d - k)\log(m))$ checks. Usually $\lvert \mathcal{K} \rvert >> \mathrm{dim}(\mathcal{K})$, effectively this a constant time operation. As as shown above, the preorder enumeration takes time linear in the size of the complex $m = \lvert \mathcal{K} \rvert$. As a result, finding the maximal faces of a given complex reduces to a linear time operation. You can see the maximal simplices using the `maximal` traversal:
+Sure enough, this works, but it can be made even more efficient: for each $\sigma \in \mathcal{K}$, rather than enumerating all the cofaces, it is enough to just check whether $\sigma$ has _any_ cofaces aside from itself. To do that, note that if $\sigma$ has any children, it is not maximal, and otherwise the only thing left to do is check if $\sigma$'s label exists anywhere in the tree at a depth greater than $\mathrm{depth}(\sigma)$. Checking the existence of a given label at any depth can be done by looking at the cousins: at depth $k$, if there are $m$ simplices, then this should take at most $O((d-k) \log (m-k))$ time. To see this, consider the worst case scenario where one has a fully connected $4$-complex:
+```{r}
+st <- simplex_tree(1:5)
+st$print_cousins()
+```
+Suppose one wants to check if there exists a $k$-simplex $\{v_0, v_1, \dots, v_{k}\}$ with last label $v_k$ in the complex. In the above complex, note there are $m-1$ $1$-simplices, and $m-2$ $2$-simplices, etc. Since the labels kept in an ordered structure, checking the existence of a $k$-simplex (with some fixed label) takes at most $\log(m-k)$ searches (using e.g. a binary search). Back to the problem of detecting whether $\sigma$ has any cofaces, since we need only check dimensions higher than $\dim(\sigma) = k$, this leads to a worst case complexity of $O((d-k)\log(m-k))$ (for $m = \lVert \mathcal{K} \rVert$, and $d = \mathrm{dim}(\mathcal{K})$). In practice, $d << m$, making the check effectively an $\approx O(m)$ operation. Since the preorder enumeration takes time linear in the size of the complex, finding the maximal faces of a given complex can be done in effectively sub-quadratic time. Of course, this traversal has also been optimized in in C++; you can enumerate the maximal simplices using the `maximal` traversal:
 
 ```{r}
+st <- simplex_tree(list(1:3, 2:5, c(6,7,9), 7:8, 10))
 print_simplices(st %>% maximal())
 ```
 
 ## From maximal faces to cliques
 
-A *k-clique* is a complete subgraph of a graph that has $k$ vertices, i.e. a subgraph if called a *k-clique* there exists an edge between every combination of $k$ vertices. A *maximal* clique is a clique that cannot be extended by adding another vertex--intuitively, they can be thought of as the 'largest' complete subgraphs which, when unioned together, yield the graph one started with. A simplicial complex may or may not have a $k+1$-simplex for every maximal cliques; for example the open triangle $\mathcal{K} = \{1, 2, 3, \{1,2\}, \{1,3\}, \{2,3\}\}$ has as its maximal simplices $\{\{1,2\}, \{1,3\}, \{2,3\}\}$, while it's maximal clique is the simplex $\{1,2,3\}$. 
+A *k-clique* is a complete subgraph that has $k$ vertices, i.e. a subgraph if called a *k-clique* there exists an edge between every combination of $k$ vertices. A *maximal* clique is a clique that cannot be extended by adding another vertex--intuitively, they can be thought of as the 'largest' complete subgraphs which, when unioned together, yield the graph one started with. A simplicial complex may or may not have a $k+1$-simplex for every maximal cliques; for example the open triangle $\mathcal{K} = \{1, 2, 3, \{1,2\}, \{1,3\}, \{2,3\}\}$ has as its maximal simplices $\{\{1,2\}, \{1,3\}, \{2,3\}\}$, while it's maximal clique is the simplex $\{1,2,3\}$. 
 
 ```{r}
 st <- simplex_tree(combn(3,2))
@@ -281,17 +310,27 @@ Let's look more at the trie structure of the simplex tree.
 st$print_tree()
 ```
 
-Consider detecting the clique ${1, 2, 3}$. Starting at vertex $\sigma = \{1\}$, we start by detecting $\sigma$'s neighbors. By the construction of the simplex tree, if another vertex $\sigma'$ is adjacent to $\sigma$ and its label is greater than $\sigma$'s label, it must be a child of $\sigma$. We know that we can form the 2-simplex ${1, 2, 3}$ if and only if we have all edges accounted for; we see that edges $\{1,2\}$ and $\{1,3\}$ are accounted for, and since no simplex has a label greater than $1$ this covers all of $\{1\}$'s edges. We descend to recurse at the node representing the simplex $\{1, 2\}$. The label is $2$. The neighbors of the vertex $\{2\}$ whose labels are greater than $2$ are exactly the children, again: so we intersect the previously accounted labels ($2$ and $3$) with $\{2\}$'s children labels. If there is a non-empty intersection, we know we have detected a clique. Since the labels of any set of children are ordered, this problem computationally reduces to computing the intersection between two sorted ranges, which can be efficiently done (in time linear in the size of the intersection) using e.g. (std::set_intersection)[https://en.cppreference.com/w/cpp/algorithm/set_intersection]. 
+Consider how one would go about detecting the clique ${1, 2, 3}$. Starting at vertex $\sigma = \{1\}$, we might start by detecting $\sigma$'s neighbors. By the construction of the simplex tree, if another vertex $\sigma'$ is adjacent to $\sigma$ and its label is greater than $\sigma$'s label, it must be a child of $\sigma$. We know that we can form the 2-simplex ${1, 2, 3}$ if and only if we have all edges accounted for; we see that ${1}$ has children nodes with labels ${2}$ and ${3}$, indicating edges $\{1,2\}$ and $\{1,3\}$ are accounted for. Since no simplex has a label greater than $1$, this covers all of $\{1\}$'s edges. We descend to recurse at the node representing the simplex $\{1, 2\}$. The label stored in the node is $2$. Again, the neighbors of the vertex $\{2\}$ whose labels are greater than $2$ are exactly its children nodes---so if we intersect the previously accounted labels ($2$ and $3$) with $\{2\}$'s children labels, any labels in their common intersection represents an intersection of three pairwise edges, and we know we have detected a clique. Since the labels of any set of children are ordered, this problem computationally reduces to computing the intersection between two sorted ranges, which can be efficiently done in time linear in the size of the ranges using e.g. [std::set_intersection](https://en.cppreference.com/w/cpp/algorithm/set_intersection).
 
-For every detected $k$-clique, if the complex is a flag complex, we may insert a $(k-1)$-simplex back into complex, thus 'expanding' the complex. Doing this for all simplices in the complex is what's called _expansion of order k_, or _k-expansion_ for short.
+One can deduce a recursive procedure for proceeding with the rest of the complex. For every detected $k$-clique, we may choose to insert a $(k-1)$-simplex back into complex, thus 'expanding' the complex. Doing this for all simplices in the complex is what's called _expansion of order k_, or _k-expansion_ for short.
 
-```{r}
-maximal1 <- as.list(st %>% maximal())
-maximal2 <- as.list(st %>% expand(k = 2) %>% maximal())
-
-print_simplices(setdiff(maximal1, maximal2))
+```{r, echo = FALSE}
+st <- simplex_tree(edges) %>% insert(list(7:8, 10))
 ```
 
+We can see which simplices were inserted via asymmetric difference
+```{r}
+s1 <- as.list(st %>% level_order())
+s2 <- as.list(st %>% expand(k = 2) %>% level_order())
+print_simplices(setdiff(s2,s1))
+```
+
+Or better, by plotting it.
+```{r}
+st %>% 
+  expand(k = 2) %>% 
+  plot(coords=coords, asp = 1)
+```
 
 
 
@@ -432,7 +471,7 @@ microbenchmark::microbenchmark({
 
 ## Conclusion 
 
-In summary, the simplex tree provides an efficient data structure for manipulating simplicial complexes that balances scalability and generality. While other structures may more be better suited to specific families of complexes (e.g. the tidy set for flag complexes), the simplex tree lies at an abstraction scale in between the extremely specialized constructions and the universal (/naïve) approach of simply storing every face as-is in an unordered list.  
+In summary, the simplex tree provides an efficient data structure for manipulating simplicial complexes that balances scalability and generality. While other structures may more be better suited to specific families of constructions, the skeleton-blockers or tidy set data structures for encoding flag complexes, the delaunay complex for surface mesh generation, etc., the simplex tree lies at an abstraction scale between the specialized constructions and the "simple" solution using just a list. As shown above, the structure in many ways is a natural structure for representing general simplicial complexes.
 
 ## References 
 [^1]: Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
