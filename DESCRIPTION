@@ -2,7 +2,7 @@ Package: simplextree
 Type: Package
 Title: Provides tools for working with general simplicial complexes 
 Version: 0.9.5
-Date: 2020-05-06
+Date: 2020-07-06
 Depends: R (>= 3.4.0)
 Author: Matt Piekenbrock
 Maintainer: Matt Piekenbrock <matt.piekenbrock@gmail.com>
@@ -16,7 +16,7 @@ Imports:
 Encoding: UTF-8
 LazyData: true
 VignetteBuilder: knitr
-SystemRequirements: C++17
+SystemRequirements: C++11
 RoxygenNote: 7.1.0
 Suggests: 
     testthat, 

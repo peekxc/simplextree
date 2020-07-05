@@ -15,39 +15,33 @@ SEXP as_XPtr(SimplexTree* st){
 template < typename Lambda >
 void vector_handler(SEXP sigma, Lambda&& f){
   const unsigned int s_type = TYPEOF(sigma);
-  
   if (!Rf_isNull(Rf_getAttrib(sigma, R_DimSymbol))){
     IntegerMatrix m = as< IntegerMatrix >(sigma);
     const size_t n = m.ncol();
     for (size_t i = 0; i < n; ++i){
       IntegerMatrix::Column cc = m(_,i);
-      f(cc.begin(), cc.end());
+      f(simplex_t(cc.begin(), cc.end()));
     }
   } else if (s_type == INTSXP || s_type == REALSXP){
-    simplex_t s = as< simplex_t >(sigma);
-    f(s.begin(), s.end());
+    f(as< simplex_t >(sigma));
   } else if (s_type == LISTSXP || s_type == VECSXP){
     List simplices = List(sigma);
     const size_t n = simplices.size();
     for (size_t i = 0; i < n; ++i){
-      simplex_t s = as< simplex_t >(simplices[i]);
-      f(s.begin(), s.end());
+      f(as< simplex_t >(simplices[i]));
     }
   } else { stop("Unknown type passed, must be list type or vector type."); }
 }
 
 // R-facing Inserter 
-void insert(SimplexTree* st, SEXP x){
+void insert_R(SimplexTree* st, SEXP x){
   SimplexTree& st_ref = *st; 
-  
-  vector_handler(x, [&st_ref](auto b, auto e){ 
-    std::sort(b, e);          // Demand sorted labels
-    e = std::unique(b, e);    // Demand unique labels
-    st_ref.insert_it(b, e, st_ref.root.get(), 0); 
+  vector_handler(x, [&st_ref](simplex_t&& sigma){ 
+    st_ref.insert(sigma); 
   });
 }
 
-R-facing Inserter for lexicographically-sorted column matrix
+// R-facing Inserter for lexicographically-sorted column matrix
 void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
   SimplexTree& st_ref = *st;
   const size_t m = simplices.ncol();
@@ -106,61 +100,24 @@ void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
 // }
 
 // R-facing remover 
-void remove(SimplexTree* st, SEXP x){
-  SimplexTree& st_ref = *st; 
-  vector_handler(x, [&st_ref](auto b, auto e){ 
-    std::sort(b, e);          // Demand sorted labels
-    e = std::unique(b, e);    // Demand unique labels
-    st_ref.remove_it(b, e); 
+void remove_R(SimplexTree* st, SEXP x){
+  vector_handler(x, [&st](simplex_t&& sigma){ 
+    st->remove(st->find(sigma)); 
   });
 }
 
 LogicalVector find_R(SimplexTree* st, SEXP simplices){
   LogicalVector v; 
-  vector_handler(simplices, [&st, &v](auto b, auto e){
-    node_ptr sigma = st->find_it(b, e, st->root.get());
-    // Rcout << sigma->label << std::endl;
-    v.push_back(sigma != st->root.get() && sigma != nullptr);
+  vector_handler(simplices, [&st, &v](simplex_t&& sigma){
+    node_ptr np = st->find(sigma);
+    v.push_back(np != st->root.get() && np != nullptr);
   });
   return(v);
 }
 
-
-// Creates a filtration from a neighborhood graph
-// void rips(SimplexTree* st, vector< double > edge_weights, const size_t k){
-//   st->rips(edge_weights, k);
-// }
-
-// double filtration_index(SimplexTree* st){
-
-// double filtration_index(SEXP st){
-//   Rcpp::XPtr< SimplexTree > stree_ptr(st);
-//   return filtration_index(static_cast< SimplexTree* >(stree_ptr));
-// }
-
-// For Debugging
-// void print_filtration(SimplexTree* st){
-//   Rcout << "Included vector: " << std::endl;
-//   LogicalVector is_included = wrap(st->included);
-//   Rcout << is_included << std::endl;
-// }
-
-// Workaround to allow returning simplextree references when modify==TRUE 
-// SEXP threshold(SimplexTree* st, std::string type, double eps_or_idx, bool modify){
-//   if (type != "index" && type != "function"){
-//     stop("Threshold must be given 'function' or 'index' as the threshold type.");
-//   }
-//   // Obtaining namespace of Matrix package
-//   Environment pkg = Environment::namespace_env("simplextree");
-//   Function f = pkg[".threshold_new"];
-//   
-//   // If mody is true, just modify the current tree based on the input
-//   if (modify){
-//     if (type == "index"){ st->threshold_index(static_cast< size_t >(eps_or_idx)); }
-//     else if (type == "function"){ st->threshold_function(static_cast< size_t >(eps_or_idx)); }
-//   } 
-//   return f(st->as_XPtr(), type, eps_or_idx, modify);
-// }
+bool collapse_R(SimplexTree* st, IntegerVector tau, IntegerVector sigma){
+  return st->collapse(st->find(tau), st->find(sigma));
+}
 
 // Copies the contents of st1 to st2
 void copy_trees(SEXP st1, SEXP st2){
@@ -168,13 +125,7 @@ void copy_trees(SEXP st1, SEXP st2){
   *st2_ptr = static_cast< const SimplexTree& >(*st1_ptr);
 }
 
-
-// // Workaround for internal const-member overloades
-// int degree_1(SimplexTree* st, int id){
-//   return ;
-// }
-
-IntegerVector degree(SimplexTree* st, IntegerVector ids){
+IntegerVector degree_R(SimplexTree* st, IntegerVector ids){
   IntegerVector res(ids.size());
   std::transform(begin(ids), end(ids), begin(res), [&st](int id){
     return st->degree(static_cast< idx_t >(id));
@@ -211,17 +162,23 @@ IntegerMatrix get_quads(SimplexTree* st) { return get_k_simplices(st, 3); }
 
 
 // Exports the 1-skeleton as an adjacency matrix 
-IntegerMatrix as_adjacency_matrix(SimplexTree* st) {
-  const size_t n = st->root->children.size();
+IntegerMatrix as_adjacency_matrix(SimplexTree* stp) {
+  const SimplexTree& st = *stp; 
+  const auto& vertices = st.root->children; 
+  const size_t n = vertices.size();
   IntegerMatrix res = IntegerMatrix(n, n);
 
   // Fill in the adjacency matrix
-  for (auto& vi: st->root->children){
-    const size_t i = st->vertex_index(vi->label);
+  size_t i = 0; 
+  for (auto& vi: vertices){
     for (auto& vj: vi->children){
-      const size_t j = st->vertex_index(vj->label);
+      auto it = std::lower_bound(begin(vertices), end(vertices), vj->label, [](const node_uptr& cn, const idx_t label){
+        return cn->label < label; 
+      });
+      const size_t j = std::distance(begin(vertices), it); 
       res.at(i, j) = res.at(j, i) = 1;
     }
+    ++i;
   }
   return(res);
 }
@@ -275,28 +232,6 @@ List as_list(SimplexTree* st){
   return res;
 }
 
-// void load(SimplexTree* st, std::string filename){
-//   Function readRDS = Function("readRDS");
-//   List st_lst = readRDS(_["file"] = filename);
-//   const size_t n = st_lst.size();
-//   for (size_t i = 0; i < n; ++i){
-//     IntegerVector si = st_lst.at(i);
-//     simplex_t sigma(si.begin(), si.end());
-//     st->insert_simplex(sigma);
-//   }
-// }
-// 
-// void save(SimplexTree* st, std::string filename){
-//   using simplex_t = vector< idx_t >;
-//   Function saveRDS = Function("saveRDS");
-//   vector< simplex_t > minimal = st->serialize();
-//   List res = wrap(minimal);
-//   saveRDS(_["object"] = res, _["file"] = filename);
-// }
-// 
-// void print_cousins(SimplexTree* st){
-//   st->print_cousins();
-// }
 
 void print_tree(SimplexTree* st){ st->print_tree(Rcout); }
 void print_cousins(SimplexTree* st){ st->print_cousins(Rcout); }
@@ -318,14 +253,14 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "print_tree", &print_tree )
     .method( "print_cousins", &print_cousins )
     .method( "clear", &SimplexTree::clear)
-    .method( "degree", &degree)
+    .method( "degree", &degree_R)
+    .method( "insert",  &insert_R)
+    .method( "insert_lex", &insert_lex)
+    .method( "remove",  &remove_R)
+    .method( "find", &find_R)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "reindex", &SimplexTree::reindex)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
-    .method( "insert",  &insert)
-    .method( "insert_lex", &insert_lex)
-    .method( "remove",  &remove)
-    .method( "find", &find_R)
     .method( "expand", &SimplexTree::expansion )
     .method( "collapse", (bool (SimplexTree::*)(simplex_t, simplex_t))(&SimplexTree::collapse))
     .method( "vertex_collapse", (bool (SimplexTree::*)(idx_t, idx_t, idx_t))(&SimplexTree::vertex_collapse))
@@ -405,13 +340,13 @@ RCPP_MODULE(filtration_module) {
     .method( "print_tree", &print_tree )
     .method( "print_cousins", &print_cousins )
     .method( "clear", &SimplexTree::clear)
-    .method( "degree", &degree)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "reindex", &SimplexTree::reindex)
     .method( "adjacent", &SimplexTree::adjacent_vertices)
-    .method( "insert", &insert)
+    .method( "degree", &degree_R)
+    .method( "insert",  &insert_R)
     .method( "insert_lex", &insert_lex)
-    .method( "remove", &remove)
+    .method( "remove",  &remove_R)
     .method( "find", &find_R)
     .method( "expand", &SimplexTree::expansion )
     .method( "collapse", (bool (SimplexTree::*)(simplex_t, simplex_t))(&SimplexTree::collapse))
@@ -589,7 +524,7 @@ param_pack validate_params(List args){
   if (!contains_arg(args_str, "sigma")){ init = st->root.get(); }
   else {
     IntegerVector sigma = args["sigma"];
-    init = st->find_node(as< simplex_t >(sigma)); 
+    init = st->find(sigma); 
     if (init == nullptr){ init = st->root.get(); }
   }
   if (init == nullptr){ stop("Invalid starting simplex"); }

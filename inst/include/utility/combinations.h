@@ -61,12 +61,19 @@ namespace detail {
 		return false;
 	}
 	
-	template < typename Lambda, class... Ts > 
+	// template < typename Lambda, class... Ts > 
+	// struct NullaryPredicate {
+	// 	Lambda f_; 
+	// 	std::tuple< Ts... > params;
+	// 	NullaryPredicate(Lambda& f, Ts ... args) : f_(f), params(std::make_tuple(std::move(args)...)) {};
+	// 	bool operator()() { return std::apply(f_, params); } 
+	// };
+	template < typename Lambda, class... Ts >
 	struct NullaryPredicate {
-		Lambda f_; 
+		Lambda f_;
 		std::tuple< Ts... > params;
 		NullaryPredicate(Lambda& f, Ts ... args) : f_(f), params(std::make_tuple(std::move(args)...)) {};
-		bool operator()() { return std::apply(f_, params); } 
+		bool operator()() { return f_(params); }
 	};
 }; // namespace detail
 	
@@ -74,10 +81,10 @@ using namespace detail;
 	
 template < class It, class Function >
 Function for_each_combination(It first, It mid, It last, Function&& f) {
-	NullaryPredicate< Function&, It, It > nullary_f(f, first, mid);
+	// NullaryPredicate< Function&, It, It > nullary_f(f, first, mid);
 	combine_discontinuous(first, mid, std::distance(first, mid),
 												mid, last, std::distance(mid, last),
-												nullary_f);
+												[&f, &first, &mid]() -> bool { return f(first, mid); });
 	return std::move(f);
 }
 

@@ -9,16 +9,42 @@
 #include <iterator>
 #include <tuple>
 #include <iostream>
+#include <type_traits>
 
 using std::get; 
 using simplex_t = SimplexTree::simplex_t;
 using node_ptr = SimplexTree::node_ptr;
 using node_uptr = SimplexTree::node_uptr;
 
+
+// #include <string_view>
+// 
+// template <typename T>
+// constexpr std::string_view 
+// type_name() {
+//     std::string_view name, prefix, suffix;
+// #ifdef __clang__
+//     name = __PRETTY_FUNCTION__;
+//     prefix = "std::string_view type_name() [T = ";
+//     suffix = "]";
+// #elif defined(__GNUC__)
+//     name = __PRETTY_FUNCTION__;
+//     prefix = "constexpr std::string_view type_name() [with T = ";
+//     suffix = "; std::string_view = std::basic_string_view<char>]";
+// #elif defined(_MSC_VER)
+//     name = __FUNCSIG__;
+//     prefix = "class std::basic_string_view<char,struct std::char_traits<char> > __cdecl type_name<";
+//     suffix = ">(void)";
+// #endif
+//     name.remove_prefix(prefix.size());
+//     name.remove_suffix(suffix.size());
+//     return name;
+// }
+
 // Simplextree namespace
 namespace st {
-    
-  // detail namespace contains internal template boilerplate, including several implementations of the detection idiom 
+
+// detail namespace contains internal template boilerplate, including several implementations of the detection idiom 
   namespace detail {
     template <typename T>
     struct has_dereference {
@@ -102,19 +128,16 @@ namespace st {
       static constexpr bool value = test_update_simplex<T>(int());
     };
   }; // end namespace detail
-  using namespace detail; 
-    
 
-  template <  bool ts, template< bool > class Derived > 
+  template < bool ts, template< bool > class Derived > 
   struct TraversalInterface {
   	using d_type = Derived< ts >;
   	using d_node = std::tuple< node_ptr, idx_t >;
   	using t_node = typename std::conditional< ts, std::tuple< node_ptr, idx_t, simplex_t >, d_node >::type;
   	using pair_pred_t = delegate< bool (t_node&) >;
-  	// using pair_pred_t = std::function< bool (t_node&) >;
   
   	public: 
-  		// enum : idx_t { np = 0, depth = 1, simplex = 2 };
+  	  static const bool is_tracking = ts;
   		static const idx_t NP = 0;
     	static const idx_t DEPTH = 1;
   		static const idx_t LABELS = 2;
@@ -152,81 +175,103 @@ namespace st {
   
   			// Constructors 
   			iterator(d_type& dd) : info(dd){
-  				if constexpr (ts){	
-  					labels = simplex_t();
-  					labels.reserve(dd.st->tree_max_depth);
-  				}
+					labels = simplex_t();
+					labels.reserve(dd.st->tree_max_depth);
   			};
   
-  			constexpr d_type& base() const {
-  				return(this->info.get());
-  			};
-  			constexpr const SimplexTree& trie() const {
-  				return(*(this->info.get().st));
-  			};
-  			constexpr t_node& current_t_node(){
-  				if constexpr (ts){ 
-  					output = std::tuple_cat(current, std::make_tuple(labels)); 
-  					return(output);
-  				} 
-  				else { return(current); }
+  			constexpr d_type& base() const { return(this->info.get()); };
+  			constexpr const SimplexTree& trie() const { return(*(this->info.get().st)); };
+  			
+  			template < bool T = ts >
+        typename std::enable_if< T == true, t_node& >::type
+  			current_t_node(){
+  			  output = std::tuple_cat(current, std::make_tuple(labels)); 
+  				return(output);
   			}
-  
+  			template < bool T = ts>
+        typename std::enable_if< T == false, t_node& >::type
+  			current_t_node(){ return(current); }
+  			
   			// Operators
-  			auto operator==(const d_iter& t) const {
-  				if constexpr (has_equality< d_iter >::value){
-  					return static_cast< d_iter* >(this)->operator==(t);
-  				} else {
-  					return (get< 0 >(t.current) == get< 0 >(current)); // && (get< 1 >(t.current) == get< 1 >(current)
-  				}
-  			}
-  			auto operator!=(const d_iter& t) const {
-  				if constexpr (has_not_equality< d_iter >::value){
-  					return static_cast< d_iter* >(this)->operator!=(t);
-  				} else {
-  					return !(*this == t);
-  				}
-  			}
-  			auto& operator*() {
-  				if constexpr (has_dereference< d_iter >::value){
-  					return static_cast< d_iter* >(this)->operator*();
-  				} else {
-  					return current_t_node();
-  				}
-  			};
-  
-  			// Updates the current simplex labels, if tracking
-  			constexpr void update_simplex() noexcept {
-  				if constexpr(has_update_simplex< d_type >::value){
-  					return static_cast< d_type* >(this)->update_simplex();
-  				} else {
-  					if constexpr (ts){
-  						if (get< NP >(current) != nullptr && get< DEPTH >(current) > 0){
-  							labels.resize(get< DEPTH >(current));
-  							labels[get< DEPTH >(current)-1] = get< NP >(current)->label;
-  						}
-  					}
-  				}
-  			}; // update_simplex
+  			bool operator==(const d_iter& t) const { return (get< 0 >(t.current) == get< 0 >(current)); }
+  			bool operator!=(const d_iter& t) const { return !(*this == t); }
+  			t_node& operator*() { return current_t_node(); };
   		};
   		
   		// methods within TraversalInterface can use template to access members of Derived
-  		auto begin() {
-  			if constexpr(has_begin< d_type >::value){
-  				return static_cast< d_type* >(this)->begin();
-  			} else {
-  				return d_type::iterator(static_cast< d_type& >(*this), init);
-  			}
-  		};
-  		auto end() {
-  			if constexpr(has_end< d_type >::value){
-  				return static_cast< d_type* >(this)->end();
-  			} else {
-  				using d_iter = typename d_type::iterator;
-  				return d_iter(static_cast< d_type& >(*this), nullptr);
-  			}
-  		};
-  };
+  		// auto begin() { return static_cast< d_type* >(this)->begin(); };
+  		// auto end() { return static_cast< d_type* >(this)->end(); };
+  		
+  		static constexpr bool derived_has_begin = detail::has_begin< Derived< ts > >::value;
+  	  static constexpr bool derived_has_end = detail::has_end< Derived< ts > >::value;
+  		
+  	// 	template < typename std::enable_if< true, int >::type = 0 >
+  	// 	auto begin(){
+  	// 		return static_cast< d_type* >(this)->begin();
+  	// 	};
+  	//   template < typename std::enable_if< false, int >::type = 0 >
+  	// 	auto begin(){
+  	// 		return static_cast< d_type* >(this)->begin();
+  	// 	};
+  		  		
+  		// template < typename std::enable_if< !detail::has_begin< d_type >::value, int >::type = 0 >
+  		// auto begin() {
+  		// 	return static_cast< d_type* >(this)->begin();
+  		// };
+  		// -> std::enable_if< false, decltype(static_cast< d_type* >(this)->begin()) >
+  		// 
+  		// auto end() -> std::enable_if< detail::has_begin< d_type >::value, decltype(d_type::iterator(static_cast< d_type& >(*this), nullptr)) >{
+  		// 	return d_type::iterator(static_cast< d_type& >(*this), nullptr);
+  		// };
+  		// auto end() -> std::enable_if< !detail::has_begin< d_type >::value, decltype(static_cast< d_type* >(this)->begin()) >{
+  		// 	return static_cast< d_type* >(this)->end();
+  		// };
+  		
+  		// Tag dispatching
+  		// using d_iter = typename Derived< ts >::iterator;
+  		// template<typename T> struct TD;
+  		
+  // 		template<typename T> struct TD;
+  // 		
+  //     auto begin(std::true_type) {
+  //       return static_cast< d_type* >(this)->begin();
+  //     };
+  //     
+  //     auto begin(std::false_type) {
+  //       using d_iter = typename Derived< ts >::iterator;
+  // 			return d_iter(static_cast< d_type& >(*this), nullptr);
+  //     };
+  //     
+  //     auto begin() {
+  //       auto b = begin(derived_has_begin); 
+  //       std::cout << type_name<decltype(b)>() << std::endl;
+  //       return b; 
+  //     };
+  // 		
+  // 		// Tag dispatching
+  //     auto end(std::true_type) {
+  //       return static_cast< d_type* >(this)->end();
+  //     };
+  //     
+  //     auto end(std::false_type) {
+  //       using d_iter = typename d_type::iterator;
+  // 			return d_iter(static_cast< d_type& >(*this), nullptr);
+  //     };
+  //     
+  //     auto end() {
+  //       return end(derived_has_end); 
+  //     };
+
+  		// auto end() {
+  		// 	if constexpr(derived_has_end){
+  		// 		return static_cast< d_type* >(this)->end();
+  		// 	} else {
+  		// 		using d_iter = typename d_type::iterator;
+  		// 		return d_iter(static_cast< d_type& >(*this), nullptr);
+  		// 	}
+  		// };
+  }; // end Traversal Interface
+  
   // https://eli.thegreenplace.net/2011/05/17/the-curiously-recurring-template-pattern-in-c
   
   template < class T, std::size_t BufSize = 64 >
@@ -236,7 +281,13 @@ namespace st {
   template < bool ts = false > 
   struct preorder : TraversalInterface< ts, preorder > {
   	using B = TraversalInterface< ts, preorder >;
-  	using B::init, B::st, B::p1, B::p2, B::NP, B::DEPTH, B::LABELS;
+  	using B::init;
+  	using B::st; 
+  	using B::p1;
+  	using B::p2;
+  	using B::NP;
+  	using B::DEPTH;
+  	using B::LABELS;
   
   	// Constructors
   	preorder(const SimplexTree* st_) : TraversalInterface<  ts, preorder >(st_, st_->root.get()) {};
@@ -251,7 +302,13 @@ namespace st {
   	// Iterator type
   	struct iterator : public TraversalInterface< ts, preorder >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current; 
+  		using Bit::labels;
+  		using Bit::info;
+  		using Bit::base;
+  		using Bit::trie;
+  		using Bit::current_t_node;
+  		using Bit::sentinel;
   
   		// DFS specific data structures
   		using dn_t = typename B::d_node;
@@ -269,7 +326,7 @@ namespace st {
   		}
   		
   		// Increment operator is all that is needed by default
-  		auto& operator++(){
+  		auto operator++() -> decltype(*this){
   			do {
   				if (get< NP >(current) != nullptr && base().p2(current_t_node())) {
   					const auto& ch = get< NP >(current)->children;
@@ -287,23 +344,46 @@ namespace st {
   			} while (!base().p1(current_t_node()) && get< NP >(current) != nullptr);
   			return(*this);
   		}
+  		
+  		template < bool T = ts >
+      auto update_simplex() -> typename std::enable_if< T == true, void >::type {
+        // std::cout << "update_simplex: " << base().init << std::endl;
+    	  if (get< NP >(current) != nullptr && get< DEPTH >(current) > 0){
+  				labels.resize(get< DEPTH >(current));
+  				labels.at(get< DEPTH >(current)-1) = get< NP >(current)->label;
+  			}
+    	}
+  		template < bool T = ts >
+      auto update_simplex() -> typename std::enable_if< T == false, void >::type { 
+        return;
+    	}
   	};
   
   	// Only start at a non-root node, else return the end
-  	auto begin(){
+  	auto begin() -> decltype(iterator(*this, init)) {
   		if (init == st->root.get()){
-  			return st->n_simplexes.empty() ? iterator(*this, nullptr) : ++iterator(*this, st->root.get()); 
+  			return st->n_simplexes.empty() ? iterator(*this, nullptr) : ++iterator(*this, st->root.get());
   		} else {
   			return iterator(*this, init);
   		}
   	};
+  	auto end() -> decltype(iterator(*this, nullptr)){
+  	  return iterator(*this, nullptr);
+    }
+  	
   };
   
   // level order traversal iterator
   template < bool ts = false > 
   struct level_order : TraversalInterface< ts, level_order > {
   	using B = TraversalInterface< ts, level_order >;
-  	using B::init, B::st, B::p1, B::p2, B::NP, B::DEPTH, B::LABELS;
+  	using B::init;
+  	using B::st; 
+  	using B::p1;
+  	using B::p2;
+  	using B::NP;
+  	using B::DEPTH;
+  	using B::LABELS;
   	using d_node = typename TraversalInterface< ts, level_order >::d_node;
   
   	// Constructors
@@ -317,7 +397,13 @@ namespace st {
   	// Iterator type
   	struct iterator : public TraversalInterface< ts, level_order >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current; 
+  		using Bit::labels;
+  		using Bit::info;
+  		using Bit::base;
+  		using Bit::trie;
+  		using Bit::current_t_node;
+  		using Bit::sentinel;
   
   		// BFS specific data structures
   		std::queue< typename B::d_node > node_queue;  
@@ -329,7 +415,7 @@ namespace st {
   		}
   		
   		// Increment operator is all that is needed by default
-  		auto& operator++(){
+  		auto operator++() -> decltype(*this){
   			do {
   				if (get< NP >(current) != nullptr && base().p2(current_t_node())) {
   					const auto& ch = get< NP >(current)->children;
@@ -348,22 +434,24 @@ namespace st {
   			return(*this);
   		}
   		
-  		// Doesn't work with regular update method, so override
-    	constexpr void update_simplex(){
-    		if constexpr (ts){
-    			labels = trie().full_simplex(get< NP >(current), get< DEPTH >(current));
-    		}
-    	};
+  		template < bool T = ts >
+      typename std::enable_if< T == true, void >::type
+    	update_simplex(){ labels = trie().full_simplex(get< NP >(current), get< DEPTH >(current)); }
+  		
+    	template < bool T = ts >
+      typename std::enable_if< T == false, void >::type
+    	update_simplex(){ return; };
   	};// iterator 
   
   	// Only start at a non-root node, else return the end
-  	auto begin(){
+  	auto begin() -> decltype(iterator(*this, init)){
   		if (init == st->root.get()){
   			return st->n_simplexes.empty() ? iterator(*this, nullptr) : ++iterator(*this, st->root.get()); 
   		} else {
   			return iterator(*this, init);
   		}
   	};
+  	auto end() -> decltype(iterator(*this, nullptr)) { return iterator(*this, nullptr); }
   };
   
   
@@ -371,7 +459,13 @@ namespace st {
   template < bool ts = false >
   struct coface_roots : TraversalInterface< ts, coface_roots > {
   	using B = TraversalInterface< ts, coface_roots >;
-  	using B::init, B::st, B::p1, B::p2, B::NP, B::DEPTH, B::LABELS;
+  	using B::init;
+  	using B::st; 
+  	using B::p1;
+  	using B::p2;
+  	using B::NP;
+  	using B::DEPTH;
+  	using B::LABELS;
   	using d_node = typename TraversalInterface< ts, coface_roots >::d_node;
   
   	// Constructors
@@ -383,7 +477,13 @@ namespace st {
   	// Iterator type
   	struct iterator : public TraversalInterface< ts, coface_roots >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current; 
+  		using Bit::labels;
+  		using Bit::info;
+  		using Bit::base;
+  		using Bit::trie;
+  		using Bit::current_t_node;
+  		using Bit::sentinel;
   
   		// coface-roots-specific structures 
   		simplex_t start_coface_s; 
@@ -402,10 +502,7 @@ namespace st {
   		
   		// Finds the next coface of a given face starting at some offset + key, or nullptr if there is none
   		std::pair< node_ptr, bool > next_coface(simplex_t face, size_t offset, idx_t depth){
-  		  // const size_t key = encode_level(depth);
   		  auto& st = trie();
-  		  // auto& lm = trie().level_map; 
-  		  // auto cousin_it = lm.find(key);
   		  bool has_cousins = st.cousins_exist(base().init->label, depth);
   		  
   		  // If the key doesn't exist or the cousins are empty, return the end
@@ -425,14 +522,8 @@ namespace st {
   		  return coface_it != c_cousins.end() ? std::make_pair(*coface_it, true) : std::make_pair(nullptr, false);
   		}
   		
-  		// Encodes the key at a specific level to find cousins
-  		size_t encode_level(size_t depth){
-  		  if (base().init == nullptr || base().init == trie().root.get()){ return 0; }
-  		  return trie().encode_node(base().init->label, depth);
-  		}
-  		
   		// Increment operator is all that is needed by default
-  		auto& operator++(){
+  		auto operator++() -> decltype(*this){
   			// If root was given, end the traversal immediately.
   			if (get< NP >(current) == trie().root.get() || get< NP >(current) == nullptr){ 
   				current = sentinel();
@@ -458,20 +549,24 @@ namespace st {
 			  return *this; 
   		}; // operator++
   
-  		// Doesn't work with regular update method, so override
-  		constexpr void update_simplex(){
-  			if constexpr (ts){
-  				labels = trie().full_simplex(get< NP >(current), get< DEPTH >(current));
-  			}
-  		};
+  		template < bool T = ts >
+      auto update_simplex() -> typename std::enable_if< T == true, void >::type { 
+        labels = trie().full_simplex(get< NP >(current), get< DEPTH >(current)); 
+      }
+  		
+    	template < bool T = ts >
+      auto update_simplex() -> typename std::enable_if< T == false, void >::type { 
+        return; 
+      };
+    	
   	}; // iterator 
   
   	// Only start at a non-root node, else return the end
-  	auto begin(){
+  	auto begin() -> decltype(iterator(*this, nullptr)) {
   		if (init == st->root.get() || init == nullptr){ return iterator(*this, nullptr); } 
   		else { return iterator(*this, init); }
   	};
-  	auto end(){ return iterator(*this, nullptr); };
+  	auto end() -> decltype(iterator(*this, nullptr)) { return iterator(*this, nullptr); };
   
   }; // end coface_roots 
   
@@ -479,14 +574,26 @@ namespace st {
   template < bool ts = false > 
   struct cofaces : TraversalInterface< ts, cofaces > {
   	using B = TraversalInterface< ts, cofaces >;
-  	using B::init, B::st, B::p1, B::p2, B::NP, B::DEPTH, B::LABELS;
+  	using B::init;
+  	using B::st; 
+  	using B::p1;
+  	using B::p2;
+  	using B::NP;
+  	using B::DEPTH;
+  	using B::LABELS;
   	using d_node = typename TraversalInterface< ts, cofaces >::d_node;
   
   	cofaces(const SimplexTree* st, node_ptr start) : TraversalInterface< ts, cofaces >(st, start){ }
   
   	struct iterator : public TraversalInterface< ts, cofaces >::iterator {
   		using Bit = typename B::iterator;
-  		using Bit::current, Bit::labels, Bit::info, Bit::update_simplex, Bit::base, Bit::trie, Bit::current_t_node, Bit::sentinel;
+  		using Bit::current; 
+  		using Bit::labels;
+  		using Bit::info;
+  		using Bit::base;
+  		using Bit::trie;
+  		using Bit::current_t_node;
+  		using Bit::sentinel;
   
   		using preorder_it = decltype(std::declval< preorder< ts > >().begin());
   		using coface_root_it = decltype(std::declval< coface_roots< false > >().begin());
@@ -505,7 +612,7 @@ namespace st {
   		}
   		
   		// Increment operator is all that is needed by default
-  		auto& operator++(){
+  		auto operator++() -> decltype(*this) {
   			// Need to increment iterator by one and return the result 
   			// Logically what needs to happen is: 
   			// - if next node is end of subtree 
@@ -531,17 +638,19 @@ namespace st {
   			return(*this);
   		};
   		
-  		// Doesn't work with regular update method, so override
-    	constexpr void update_simplex(){
-    		if constexpr (ts){
-    		  labels = get< LABELS >(*c_node);
-    		}
-    	};
+  		template < bool T = ts >
+      typename std::enable_if< T == true, void >::type
+    	update_simplex(){ labels = get< LABELS >(*c_node); }
+  		
+    	template < bool T = ts >
+      typename std::enable_if< T == false, void >::type
+    	update_simplex(){ return; };
+    	
   	}; // iterator
   	
   	// Only start at a non-root node, else return the end
-  	auto begin(){ return iterator(*this, init); };
-  	auto end(){ return iterator(*this, nullptr); };
+  	auto begin() -> decltype(iterator(*this, init))  { return iterator(*this, init); };
+  	auto end() -> decltype(iterator(*this, nullptr)) { return iterator(*this, nullptr); };
   }; // cofaces
   
   // ---- expansion iterator ------
@@ -651,54 +760,108 @@ namespace st {
   // K-skeleton iterator
   template < bool ts = false > 
   struct k_skeleton : preorder< ts > {
-  	using t_node = typename TraversalInterface< ts, preorder >::t_node;
-  	static constexpr auto valid_eval = [](const size_t k) constexpr { 
-  		return([k](t_node& cn) -> bool { return get< 1 >(cn) <= (k+1); });
+    using P = preorder< ts >;
+    using B = TraversalInterface< ts, preorder >;
+  	using B::init;
+  	using t_node = typename B::t_node;
+  	using iterator_t = typename P::iterator;
+  	
+  	k_skeleton(const SimplexTree* st, node_ptr start, const size_t k) 
+  	  : preorder< ts >(
+  	      st, start, 
+          [k](t_node& cn) -> bool { return get< 1 >(cn) <= (k+1); },
+          [k](t_node& cn) -> bool { return get< 1 >(cn) <= k; }
+        )
+  	{};
+  	// Only start at a non-root node, else return the end
+  	auto begin() -> iterator_t {
+  	  return static_cast< P& >(*this).begin();
+  	  //return static_cast< P& >(*this).begin();
+      // return iterator_t(static_cast< P& >(*this), (node_ptr) init);
   	};
-  	static constexpr auto valid_children = [](const size_t k) constexpr { 
-  		return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
-  	};
-  	k_skeleton(const SimplexTree* st, node_ptr start, const size_t k) : preorder< ts >(st, start, valid_eval(k), valid_children(k)){}
+  	auto end() -> iterator_t {
+  	  return static_cast< P& >(*this).end();
+  	  // return iterator_t(static_cast< P& >(*this), nullptr);
+  	}
   };
   
   template < bool ts = false > 
   struct k_simplices : preorder< ts > {
-  	using t_node = typename TraversalInterface< ts, preorder >::t_node;
+    using P = preorder< ts >;
+    using B = TraversalInterface< ts, preorder >;
+  	using B::init;
+  	using t_node = typename B::t_node;
+  	using iterator_t = typename P::iterator;
+  	
   	//using d_node = tuple< node_ptr, idx_t >;
-  	static constexpr auto valid_eval = [](const size_t k) constexpr { 
-  		return([k](t_node& cn) -> bool { return get< 1 >(cn) == (k+1); });
+  	// const static auto valid_eval = [](const size_t k) { 
+  	// 	return([k](t_node& cn) -> bool { return get< 1 >(cn) == (k+1); });
+  	// };
+  	// const static auto valid_children = [](const size_t k) { 
+  	// 	return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
+  	// };
+  	k_simplices(const SimplexTree* st, node_ptr start, const size_t k) 
+  	  : preorder< ts >(
+  	      st, start, 
+          [k](t_node& cn) -> bool { return get< 1 >(cn) == (k+1); }, 
+          [k](t_node& cn) -> bool { return get< 1 >(cn) <= k; }
+        )
+  	{};
+  	// Only start at a non-root node, else return the end
+  	auto begin() -> iterator_t {
+  	  return static_cast< P& >(*this).begin();
+  	  // return iterator_t(static_cast< P& >(*this), (node_ptr) init);
   	};
-  	static constexpr auto valid_children = [](const size_t k) constexpr { 
-  		return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
-  	};
-  	k_simplices(const SimplexTree* st, node_ptr start, const size_t k) : preorder< ts >(st, start, valid_eval(k), valid_children(k)){}
+  	auto end() -> iterator_t {
+  	  return static_cast< P& >(*this).end();
+  	  //return iterator_t(static_cast< P& >(*this), nullptr);
+  	}
   };
   
   
   template < bool ts = false > 
   struct maximal : preorder< ts > {
-  	using t_node = typename TraversalInterface< ts, preorder >::t_node; 
-  
+    using P = preorder< ts >;
+    using B = TraversalInterface< ts, preorder >;
+  	using B::init;
+  	using t_node = typename B::t_node;
+  	using iterator_t = typename P::iterator;
   	// Check if a given node has no children
-  	static constexpr bool has_no_children(const t_node& cn){ return(get< 0 >(cn)->children.empty()); }
-  	
-  	// Check cn is only coface 
-  	static constexpr bool is_only_root(const SimplexTree* st, const t_node& cn){
-  		auto cr = coface_roots< ts >(st, get< 0 >(cn));
-  		return(std::next(cr.begin()) == cr.end());
-  	}
-  
+  	// const static bool has_no_children(const t_node& cn){ return(get< 0 >(cn)->children.empty()); }
+  	// 
+  	// // Check cn is only coface 
+  	// const static bool is_only_root(const SimplexTree* st, const t_node& cn){
+  	// 	auto cr = coface_roots< ts >(st, get< 0 >(cn));
+  	// 	return(std::next(cr.begin()) == cr.end());
+  	// }
+  	// 
   	// A valid member in a preorder-traversal is just 
-  	static constexpr auto valid_eval = [](const SimplexTree* st) constexpr { 
-  		return([st](t_node& cn) -> bool { 
-  			return get<0>(cn) == nullptr ? false : has_no_children(cn) && is_only_root(st, cn);
-  		});
-  	};
-  	static constexpr auto always_true = [](t_node& cn) -> bool { return true; };
+  	// const static auto valid_eval = [](const SimplexTree* st) { 
+  	// 	return([&st](t_node& cn) -> bool { 
+  	// 		return get<0>(cn) == nullptr ? false : has_no_children(cn) && is_only_root(st, cn);
+  	// 	});
+  	// };
+  	// const static auto always_true = [](t_node& cn) -> bool { return true; };
   
   	// Constructor is all that is needed
   	maximal(const SimplexTree* st, node_ptr start) : 
-  		preorder< ts >(st, start, valid_eval(st), always_true){}
+  		preorder< ts >(st, start, [st](t_node& cn) -> bool { 
+    		node_ptr np = get< 0 >(cn);
+    		if (np != nullptr && np != st->root.get()){
+    		  auto cr = coface_roots< false >(st, np);
+    		  return(np->children.empty() && std::next(cr.begin()) == cr.end());
+    		}
+    		return false;
+  		}, [](t_node& cn) -> bool { return true; })
+  	{};
+  	auto begin() -> iterator_t {
+  	  return static_cast< P& >(*this).begin();
+  	  // return iterator_t(static_cast< P& >(*this), (node_ptr) init);
+  	};
+  	auto end() -> iterator_t {
+  	  return static_cast< P& >(*this).end();
+  	  // return iterator_t(static_cast< P& >(*this), nullptr);
+  	}
   
   };
   
@@ -711,98 +874,213 @@ namespace st {
     return true;
   }
   
+  template< typename tnode_t >
+  std::function< bool(tnode_t&) > link_condition(const SimplexTree* st, const node_ptr s_np){
+    const simplex_t s = st->full_simplex(s_np);
+		return([st, s](tnode_t& cn) -> bool {
+			bool is_link = false;
+			const simplex_t t = st->full_simplex(get< 0 >(cn));
+			bool is_disjoint = empty_intersection(t, s);
+			if (is_disjoint){
+				vector< idx_t > pot_link;
+      	std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(pot_link));
+      	if (st->find_it(begin(pot_link), end(pot_link), st->root.get()) != nullptr){
+      	  is_link = true;
+      	}
+			}
+			return(is_link);
+		});
+  }
+  
   template < bool ts = false > 
   struct link : preorder< ts > {
-  	using t_node = typename TraversalInterface< ts, preorder >::t_node; 
+  	using P = preorder< ts >;
+    using B = TraversalInterface< ts, preorder >;
+  	using B::init;
+  	using t_node = typename B::t_node;
+  	using iterator_t = typename P::iterator;
   
-  	static inline simplex_t get_simplex(const SimplexTree* st, t_node& cn){
-  		if constexpr (ts){ return(get< 2 >(cn)); }
-  		else{ return(st->full_simplex(get< 0 >(cn))); }
-  	}
+  //   template < bool T = ts >
+  // 	static auto get_simplex2(const SimplexTree* st, t_node& cn) -> std::enable_if< T == true, simplex_t > {
+  // 		return(get< 2 >(cn));
+  // 	}
+  //   template < bool T = ts >
+  // 	static auto get_simplex2(const SimplexTree* st, t_node& cn) -> std::enable_if< T == false, simplex_t > {
+  // 		return(st->full_simplex(get< 0 >(cn)));
+  // 	}
   
   	// A valid member in a preorder-traversal is just 
-  	static inline auto valid_eval = [](const SimplexTree* st, node_ptr s_np) { 
-  		const simplex_t s = st->full_simplex(s_np);
-  		return([st, s](t_node& cn) -> bool { 
-  			bool is_link = false; 
-  			const simplex_t t = get_simplex(st, cn); 
-  			bool is_disjoint = empty_intersection(t, s);
-  			if (is_disjoint){
-  				// potential_link.resize(0);
-  				vector< idx_t > potential_link;
-        	std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(potential_link)); 
-        	if (st->find_node(potential_link) != nullptr){ is_link = true;  }
-  			}
-  			return(is_link);
-  		});
-  	};
-  	static constexpr auto always_true = [](t_node& cn) -> bool { return true; };
+  // 	const auto valid_eval = [](const SimplexTree* st, const node_ptr s_np) {
+  // 		const simplex_t s = st->full_simplex(s_np);
+  // 		return([st, s](t_node& cn) -> bool {
+  // 			bool is_link = false;
+  // 			const simplex_t t = st->full_simplex(get< 0 >(cn));
+  // 			bool is_disjoint = empty_intersection(t, s);
+  // 			if (is_disjoint){
+  // 				vector< idx_t > pot_link;
+  //       	std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(pot_link));
+  //       	if (st->find_it(begin(pot_link), end(pot_link), st->root.get()) != nullptr){
+  //       	  is_link = true;
+  //       	}
+  // 			}
+  // 			return(is_link);
+  // 		});
+  // 	};
+  // 	static const auto always_true = [](t_node& cn) -> bool { return true; };
+  
+  
+  // [st, &start](t_node& cn) -> bool {
+  // 		  bool is_link = false;
+  // 		  std::cout << "testing: \n";        
+  // 			std::cout << "1: " << start << std::endl;
+  // 		  st->print_simplex(std::cout, get<0>(cn), true);
+  //       st->print_simplex(std::cout, start, true);
+  // 			// std::cout << "2: " << start << std::endl;
+  // 		  const simplex_t s = st->full_simplex(start);
+  // 			const simplex_t t = st->full_simplex(get< 0 >(cn));
+  // 			// std::cout << "3: " << start << std::endl;
+  // 			bool is_disjoint = empty_intersection(t, s);
+  // 			if (is_disjoint){
+  // 				vector< idx_t > pot_link;
+  //       	std::set_union(s.begin(), s.end(), t.begin(), t.end(), std::back_inserter(pot_link));
+  //       	if (st->find_it(pot_link.begin(), pot_link.end(), st->root.get()) != nullptr){
+  //       	  is_link = true;
+  //       	}
+  // 			}
+  // 			// std::cout << "4: " << start << std::endl;
+  // 			std::cout << "is_link: " << is_link << std::endl;        
+  // 			return(is_link);
+  // 		}
   
   	// Constructor is all that is needed
-  	link(const SimplexTree* st, node_ptr start) : 
-  		preorder< ts >(st, st->root.get(), valid_eval(st, start), always_true){}
+  	link(const SimplexTree* st, const node_ptr start) : 
+  		preorder< ts >(
+  		    st, st->root.get(), 
+  		    link_condition< t_node >(st, start),
+  		    [](const t_node& cn) -> bool { return true; }
+  		)
+  	{};
+  	auto begin() -> iterator_t {
+  	  return static_cast< P& >(*this).begin();// maybe change this to not be P&
+  	  // return iterator_t(static_cast< P& >(*this), (node_ptr) init);
+  	};
+  	auto end() -> iterator_t {
+  	  return static_cast< P& >(*this).end();
+  	  // return iterator_t(static_cast< P& >(*this), nullptr);
+  	}
   }; // link
   
+  template< typename tnode_t >
+  std::function<bool(tnode_t&)> face_condition(const SimplexTree* st, node_ptr start){
+    const simplex_t sigma = st->full_simplex(start);
+    return [st, sigma](tnode_t& cn) -> bool { 
+      node_ptr np = get<0>(cn);
+      if (np == nullptr || np == st->root.get()){ return false; }
+      simplex_t tau = st->full_simplex(np, get<1>(cn));
+
+      return std::includes(sigma.begin(), sigma.end(), tau.begin(), tau.end());
+		};
+  };
+  
+  template< typename tnode_t >
+  std::function<bool(tnode_t&)> face_condition2(const SimplexTree* st, node_ptr start){
+    const size_t d = st->depth(start);
+    return [d](tnode_t& cn) -> bool { return get< 1 >(cn) <= d; };
+  };
   
   template < bool ts = false > 
   struct faces : level_order< ts > {
-  	using t_node = typename TraversalInterface< ts, level_order >::t_node; 
+  	using P = level_order< ts >;
+    using B = TraversalInterface< ts, level_order >;
+  	using B::init;
+  	using t_node = typename B::t_node;
+  	using iterator_t = typename P::iterator;
   
   	// A valid member in a preorder-traversal is just 
-  	static constexpr auto valid_eval = [](const SimplexTree* st, node_ptr start) { 
-  		simplex_t sigma = st->full_simplex(start);
-  		return([sigma](t_node& cn) -> bool { 
-  		  return SimplexTree::is_face(get< 2 >(cn), sigma);
-  		});
-  	};
-  	static constexpr auto valid_children = [](const SimplexTree* st, node_ptr start) constexpr { 
-  	  idx_t k = st->depth(start);
-  		return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
-  	};
+  	// const static auto valid_eval = [](const SimplexTree* st, node_ptr start) { 
+  	// 	simplex_t sigma = st->full_simplex(start);
+  	// 	return([sigma](t_node& cn) -> bool { 
+  	// 	  return SimplexTree::is_face(get< 2 >(cn), sigma);
+  	// 	});
+  	// };
+  	// const static auto valid_children = [](const SimplexTree* st, node_ptr start) { 
+  	//   idx_t k = st->depth(start);
+  	// 	return([k](t_node& cn) -> bool{ return get< 1 >(cn) <= k; });
+  	// };
   	// Constructor is all that is needed
   	faces(const SimplexTree* st, node_ptr start) : 
-  		level_order< ts >(st, st->root.get(), valid_eval(st, start), valid_children(st, start)){}
+  		level_order< ts >(
+  		  st, st->root.get(),
+  		  // [](t_node& cn) -> bool { return true; }, 
+  		  face_condition< t_node >(st, start),
+  		  face_condition2< t_node >(st, start)
+  		  // [&st, &start](t_node& cn) ->bool { return get< 1 >(cn) <= st->depth(start); }
+        // face_condition< t_node >(st, start),
+    		// [&st, &start](t_node& cn) ->bool { return get< 1 >(cn) <= st->depth(start); }
+  	  )
+  	{};
+  	auto begin() -> iterator_t {
+  	  return static_cast< P& >(*this).begin();
+  	  // return iterator_t(static_cast< P& >(*this), (node_ptr) init);
+  	};
+  	auto end() -> iterator_t {
+  	  return static_cast< P& >(*this).end();
+  	  // return iterator_t(static_cast< P& >(*this), nullptr);
+  	}
   };
   
   
+  template <class T>
+  auto get_node_ptr(T& cn) -> node_ptr { return std::get< 0 >(cn); }
   
+  template <class T>
+  auto get_depth(T& cn) -> idx_t { return std::get< 1 >(cn); }
   
+  template <class T>
+  auto get_simplex(T& cn) -> simplex_t { return std::get< 2 >(cn); }
   
   // Generic traversal function which unpacks the tuple and allows for early termination of the iterable
   template <class Iterable, class Lambda> 
-  void traverse(Iterable traversal, Lambda f){
+  auto traverse(Iterable traversal, Lambda f) -> typename std::enable_if< Iterable::is_tracking, void >::type {
   	for (auto& cn: traversal){ 
-  		bool should_continue = std::apply(f, cn);
+  		bool should_continue = f(get_node_ptr(cn), get_depth(cn), get_simplex(cn));
+  		if (!should_continue){ break; }
+  	}
+  }
+  template <class Iterable, class Lambda> 
+  auto traverse(Iterable traversal, Lambda f) -> typename std::enable_if< !Iterable::is_tracking, void >::type {
+  	for (auto& cn: traversal){ 
+  		bool should_continue = f(get_node_ptr(cn), get_depth(cn));
   		if (!should_continue){ break; }
   	}
   }
   
-  template <class T>
-  constexpr auto get_node_ptr(T& cn){ return std::get< 0 >(cn); }
-  
-  template <class T>
-  constexpr auto get_depth(T& cn){ return std::get< 1 >(cn); }
-  
-  template <class T>
-  constexpr auto get_simplex(T& cn){ return std::get< 2 >(cn); }
-  
-  template < class Iterable > 
-  auto generate_node_pairs(Iterable traversal) ->  vector< std::pair< node_ptr, idx_t > > {
-    auto result = vector< std::pair< node_ptr, idx_t > >(); 
-    for (auto& cn: traversal){ 
-      result.push_back(std::make_tuple(get_node_ptr(cn), get_depth(cn)));
-    }
-    return(result);
-  }
-  
-  template < class Iterable > 
-  auto generate_simplices(Iterable traversal) -> vector< simplex_t > {
-    vector< simplex_t > result; 
-    for (auto& cn: traversal){ 
-      result.push_back(get_simplex(cn));
-    }
-    return(result);
-  }
+
+  // template < class Iterable, typename Lambda > 
+  // void traverse_node_pairs(Iterable traversal, Lambda&& f) -> typename std::enable_if< Iterable::is_tracking, void >::type {
+  //   for (auto& cn: traversal){ 
+  //     f(std::make_pair(get_node_ptr(cn), get_depth(cn)));
+  //   }
+  // }
+  // template < class Iterable, typename Lambda > 
+  // void traverse_node_pairs(Iterable traversal, Lambda&& f) -> typename std::enable_if< !Iterable::is_tracking, void >::type {
+  //   for (auto& cn: traversal){ 
+  //     f(std::make_pair(get_node_ptr(cn), get_depth(cn)));
+  //   }
+  // }
+  // 
+  // template < class Iterable, typename Lambda > 
+  // void traverse_simplices(Iterable traversal, Lambda&& f) -> typename std::enable_if< Iterable::is_tracking, void >::type {
+  //   for (auto& cn: traversal){ 
+  //     f(get_simplex(cn));
+  //   }
+  // }
+  // template < class Iterable, typename Lambda > 
+  // void traverse_simplices(Iterable traversal, Lambda&& f) -> typename std::enable_if< !Iterable::is_tracking, void >::type {
+  //   for (auto& cn: traversal){ 
+  //     f(get_simplex(cn));
+  //   }
+  // }
   
    // Generic traversal function which unpacks the tuple and allows for early termination of the iterable
   // template <class Iterable, class Lambda> 

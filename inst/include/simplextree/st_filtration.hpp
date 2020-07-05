@@ -94,7 +94,7 @@ public:
   void initialize(const SimplexTree& sc){
     auto max_tr = st::maximal< true >(&sc, sc.root.get());
     traverse(max_tr, [this](node_ptr cn, idx_t depth, simplex_t sigma){
-      insert_it(begin(sigma), end(sigma), root.get(), 0);
+      this->insert_it(begin(sigma), end(sigma), root.get(), 0);
       return true; 
     });
     id_policy = sc.id_policy;
@@ -150,7 +150,7 @@ struct sorted_edges {
 
   sorted_edges(Filtration* st, const vector< double >& weights) : values(weights), vertices(st->get_vertices()) {
     const size_t n = vertices.size(); 
-    auto edge_traversal = st::k_simplices< true >(static_cast< SimplexTree* >(st), st->root.get(), 1);
+    auto edge_traversal = st::k_simplices< true >(dynamic_cast< SimplexTree* >(st), st->root.get(), 1);
     st::traverse(edge_traversal, [this, n](node_ptr np, idx_t depth, simplex_t edge){
       auto eid = match(edge, vertices);
       keys.push_back(to_natural_2(eid[0], eid[1], n)); 
@@ -162,8 +162,11 @@ struct sorted_edges {
   // Given a simplex 'sigma' whose values are vertex ids in 'vertices', calculates the maximum weight
   double max_weight(simplex_t sigma){
     auto v_ids = match(sigma, vertices);
+    
+    using it_t = vector< size_t >::iterator;
+    
     double weight = 0.0; 
-		for_each_combination(v_ids.begin(), v_ids.begin()+2, v_ids.end(), [this, &weight](auto& it1, auto& it2){
+		for_each_combination(v_ids.begin(), v_ids.begin()+2, v_ids.end(), [this, &weight](it_t it1, it_t it2){
 			const size_t idx = to_natural_2(*it1, *std::next(it1), vertices.size()); 
 			const auto key_idx = std::lower_bound(keys.begin(), keys.end(), idx);
 			const double ew = values[std::distance(keys.begin(), key_idx)];
@@ -288,7 +291,7 @@ inline vector< size_t > Filtration::simplex_idx(size_t idx) const {
 // }
 
 inline simplex_t Filtration::expand_simplex(vector< size_t > indices) const {
-  std::transform(begin(indices), end(indices), begin(indices), [this](auto i){ return(fc.at(i).label); });
+  std::transform(begin(indices), end(indices), begin(indices), [this](size_t i){ return(fc.at(i).label); });
   return(indices);
 }
 
@@ -334,12 +337,10 @@ inline void Filtration::threshold_value(double eps){
 inline void Filtration::threshold_index(size_t req_index){
   const size_t c_idx = current_index();
   const bool is_increasing = c_idx < req_index;
-  traverse_filtration(c_idx, req_index, [this, is_increasing](const size_t i, auto s, auto e){
-    // for (auto label: sigma){ std::cout << label << ","; } std::cout << std::endl;
+  using it_t = SmallVector< size_t >::iterator;
+  traverse_filtration(c_idx, req_index, [this, is_increasing](const size_t i, it_t s, it_t e){
     included.at(i) = is_increasing; 
-    is_increasing ? insert_it(s,e,root.get(),0) : remove_it(s,e);
-    // modify(s, e, is_increasing ? INSERT : REMOVE);
-    // is_increasing ? insert_simplex(sigma) : remove_simplex(sigma);
+    is_increasing ? insert_it(s,e,root.get(),0) : remove(find_it(s,e,root.get()));
   });
 }
 

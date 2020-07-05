@@ -9,7 +9,7 @@ using namespace Rcpp;
 bool nfold_intersection(vector< vector< int > > x, const size_t n){
   using it_t = vector< int >::iterator;
   auto ranges = vector< std::pair< it_t, it_t > >();
-  std::transform(begin(x), end(x), std::back_inserter(ranges), [](auto& cs){
+  std::transform(begin(x), end(x), std::back_inserter(ranges), [](vector< int >& cs){
     return std::make_pair(cs.begin(), cs.end());
   });
   bool is_connected = n_intersects(ranges, n);
@@ -131,7 +131,8 @@ void nerve_expand(SEXP stx, vector< size_t > ids, vector< vector< int > > cover,
   for (auto& c_set: cover){ ranges.emplace(ids[i++], std::make_pair(begin(c_set), end(c_set))); }
 
   // First insert all the edges w/ a common intersection
-  for_each_combination(begin(ids), begin(ids)+2, end(ids), [&st, &ranges, threshold](auto b, auto e){
+  using it_t2 = typename vector< size_t >::iterator; 
+  for_each_combination(begin(ids), begin(ids)+2, end(ids), [&st, &ranges, threshold](it_t2 b, it_t2 e){
     auto edge = std::make_pair(*b, *std::next(b, 1));
     vector< range_t > sets = { ranges[edge.first], ranges[edge.second] };
     bool valid_edge = n_intersects(sets, threshold);
@@ -142,7 +143,7 @@ void nerve_expand(SEXP stx, vector< size_t > ids, vector< vector< int > > cover,
   });
   
   // Then perform the conditional k-expansion
-  st.expansion_f(k, [&](auto parent, idx_t depth, idx_t label){
+  st.expansion_f(k, [&](node_ptr parent, idx_t depth, idx_t label){
     
     // Collect simplex to test
     auto k_simplex = st.full_simplex(parent, depth);
@@ -179,7 +180,8 @@ void nerve_expand_f(SEXP stx, vector< size_t > ids, Function include_f, const si
   }
 
   // First insert all the edges w/ a common intersection
-  for_each_combination(begin(ids), begin(ids)+2, end(ids), [&st, &include_f](auto b, auto e){
+  using it_t = vector< size_t >::iterator; 
+  for_each_combination(begin(ids), begin(ids)+2, end(ids), [&st, &include_f](it_t b, it_t e){
     IntegerVector edge = IntegerVector(b, e);
     bool valid_edge = include_f(edge);
     if (valid_edge){ st.insert_it(b, e, st.root.get(), 0); }
@@ -187,7 +189,7 @@ void nerve_expand_f(SEXP stx, vector< size_t > ids, Function include_f, const si
   });
   
   // Then perform the conditional k-expansion
-  st.expansion_f(k, [&](auto parent, idx_t depth, idx_t label){
+  st.expansion_f(k, [&](node_ptr parent, idx_t depth, idx_t label){
     
     // Collect simplex to test
     auto k_simplex = st.full_simplex(parent, depth);

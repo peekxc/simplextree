@@ -17,7 +17,7 @@ using std::unordered_set;
 
 // Safely advance iterator to prevent passing the end
 template <class Iter, class Incr>
-auto safe_advance(const Iter& curr, const Iter& end, Incr n) {
+Iter safe_advance(const Iter& curr, const Iter& end, Incr n) {
   size_t remaining(std::distance(curr, end));
   if (remaining < n) { n = remaining; }
   return std::next(curr, n);
@@ -56,13 +56,14 @@ bool intervals_disjoint(vector< pair< T, T > > intervals){
   }
   
   // Sort by the values of value types  
-  std::stable_sort(begin(interval_ids), end(interval_ids), [](auto& p1, auto& p2){
+  using rng_t = std::pair< T, T >; 
+  std::stable_sort(begin(interval_ids), end(interval_ids), [](const rng_t& p1, const rng_t& p2){
     return p1.second < p2.second; 
   });
   
-  auto front = begin(interval_ids);
+  auto front = interval_ids.begin();
   auto front1 = std::next(front); 
-  auto back = rbegin(interval_ids);
+  auto back = interval_ids.rbegin();
   auto back1 = std::next(back); 
   
   if (((front->first == front1->first) || (back->first == back1->first)) && front1->second != back1->second){
@@ -122,7 +123,8 @@ bool n_intersects_sorted(vector< pair< Iter, Iter > > ranges, const size_t n){
   if (ranges.size() <= 1){ return(false); }
   
   // Sort by size, then fold a set_intersection
-  std::sort(begin(ranges), end(ranges), [](auto& p1, auto& p2){
+  using rng_t = pair< Iter, Iter >;
+  std::sort(begin(ranges), end(ranges), [](rng_t& p1, rng_t& p2){
     return std::distance(p1.first, p1.second) < std::distance(p2.first, p2.second);
   });
  
@@ -147,8 +149,9 @@ bool n_intersects_unsorted(vector< pair< Iter, Iter > > ranges, const size_t n, 
   using T = typename Iter::value_type; 
   
   // Use lambda to determine when finished
+  using rng_t = pair< Iter, Iter >;
   const auto finished = [&ranges](){
-    size_t n_finished = std::accumulate(begin(ranges), end(ranges), (size_t) 0, [](size_t val, auto& p){ return p.first == p.second; });
+    size_t n_finished = std::accumulate(begin(ranges), end(ranges), (size_t) 0, [](size_t val, rng_t& p){ return p.first == p.second; });
     return(n_finished >= 2);
   };
   
@@ -163,7 +166,7 @@ bool n_intersects_unsorted(vector< pair< Iter, Iter > > ranges, const size_t n, 
     }
     
     // Extract range with minimum first element
-    auto rng_it = std::min_element(begin(ranges), end(ranges), [](auto& p1, auto &p2){
+    auto rng_it = std::min_element(begin(ranges), end(ranges), [](rng_t& p1, rng_t &p2){
       if (p1.first == p1.second){ return false; }
       if (p2.first == p2.second){ return true; }
       return(*p1.first < *p2.first);
@@ -203,18 +206,19 @@ bool n_intersects_unsorted(vector< pair< Iter, Iter > > ranges, const size_t n, 
 template < typename Iter >
 bool n_intersects(const vector< pair< Iter, Iter > >& ranges, const size_t n){
   using T = typename Iter::value_type; 
+  using rng_t = pair< Iter, Iter >;
   
   // Check if any of the ranges don't even have n elements
-  const bool too_small = std::any_of(begin(ranges), end(ranges), [n](auto& rng){ return std::distance(rng.first, rng.second) < n; });
+  const bool too_small = std::any_of(begin(ranges), end(ranges), [n](const rng_t& rng){ return std::distance(rng.first, rng.second) < n; });
   if (too_small){ return(false); }
   
   // Do linear O(n) scan to determine if everything is sorted
-  const bool is_sorted = std::all_of(begin(ranges), end(ranges), [](auto& rng){ return std::is_sorted(rng.first, rng.second); });
+  const bool is_sorted = std::all_of(begin(ranges), end(ranges), [](const rng_t& rng){ return std::is_sorted(rng.first, rng.second); });
   
   // Collect (min,max) of each range
   auto minmaxes = vector< std::pair< T, T > >();
   minmaxes.reserve(ranges.size());
-  std::transform(begin(ranges), end(ranges), std::back_inserter(minmaxes), [is_sorted](auto& rng){
+  std::transform(begin(ranges), end(ranges), std::back_inserter(minmaxes), [is_sorted](const rng_t& rng){
     if (is_sorted){ 
       auto min = *rng.first;
       auto max = std::distance(rng.first, rng.second) == 1 ? *rng.first : *std::prev(rng.second);
