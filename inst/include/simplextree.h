@@ -172,7 +172,7 @@ struct SimplexTree {
   auto degree(idx_t) const -> size_t;
   auto adjacent_vertices(const idx_t) const -> simplex_t;
   auto record_new_simplexes(const idx_t k, const idx_t n) -> void;// record keeping
-  constexpr auto dimension() const -> idx_t { return tree_max_depth == 0 ? 0 : tree_max_depth - 1; }
+  auto dimension() const -> idx_t { return tree_max_depth == 0 ? 0 : tree_max_depth - 1; }
   
   template< typename Iterable > 
   auto insert(Iterable v) -> void; 

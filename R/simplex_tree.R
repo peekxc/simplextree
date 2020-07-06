@@ -91,7 +91,7 @@ flag <- function(st, d){
 }
 
 #' rips
-#' @description Constructs a Vietoris-Rips complex. 
+#' @description Constructs the Vietoris-Rips complex. 
 #' @param d a numeric 'dist' vector. 
 #' @param eps diameter parameter. 
 #' @param filtered whether to construct the filtration. Defaults to false. See details. 
@@ -128,6 +128,7 @@ print.st_traversal <- function(x){
 
 # ---- as.list.st_traversal ----
 #' as.list.st_traversal
+#' @param x traversal object.
 #' @export
 as.list.st_traversal <- function(x){
   return(ltraverse(x, identity))
@@ -136,7 +137,6 @@ as.list.st_traversal <- function(x){
 
 # ---- traverse ----
 #' @name traverse
-#' @aliases ltraverse straverse
 #' @title traverse
 #' @param sigma The simplex to initialize the traversal. See details.  
 #' @param f An arbitrary function which accepts as input a simplex. See details. 
@@ -466,6 +466,7 @@ NULL
 # ---- clear ----
 #' @name clear
 #' @title Clears the simplex tree
+#' @param st a simplex tree object. 
 #' @description Removes all simplices from the simplex tree, except the root node.
 #' @examples 
 #' st <- simplex_tree()
@@ -540,6 +541,8 @@ expand <- function(st, k=2){
 # ---- adjacent ----
 #' @name adjacent
 #' @title Adjacent vertices.
+#' @param st a simplex tree.
+#' @param vertices vertex ids. 
 #' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 #' @examples
 #' st <- simplex_tree(1:3)
@@ -638,14 +641,12 @@ is_face <- function(st, tau, sigma){
 #' @name collapse
 #' @title Elementary collapse
 #' @description Performs an elementary collapse. 
-#' @param tau a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.
-#' @param sigma a n-length vector of vertex ids representing a (n-1)-simplex. Must be the only coface of \code{tau}.
-#' @param u a vertex id representing one of the vertices in the free pair.
-#' @param v a vertex id representing one of the vertices in the free pair. 
-#' @param w a vertex id representing the target of the collapse.
+#' @param st a simplex tree.
+#' @param pair list of simplices to collapse. 
+#' @param w vertex to collapse to, if performing a vertex collapse. 
 #' @section Usage:
-#' st$collapse(tau, sigma)
-#' st$collapse(u, v, w)
+#' st %>% collapse(pair)
+#' st %>% collapse(pair, w)
 #' @details This function provides two types of \emph{elementary collapses}. \cr 
 #' \cr 
 #' The first type of collapse is in the sense described by (1), which is 
@@ -666,28 +667,23 @@ is_face <- function(st, tau, sigma){
 #' 2. Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
 #' 
 #' @examples 
-#' st <- simplextree::simplex_tree()
-#' st$insert(1:3)
-#' st$collapse(1:2, 1:3)
-#' st$print_tree()
-#' # 1 (h = 1): .( 3 )
-#' # 2 (h = 1): .( 3 )
-#' # 3 (h = 0):
+#' st <- simplextree::simplex_tree(1:3)
+#' st %>% print_simplices()
+#' # 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
+#' st %>% collapse(1:2, 1:3)
+#' # 1, 2, 3, 1 3, 2 3=
 #' 
-#' st$insert(list(1:3, 2:5))
-#' st$print_tree()
-#' # 1 (h = 2): .( 2 3 )..( 3 )
-#' # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
-#' # 3 (h = 2): .( 4 5 )..( 5 )
-#' # 4 (h = 1): .( 5 )
-#' # 5 (h = 0): 
-#' st$collapse(2:4, 2:5)
-#' st$print_tree()
-#' # 1 (h = 2): .( 2 3 )..( 3 )
-#' # 2 (h = 2): .( 3 4 5 )..( 5 5 )
-#' # 3 (h = 2): .( 4 5 )..( 5 )
-#' # 4 (h = 1): .( 5 )
-#' # 5 (h = 0): 
+#' st %>% insert(list(1:3, 2:5))
+#' st %>% print_simplices("column")
+#' 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 2 3 2
+#'           2 3 3 4 5 4 5 5 2 3 3 4 4 3
+#'                           3 4 5 5 5 4
+#'                                     5
+#' st %>% collapse(list(2:4, 2:5))
+#' st %>% print_simplices() 
+#' # 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 3
+#' #           2 3 3 4 5 4 5 5 2 3 4 4
+#' #                           3 5 5 5
 #' @export
 collapse <- function(st, pair, w=NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -764,13 +760,13 @@ contract <- function(st, edge){
 
 # ---- serialize / deserialize ----
 #' @name serialize
-#' @title Serializes/deserializes the simplex tree. 
+#' @title Serializes the simplex tree. 
 #' @description Provides a compressed serialization interface for the simplex tree.
 #' @param st a simplex tree.
 #' @family serialization
 #' @details The serialize/deserialize commands can be used to compress/uncompress the complex into 
 #' smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
-#' The serialization 
+#' The serialization.
 #' @examples 
 #' st <- simplex_tree(list(1:5, 7:9))
 #' tmp <- serialize(st)
@@ -797,7 +793,14 @@ serialize <- function(st){
 
 }
 
+#' @name deserialize 
+#' @title Deserializes the simplex tree. 
+#' @description Provides a compressed serialization interface for the simplex tree.
+#' @param st a simplex tree.
 #' @family serialization
+#' @details The serialize/deserialize commands can be used to compress/uncompress the complex into 
+#' smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
+#' The serialization.
 #' @export
 deserialize <- function(complex, st = NULL){
   if (is.null(complex)){ return(simplex_tree()) }
@@ -820,6 +823,7 @@ deserialize <- function(complex, st = NULL){
 # ---- clone ----
 #' @name clone 
 #' @title Clones the given simplex tree.
+#' @param st a simplex tree.
 #' @description Performs a deep-copy on the supplied simplicial complex. 
 #' @export
 clone <- function(st){
@@ -1005,7 +1009,7 @@ NULL
 #'   }, movie.name = "si_animation.gif", interval=0.2)
 #' }
 #' @export
-plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE, clip_polygons=FALSE,...) {
+plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE,...) {
   stopifnot(class(x) %in% .st_classes)
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
@@ -1104,21 +1108,21 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
     for (d in seq(x$dimension, 2)){
       if (any(draw_simplex[dim_idx == d])){
         
-        safe_to_clip <- is_char_vec && ((length(color_pal) == x$dimension+1L) || by_dim)
-        if (clip_polygons && safe_to_clip){
-          polys <- ltraverse(k_simplices(x, k=d), function(simplex){ 
-            poly <- coords[match(simplex, v),] 
-            poly <- poly[grDevices::chull(poly),,drop=FALSE]
-            list(x=poly[,1], y=poly[,2])
-          })
-          subset <- (draw_simplex & (dim_idx==d))
-          polys <- polys[subset[dim_idx==d]]
-          clipped_polys <- Reduce(f = function(A, B){ polyclip::polyclip(A, B, op = "union") }, 
-                                  x = polys[-1], init = polys[[1]])
-          clipped_polys <- do.call(rbind, lapply(clipped_polys, function(p){ rbind(cbind(p$x, p$y), c(NA,NA))}))
-          params <- list(x=clipped_polys, border=NA, col=simplex_colors[head(which(dim_idx==d),1)])
-          do.call(graphics::polygon, modifyList(params, as.list(polygon_opt)))
-        } else {
+        # safe_to_clip <- is_char_vec && ((length(color_pal) == x$dimension+1L) || by_dim)
+        # if (clip_polygons && safe_to_clip){
+        #   polys <- ltraverse(k_simplices(x, k=d), function(simplex){ 
+        #     poly <- coords[match(simplex, v),] 
+        #     poly <- poly[grDevices::chull(poly),,drop=FALSE]
+        #     list(x=poly[,1], y=poly[,2])
+        #   })
+        #   subset <- (draw_simplex & (dim_idx==d))
+        #   polys <- polys[subset[dim_idx==d]]
+        #   clipped_polys <- Reduce(f = function(A, B){ polyclip::polyclip(A, B, op = "union") }, 
+        #                           x = polys[-1], init = polys[[1]])
+        #   clipped_polys <- do.call(rbind, lapply(clipped_polys, function(p){ rbind(cbind(p$x, p$y), c(NA,NA))}))
+        #   params <- list(x=clipped_polys, border=NA, col=simplex_colors[head(which(dim_idx==d),1)])
+        #   do.call(graphics::polygon, modifyList(params, as.list(polygon_opt)))
+        # } else {
           polys <- ltraverse(k_simplices(x, k=d), function(simplex){ 
             poly <- coords[match(simplex, v),] 
             rbind(poly[grDevices::chull(poly),,drop=FALSE], c(NA, NA))
@@ -1127,7 +1131,7 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
           polys_to_draw <- polys[subset[dim_idx==d]]
           params <- list(x=do.call(rbind, polys_to_draw), border=NA, col=simplex_colors[dim_idx==d])
           do.call(graphics::polygon, modifyList(params, as.list(polygon_opt)))
-        }
+        # }
       }
     }
   }

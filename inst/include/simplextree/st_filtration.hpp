@@ -318,7 +318,7 @@ inline void Filtration::traverse_filtration(size_t a, size_t b, Lambda&& f){
   if (a > b){
     int i = a >= fc.size() ? fc.size() - 1 : a; // i possibly negative!
     //for (; i >= b && i >= 0; --i){ f(i, expand_simplex(simplex_idx(i))); }
-    for (; i >= b && i >= 0; --i){ apply_f(i); }
+    for (; i >= int(b) && i >= 0; --i){ apply_f(i); }
   }
   return;
 }

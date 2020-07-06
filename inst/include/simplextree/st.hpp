@@ -127,17 +127,11 @@ inline vector< idx_t > SimplexTree::adjacent_vertices(const size_t v) const {
   
   // First extract the vertices which labels > v by checking edges
   //std::string key = std::to_string(v) + "-2";
-  traverse_cousins(v, 2, [&res](node_ptr cousin){
-    res.push_back(node_label(cousin->parent)); 
-  });
-//   auto it = level_map.find(encode_node(v, 2));
-//   if (it != level_map.end()){
-// 		const auto& cousins = (*it).second;
-//     for (const auto& cn: cousins){ 
-// 			res.push_back(node_label(cn->parent)); 
-// 		}
-//   }
-  
+  if (cousins_exist(v, 2)){
+    traverse_cousins(v, 2, [&res](node_ptr cousin){
+      res.push_back(node_label(cousin->parent)); 
+    });
+  }
   // Then get the vertices with labels < v
   node_ptr cn = find_by_id(root->children, v); 
   if (cn != nullptr){
@@ -591,11 +585,10 @@ inline bool SimplexTree::vertex_collapse(node_ptr vp1, node_ptr vp2, node_ptr vt
 inline bool SimplexTree::collapse(node_ptr tau, node_ptr sigma){
   if (tau == nullptr || sigma == nullptr){ return false; }
 	auto tau_cofaces = st::cofaces< false >(this, tau);
-	bool sigma_only_coface = false; 
-	size_t n_cf = 0; 
-	traverse(tau_cofaces, [&tau, &n_cf, &sigma_only_coface](node_ptr coface, idx_t depth){
-		sigma_only_coface |= (coface == tau);
-		return((++n_cf) >= 2); 
+	bool sigma_only_coface = true; 
+	traverse(tau_cofaces, [&tau, &sigma, &sigma_only_coface](node_ptr coface, idx_t depth){
+		sigma_only_coface &= (coface == tau) || (coface == sigma);
+		return(sigma_only_coface); 
 	});
 	if (sigma_only_coface){
 		remove_leaf(sigma->parent, sigma->label);

@@ -610,7 +610,7 @@ namespace st {
   			 current = std::make_tuple(cn, dd.st->depth(cn));
   		   update_simplex();
   		}
-  		
+  		 
   		// Increment operator is all that is needed by default
   		auto operator++() -> decltype(*this) {
   			// Need to increment iterator by one and return the result 
@@ -628,11 +628,11 @@ namespace st {
   					++c_root;
   					subtree.reset(get< NP >(*c_root));
   					c_node = subtree.begin();
-  					current = { get< NP >(*c_node), get< DEPTH >(*c_node) };
+  					current = std::make_tuple(get< NP >(*c_node), get< DEPTH >(*c_node));
   				}
   			} else {
   				++c_node;
-  				current = { get< NP >(*c_node), get< DEPTH >(*c_node) };
+  			  current = std::make_tuple(get< NP >(*c_node), get< DEPTH >(*c_node));
   			}
   			update_simplex();
   			return(*this);
