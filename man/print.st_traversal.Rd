@@ -4,7 +4,12 @@
 \alias{print.st_traversal}
 \title{print.st_traversal}
 \usage{
-\method{print}{st_traversal}(x)
+\method{print}{st_traversal}(x, ...)
+}
+\arguments{
+\item{x}{traversal object.}
+
+\item{...}{unused.}
 }
 \description{
 print.st_traversal

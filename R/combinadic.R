@@ -12,7 +12,11 @@
 #' all(nat_to_sub(seq(choose(100,2)), n = 100, k = 2) == combn(100,2))
 #' \dontrun{
 #'   ## Generating pairwise combinadics is particularly fast
-#'   microbenchmark({ nat_to_sub(x, n = 120L, k = 2L) }, times = 100, setup = { x = seq(choose(120,2)) })
+#'   microbenchmark(
+#'     { nat_to_sub(x, n = 120L, k = 2L) }, 
+#'     times = 100, 
+#'     setup = { x = seq(choose(120,2)) }
+#'   )
 #'   microbenchmark({ combn(120,2) }, times = 100)
 #' }
 #' 
@@ -67,7 +71,7 @@ inverse.choose <- function(x, k) {
       C <- factorial(k)*x
       n <- 1
       while(n^k < C){ n <- n*2 }
-      m <- head(which(seq(1,n)^k >= C),1)
+      m <- utils::head(which(seq(1,n)^k >= C),1)
       potential_n <- seq(max(c(m, 2*k)), m+k)
       final_n <- potential_n[choose(potential_n, k) == x]
     }

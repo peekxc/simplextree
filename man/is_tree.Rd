@@ -3,13 +3,19 @@
 \name{is_tree}
 \alias{is_tree}
 \title{Checks if the simplicial complex is a tree.}
+\usage{
+is_tree(st)
+}
+\arguments{
+\item{st}{a simplex tree.}
+}
 \description{
 This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.
 }
 \examples{
 st <- simplex_tree()
-st$insert(list(1:2, 2:3))
-st$is_tree() # true
-st$insert(c(1, 3))
-st$is_tree() # false
+st \%>\% insert(list(1:2, 2:3))
+st \%>\% is_tree() # true
+st \%>\% insert(c(1, 3))
+st \%>\% is_tree() # false
 }

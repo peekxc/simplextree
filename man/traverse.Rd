@@ -31,34 +31,10 @@ the supplied function \code{f} as the first argument to \code{f}. \cr
 \examples{
 ## Starter example complex 
 st <- simplex_tree()
-st$insert(list(1:3, 2:5))
+st \%>\% insert(list(1:3, 2:5))
 
 ## Print out complex using depth-first traversal. 
-## 'empty_face' implies that the DFS will start at the root. 
-st$traverse(empty_face, print, "dfs")
-st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
-
-## Print of subtree rooted at vertex 1 using depth-first traversal. 
-st$traverse(1L, print, "dfs")
-
-## Print simplices in the star of the edge [4, 5]
-st$traverse(c(4, 5), print, "star")
-
-## Traversals can be chained. Here's an example that prints the link of each vertex.
-st$traverse(function(simplex){
-  if (length(simplex) == 1){
-    print(sprintf("Link of \%d:", simplex))    
-    st$traverse(simplex, print, "link")
-  }
-}, "bfs")
-
-## To see the cofaces of a given simplex 
-st <- simplex_tree()
-st$insert(c(1, 2, 3))
-st$traverse(1L, print, "cofaces")
-
-## Alternatively, collect results into a list 
-three_cofaces <- st$ltraverse(3L, identity, "cofaces")
+st \%>\% traverse(preorder(st), print)
 }
 \seealso{
 Other traversals: 

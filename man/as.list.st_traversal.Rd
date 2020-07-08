@@ -4,10 +4,12 @@
 \alias{as.list.st_traversal}
 \title{as.list.st_traversal}
 \usage{
-\method{as.list}{st_traversal}(x)
+\method{as.list}{st_traversal}(x, ...)
 }
 \arguments{
 \item{x}{traversal object.}
+
+\item{...}{unused.}
 }
 \description{
 as.list.st_traversal

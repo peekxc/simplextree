@@ -59,11 +59,40 @@
 #' @examples
 #' ## Recreating simplex tree from figure. 
 #' st <- simplex_tree()
-#' st$insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
+#' st %>% insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
 #' plot(st)
 #' 
 #' ## Example insertion
-#' st$insert(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
+#' st <- simplex_tree(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
+#' print(st) 
+#' # Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+#' 
+#' ## More detailed look at structure
+#' print_simplices(st, "tree")
+#' # 1 (h = 2): .( 2 3 )..( 3 )
+#' # 2 (h = 1): .( 3 )
+#' # 3 (h = 0): 
+#' # 4 (h = 1): .( 5 )
+#' # 5 (h = 0): 
+#' # 6 (h = 0): 
+#' ## Print the set of simplices making up the star of the simplex '2'
+#' print_simplices(st %>% cofaces(2))
+#' 2, 2 3, 1 2, 1 2 3
+#' 
+#' ## Retrieves list of all simplices in DFS order, starting with the empty face 
+#' dfs_list <- ltraverse(st %>% preorder(empty_face), identity)
+#' 
+#' ## Get connected components 
+#' print(st$connected_components)
+#' [1] 1 1 1 4 4 5
+#' 
+#' ## Use clone() to make copies of the complex (don't use the assignment `<-`)
+#' new_st <- st %>% clone()
+#' 
+#' ## Other more internal methods available via `$` 
+#' list_of_simplices <- st$as_list()
+#' adj_matrix <- st$as_adjacency_matrix()
+#' # ... see also as_adjacency_list(), as_edge_list(), etc 
 #' @export
 simplex_tree <- function(simplices = NULL){
   st <- new(SimplexTree)
@@ -101,8 +130,10 @@ empty_face <- integer(0L)
 
 # ---- print.st_traversal ----
 #' print.st_traversal
+#' @param x traversal object.
+#' @param ... unused. 
 #' @export
-print.st_traversal <- function(x){
+print.st_traversal <- function(x, ...){
   sigma_str <- ifelse(length(x$sigma) == 0 || is.null(x$sigma), "empty face", paste0(x$sigma, collapse = " "))
   tt <- .traversal_types[x$traversal_type+1L]
   writeLines(sprintf("%s traversal @ { %s }", tt, sigma_str))
@@ -111,8 +142,9 @@ print.st_traversal <- function(x){
 # ---- as.list.st_traversal ----
 #' as.list.st_traversal
 #' @param x traversal object.
+#' @param ... unused. 
 #' @export
-as.list.st_traversal <- function(x){
+as.list.st_traversal <- function(x, ...){
   return(ltraverse(x, identity))
 }
 
@@ -136,34 +168,10 @@ as.list.st_traversal <- function(x){
 #' @examples
 #' ## Starter example complex 
 #' st <- simplex_tree()
-#' st$insert(list(1:3, 2:5))
+#' st %>% insert(list(1:3, 2:5))
 #' 
 #' ## Print out complex using depth-first traversal. 
-#' ## 'empty_face' implies that the DFS will start at the root. 
-#' st$traverse(empty_face, print, "dfs")
-#' st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
-#' 
-#' ## Print of subtree rooted at vertex 1 using depth-first traversal. 
-#' st$traverse(1L, print, "dfs")
-#' 
-#' ## Print simplices in the star of the edge [4, 5]
-#' st$traverse(c(4, 5), print, "star")
-#' 
-#' ## Traversals can be chained. Here's an example that prints the link of each vertex.
-#' st$traverse(function(simplex){
-#'   if (length(simplex) == 1){
-#'     print(sprintf("Link of %d:", simplex))    
-#'     st$traverse(simplex, print, "link")
-#'   }
-#' }, "bfs")
-#' 
-#' ## To see the cofaces of a given simplex 
-#' st <- simplex_tree()
-#' st$insert(c(1, 2, 3))
-#' st$traverse(1L, print, "cofaces")
-#' 
-#' ## Alternatively, collect results into a list 
-#' three_cofaces <- st$ltraverse(3L, identity, "cofaces")
+#' st %>% traverse(preorder(st), print)
 #' @export
 traverse <- function(traversal, f, ...){
   stopifnot("st_traversal" %in% class(traversal))
@@ -528,10 +536,15 @@ expand <- function(st, k=2){
 #' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 #' @examples
 #' st <- simplex_tree(1:3)
-#' st %>% adjacent(2) ## 1 3
+#' st %>% adjacent(2) 
+#' # 1 3
+#' @export
 adjacent <- function(st, vertices){
   stopifnot(is.vector(vertices))
-  return(st$adjacent(vertices))
+  if (length(vertices) == 1){ return(st$adjacent(vertices)) }
+  else {
+    return(lapply(vertices, st$adjacent))
+  }
 }
 
 # ---- insert ----
@@ -657,10 +670,11 @@ is_face <- function(st, tau, sigma){
 #' 
 #' st %>% insert(list(1:3, 2:5))
 #' st %>% print_simplices("column")
-#' 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 2 3 2
-#'           2 3 3 4 5 4 5 5 2 3 3 4 4 3
-#'                           3 4 5 5 5 4
-#'                                     5
+#' # 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 2 3 2
+#' #           2 3 3 4 5 4 5 5 2 3 3 4 4 3
+#' #                           3 4 5 5 5 4
+#' #                                     5
+#' 
 #' st %>% collapse(list(2:4, 2:5))
 #' st %>% print_simplices() 
 #' # 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 3
@@ -708,6 +722,7 @@ threshold <- function(st, index = NULL, value = NULL){
 #' @name contract
 #' @title Edge contraction
 #' @description Performs an edge contraction. 
+#' @param st a simplex tree.
 #' @param edge an edge to contract, as a 2-length vector. 
 #' @section Usage: 
 #' st$contract(edge)
@@ -722,19 +737,14 @@ threshold <- function(st, index = NULL, value = NULL){
 #' Note that edge contraction is not symmetric.
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples 
-#' st <- simplextree::simplex_tree()
-#' st$insert(1:3)
-#' st$print_tree()
-#' # 1 (h = 2): .( 2 3 )..( 3 )
-#' # 2 (h = 1): .( 3 )
-#' # 3 (h = 0): 
-#' st$contract(c(1, 3))
-#' st$print_tree()
-#' # 1 (h = 1): .( 2 )
-#' # 2 (h = 0): 
+#' st <- simplex_tree(1:3) %>% print_simplices()
+#' # 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
+#' st %>% contract(c(1, 3)) %>% print_simplices()
+#' # 1, 2, 1 2
 #' @export
 contract <- function(st, edge){
   stopifnot(class(st) %in% .st_classes)
+  stopifnot(is.numeric(edge) && length(edge) == 2)
   st$contract(edge)
   return(invisible(st))
 }
@@ -751,13 +761,24 @@ contract <- function(st, edge){
 #' The serialization.
 #' @examples 
 #' st <- simplex_tree(list(1:5, 7:9))
-#' tmp <- serialize(st)
-#' print(tmp)
-#' # [[1]]
-#' # [1] 1 2 3
-#' st$clear()
-#' st$deserialize(tmp)
-#' st$print_tree()
+#' st2 <- deserialize(serialize(st))
+#' all.equal(as.list(preorder(st)), as.list(preorder(st2)))
+#' # TRUE 
+#' 
+#' set.seed(1234)
+#' R <- rips(dist(replicate(2, rnorm(150))), eps = pnorm(0.20), dim = 2)
+#' print(R$n_simplices)
+#' # 50 137 229
+#' 
+#' ## Approx. size of the full complex 
+#' print(utils::object.size(as.list(preorder(R))), units = "Kb")
+#' # 345.7 Kb
+#' 
+#' ## Approx. size of serialized version 
+#' print(utils::object.size(serialize(R)), units = "Kb")
+#' # 14.4 Kb
+#' 
+#' ## You can save these to disk via e.g. saveRDS(serialize(R), ...)
 #' @export
 serialize <- function(st){
   stopifnot(class(st) %in% .st_classes)
@@ -772,7 +793,6 @@ serialize <- function(st){
     list(ids = ids, dims = rle(minimal[1,]), maps = minimal[2,])
   })
   return(complex)
-
 }
 
 #' @name deserialize 
@@ -782,7 +802,6 @@ serialize <- function(st){
 #' @family serialization
 #' @details The serialize/deserialize commands can be used to compress/uncompress the complex into 
 #' smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
-#' The serialization.
 #' @export
 deserialize <- function(complex, st = NULL){
   if (is.null(complex)){ return(simplex_tree()) }
@@ -810,34 +829,9 @@ deserialize <- function(complex, st = NULL){
 #' @export
 clone <- function(st){
   stopifnot(class(st) %in% .st_classes)
-  new_st <- simplextree() 
-  new_st$deserialize(st$serialize())
+  new_st <- deserialize(st %>% serialize())
   return(new_st)
 }
-
-# ---- save ----
-#' @name save 
-#' @aliases load
-#' @title Saves/loads the simplex tree to a file
-#' @param filename the filename to save/load the simplex tree to/from. 
-#' @description Allows saving/loading the simplex tree with the help of \code{\link{readRDS}}. 
-#' @details Both saving and loading requires a filename to save the tree to. Loading 
-#' @seealso serialize deserialize
-#' @examples 
-#' st <- simplex_tree()
-#' st$insert(1:3)
-#' tf <- tempfile()
-#' st$print_tree()
-#' st$save(tf)
-#' st$clear()
-#' print(st)
-#' # < empty simplex tree >
-#' st$load(tf)
-#' st$print_tree()
-#' # 1 (h = 2): .( 2 3 )..( 3 )
-#' # 2 (h = 1): .( 3 )
-#' # 3 (h = 0):
-NULL
 
 # ---- reindex ----
 #' @name reindex 
@@ -849,12 +843,11 @@ NULL
 #' \code{ids}[i]. See examples.
 #' @examples 
 #' st <- simplex_tree()
-#' st$insert(1:3)
-#' st$print_tree()
+#' st %>% insert(1:3) %>% print_simplices("tree")
 #' # 1 (h = 2): .( 2 3 )..( 3 )
 #' # 2 (h = 1): .( 3 )
 #' # 3 (h = 0):
-#' st$reindex(4:6)
+#' st %>% reindex(4:6) %>% print_simplices("tree")
 #' # 4 (h = 2): .( 5 6 )..( 6 )
 #' # 5 (h = 1): .( 6 )
 #' # 6 (h = 0):
@@ -870,15 +863,18 @@ reindex <- function(st, ids){
 # ---- is_tree ----
 #' @name is_tree 
 #' @title Checks if the simplicial complex is a tree.
+#' @param st a simplex tree. 
 #' @description This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.
 #' @examples 
 #' st <- simplex_tree()
-#' st$insert(list(1:2, 2:3))
-#' st$is_tree() # true
-#' st$insert(c(1, 3))
-#' st$is_tree() # false
-NULL
-
+#' st %>% insert(list(1:2, 2:3))
+#' st %>% is_tree() # true
+#' st %>% insert(c(1, 3))
+#' st %>% is_tree() # false
+is_tree <- function(st){
+  stopifnot(class(st) %in% .st_classes)
+  return(st$is_tree())
+}
 
 # ---- plot.Rcpp_SimplexTree ----
 #' @name plot.simplextree

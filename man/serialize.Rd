@@ -19,13 +19,24 @@ The serialization.
 }
 \examples{
 st <- simplex_tree(list(1:5, 7:9))
-tmp <- serialize(st)
-print(tmp)
-# [[1]]
-# [1] 1 2 3
-st$clear()
-st$deserialize(tmp)
-st$print_tree()
+st2 <- deserialize(serialize(st))
+all.equal(as.list(preorder(st)), as.list(preorder(st2)))
+# TRUE 
+
+set.seed(1234)
+R <- rips(dist(replicate(2, rnorm(150))), eps = pnorm(0.20), dim = 2)
+print(R$n_simplices)
+# 50 137 229
+
+## Approx. size of the full complex 
+print(utils::object.size(as.list(preorder(R))), units = "Kb")
+# 345.7 Kb
+
+## Approx. size of serialized version 
+print(utils::object.size(serialize(R)), units = "Kb")
+# 14.4 Kb
+
+## You can save these to disk via e.g. saveRDS(serialize(R), ...)
 }
 \seealso{
 Other serialization: 

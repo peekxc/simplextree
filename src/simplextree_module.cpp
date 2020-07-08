@@ -19,6 +19,7 @@ void vector_handler(SEXP sigma, Lambda&& f){
     IntegerMatrix m = as< IntegerMatrix >(sigma);
     const size_t n = m.ncol();
     for (size_t i = 0; i < n; ++i){
+      if (i % 1000 == 0){ Rcpp::checkUserInterrupt(); }
       IntegerMatrix::Column cc = m(_,i);
       f(simplex_t(cc.begin(), cc.end()));
     }
@@ -28,6 +29,7 @@ void vector_handler(SEXP sigma, Lambda&& f){
     List simplices = List(sigma);
     const size_t n = simplices.size();
     for (size_t i = 0; i < n; ++i){
+      if (i % 1000 == 0){ Rcpp::checkUserInterrupt(); }
       f(as< simplex_t >(simplices[i]));
     }
   } else { stop("Unknown type passed, must be list type or vector type."); }

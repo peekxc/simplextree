@@ -83,11 +83,40 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 \examples{
 ## Recreating simplex tree from figure. 
 st <- simplex_tree()
-st$insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
+st \%>\% insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
 plot(st)
 
 ## Example insertion
-st$insert(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
+st <- simplex_tree(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
+print(st) 
+# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+
+## More detailed look at structure
+print_simplices(st, "tree")
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0): 
+# 4 (h = 1): .( 5 )
+# 5 (h = 0): 
+# 6 (h = 0): 
+## Print the set of simplices making up the star of the simplex '2'
+print_simplices(st \%>\% cofaces(2))
+2, 2 3, 1 2, 1 2 3
+
+## Retrieves list of all simplices in DFS order, starting with the empty face 
+dfs_list <- ltraverse(st \%>\% preorder(empty_face), identity)
+
+## Get connected components 
+print(st$connected_components)
+[1] 1 1 1 4 4 5
+
+## Use clone() to make copies of the complex (don't use the assignment `<-`)
+new_st <- st \%>\% clone()
+
+## Other more internal methods available via `$` 
+list_of_simplices <- st$as_list()
+adj_matrix <- st$as_adjacency_matrix()
+# ... see also as_adjacency_list(), as_edge_list(), etc 
 }
 \references{
 Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

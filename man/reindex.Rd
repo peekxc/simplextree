@@ -19,12 +19,11 @@ number of vertices. The simplex tree is modified to replace the vertex label at 
 }
 \examples{
 st <- simplex_tree()
-st$insert(1:3)
-st$print_tree()
+st \%>\% insert(1:3) \%>\% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
-st$reindex(4:6)
+st \%>\% reindex(4:6) \%>\% print_simplices("tree")
 # 4 (h = 2): .( 5 6 )..( 6 )
 # 5 (h = 1): .( 6 )
 # 6 (h = 0):

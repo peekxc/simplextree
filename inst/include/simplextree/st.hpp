@@ -246,10 +246,11 @@ inline void SimplexTree::insert_it(Iter s, Iter e, node_ptr c_node, const idx_t 
 // Wrapper to find a vertex from the top nodes
 template< typename Iterable >
 inline void SimplexTree::insert(Iterable v) {
+  static_assert(st::detail::has_begin< Iterable >::value, "Must be iterable object.");
   auto b = v.begin(), e = v.end();
   std::sort(b, e);          // Demand sorted labels
   e = std::unique(b, e);    // Demand unique labels
-  insert_it(v.begin(), v.end(), root.get(), 0);
+  insert_it(b, e, root.get(), 0);
 }
 
 // Create a set of (i)-simplexes as children of the current node, if they don't already exist
@@ -619,14 +620,14 @@ inline vector< idx_t > SimplexTree::connected_components() const{
 
 // Edge contraction 
 inline void SimplexTree::contract(vector< idx_t > edge){
-  set< node_ptr > to_remove;
+  vector< simplex_t > to_remove;
   vector< simplex_t > to_insert; 
   traverse(st::preorder< true >(this, root.get()), [this, edge, &to_remove, &to_insert](node_ptr np, idx_t depth, simplex_t sigma){
     const idx_t va = edge[0], vb = edge[1];
     if (np->label == vb){ // only consider simplices which contain v_lb
       bool includes_a = std::find(sigma.begin(), sigma.end(), va) != sigma.end();
       if (includes_a){ // case 1: sigma includes both v_la and v_lb
-        to_remove.insert(np); // add whole simplex to remove list, and we're done.
+        to_remove.push_back(sigma); // add whole simplex to remove list, and we're done.
       } else { // case 2: sigma includes v_lb, but not v_la
         // Insert new simplices with v_la --> v_lb, identity otherwise
         const auto local_preorder = st::preorder< true >(this, np);
@@ -635,13 +636,16 @@ inline void SimplexTree::contract(vector< idx_t > edge){
           to_insert.push_back(tau); // si will be sorted upon insertion
           return true; 
         });
-        to_remove.insert(np);
+        to_remove.push_back(sigma);
       }
     }
     return true; 
   });
+  
+  // for (auto& edge: to_remove){ print_simplex(std::cout, edge, true); }
+  
   // Remove the simplices containing vb
-	for (auto& edge: to_remove){ remove(edge); }
+	for (auto& edge: to_remove){ remove(find(edge)); }
 	for (auto& edge: to_insert){ insert(edge); }
 }
 
@@ -795,7 +799,7 @@ inline bool SimplexTree::is_tree() const{
   
   // Apply DFS w/ UnionFind. If a cycle is detected, no more recursive evaluations are performed. 
 	bool has_cycle = false; 
-	auto st_dfs = st::k_skeleton< true >(this, root.get(), 1);
+	auto st_dfs = st::k_simplices< true >(this, root.get(), 1);
 	for (auto& cn: st_dfs){
 		const auto si = get< 2 >(cn);
 		idx_t i1 = index_of(si.at(0)), i2 = index_of(si.at(1)); 
