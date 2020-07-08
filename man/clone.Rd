@@ -6,6 +6,9 @@
 \usage{
 clone(st)
 }
+\arguments{
+\item{st}{a simplex tree.}
+}
 \description{
 Performs a deep-copy on the supplied simplicial complex.
 }

@@ -6,6 +6,11 @@
 \usage{
 adjacent(st, vertices)
 }
+\arguments{
+\item{st}{a simplex tree.}
+
+\item{vertices}{vertex ids.}
+}
 \description{
 Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 }

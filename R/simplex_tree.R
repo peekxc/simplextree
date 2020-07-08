@@ -90,24 +90,6 @@ flag <- function(st, d){
   return(fi)
 }
 
-#' rips
-#' @description Constructs the Vietoris-Rips complex. 
-#' @param d a numeric 'dist' vector. 
-#' @param eps diameter parameter. 
-#' @param filtered whether to construct the filtration. Defaults to false. See details. 
-#' @export
-rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
-	stopifnot(is.numeric(d) || 'dist' %in% class(d))
-	n <- inv_nchoose2(length(d))
-	ind_to_insert <- which(d <= eps)
-	st <- simplex_tree() %>% 
-			insert(as.list(seq(n))) %>% 
-			insert(nat_to_sub(ind_to_insert, n, 2), check_valid = FALSE) %>% 
-			expand(k = dim)
-	if (filtered){ st <- st %>% flag(d[ind_to_insert]) }
-	return(st)
-}
-
 # ---- empty_face ----
 #' empty_face 
 #' @description Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree. 
@@ -427,7 +409,7 @@ setClass("Rcpp_SimplexTree")
 # ---- print.Rcpp_Filtration ----
 setClass("Rcpp_Filtration")
 .print_filtration <- setMethod("show", "Rcpp_Filtration", function (object) {
-  cat(format(object))
+  # cat(format(object))
   max_k <- length(object$n_simplices)
   if (max_k == 0){ cat("< empty filtration >\n") }
   else {

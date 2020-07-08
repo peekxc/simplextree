@@ -6,6 +6,9 @@
 \usage{
 \method{as.list}{st_traversal}(x)
 }
+\arguments{
+\item{x}{traversal object.}
+}
 \description{
 as.list.st_traversal
 }

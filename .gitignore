@@ -35,12 +35,15 @@ vignettes/*.pdf
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
 
-# source files
+# object files
 **/*.o
 **/*.so
 
 # working directory 
 ignore
 
+# windows crap
+**/*.ini
+**/*.dll
 
 .Rproj.user

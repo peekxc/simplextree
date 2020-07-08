@@ -6,6 +6,9 @@
 \usage{
 clear(st)
 }
+\arguments{
+\item{st}{a simplex tree object.}
+}
 \description{
 Removes all simplices from the simplex tree, except the root node.
 }

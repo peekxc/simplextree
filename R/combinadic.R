@@ -38,3 +38,43 @@ sub_to_nat  <- function(x, n){
   if (choose(n, nrow(x)) > ((2^64) - 2)){ stop("(n,k) combination too big; combinadics limited to 64-bit integer arithmetic.") }
 	return(to_natural_R(x-1L, n)+1L)
 }
+
+#' inverse.choose
+#' @description Inverts the binomial coefficient for general (n,k).
+#' @details Given a quantity x = choose(n, k) with fixed k, finds n. 
+#' @param x the binomial coefficient. 
+#' @examples 
+#' 100 == inv.choose(choose(100,2), k = 2)
+#' # TRUE 
+#' 12345 == inv.choose(choose(12345, 5), k = 5)
+#' # TRUE
+#' @return the numerator of the binomial coefficient, if the Otherwise  
+#' @export 
+inverse.choose <- function(x, k) {
+  stopifnot(k >= 1)
+  if (k == 1){ final_n <- x }
+  else if (k == 2){
+    rng <- floor(sqrt(2*x)):ceiling(sqrt(2*x)+2)
+	  final_n <- rng[choose(rng, 2) == x]
+  } else {
+    # From: https://math.stackexchange.com/questions/103377/how-to-reverse-the-n-choose-k-formula
+    if (x < 10^7){
+      lb <- (factorial(k)*x)^(1/k)
+      potential_n <- seq(floor(lb), ceiling(lb+k))
+      final_n <- potential_n[choose(potential_n, k) == x]
+    } else {
+      lb <- floor((4^k)/(2*k + 1))
+      C <- factorial(k)*x
+      n <- 1
+      while(n^k < C){ n <- n*2 }
+      m <- head(which(seq(1,n)^k >= C),1)
+      potential_n <- seq(max(c(m, 2*k)), m+k)
+      final_n <- potential_n[choose(potential_n, k) == x]
+    }
+  }
+  if (length(final_n) == 0){ stop("Unable to invert binomial coefficient.") }
+  return(final_n)
+}
+
+
+

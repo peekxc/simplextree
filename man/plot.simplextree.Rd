@@ -16,7 +16,6 @@
   maximal = TRUE,
   by_dim = TRUE,
   add = FALSE,
-  clip_polygons = FALSE,
   ...
 )
 }
@@ -41,9 +40,9 @@
 
 \item{add}{Whether to add to the plot or redraw. Defaults to false. See details.}
 
-\item{clip_polygons}{Whether to clip the polygons. Useful when visualizing large complexes. See details.}
-
 \item{...}{unused}
+
+\item{clip_polygons}{Whether to clip the polygons. Useful when visualizing large complexes. See details.}
 }
 \description{
 Plots the simplex tree

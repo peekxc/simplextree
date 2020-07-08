@@ -2,8 +2,6 @@
 % Please edit documentation in R/simplex_tree.R
 \name{traverse}
 \alias{traverse}
-\alias{ltraverse}
-\alias{straverse}
 \title{traverse}
 \usage{
 traverse(traversal, f, ...)

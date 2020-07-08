@@ -7,15 +7,11 @@
 collapse(st, pair, w = NULL)
 }
 \arguments{
-\item{w}{a vertex id representing the target of the collapse.}
+\item{st}{a simplex tree.}
 
-\item{tau}{a k-length vector of vertex ids representing a (k-1)-simplex. Must be a face of \code{sigma}.}
+\item{pair}{list of simplices to collapse.}
 
-\item{sigma}{a n-length vector of vertex ids representing a (n-1)-simplex. Must be the only coface of \code{tau}.}
-
-\item{u}{a vertex id representing one of the vertices in the free pair.}
-
-\item{v}{a vertex id representing one of the vertices in the free pair.}
+\item{w}{vertex to collapse to, if performing a vertex collapse.}
 }
 \value{
 boolean indicating whether the collapse was performed.
@@ -39,33 +35,28 @@ two representing the free pair, and the last representing the target vertex to c
 }
 \section{Usage}{
 
-st$collapse(tau, sigma)
-st$collapse(u, v, w)
+st %>% collapse(pair)
+st %>% collapse(pair, w)
 }
 
 \examples{
-st <- simplextree::simplex_tree()
-st$insert(1:3)
-st$collapse(1:2, 1:3)
-st$print_tree()
-# 1 (h = 1): .( 3 )
-# 2 (h = 1): .( 3 )
-# 3 (h = 0):
+st <- simplextree::simplex_tree(1:3)
+st \%>\% print_simplices()
+# 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
+st \%>\% collapse(1:2, 1:3)
+# 1, 2, 3, 1 3, 2 3=
 
-st$insert(list(1:3, 2:5))
-st$print_tree()
-# 1 (h = 2): .( 2 3 )..( 3 )
-# 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
-# 3 (h = 2): .( 4 5 )..( 5 )
-# 4 (h = 1): .( 5 )
-# 5 (h = 0): 
-st$collapse(2:4, 2:5)
-st$print_tree()
-# 1 (h = 2): .( 2 3 )..( 3 )
-# 2 (h = 2): .( 3 4 5 )..( 5 5 )
-# 3 (h = 2): .( 4 5 )..( 5 )
-# 4 (h = 1): .( 5 )
-# 5 (h = 0): 
+st \%>\% insert(list(1:3, 2:5))
+st \%>\% print_simplices("column")
+1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 2 3 2
+          2 3 3 4 5 4 5 5 2 3 3 4 4 3
+                          3 4 5 5 5 4
+                                    5
+st \%>\% collapse(list(2:4, 2:5))
+st \%>\% print_simplices() 
+# 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 3
+#           2 3 3 4 5 4 5 5 2 3 4 4
+#                           3 5 5 5
 }
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
