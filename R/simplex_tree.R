@@ -77,14 +77,14 @@
 #' # 6 (h = 0): 
 #' ## Print the set of simplices making up the star of the simplex '2'
 #' print_simplices(st %>% cofaces(2))
-#' 2, 2 3, 1 2, 1 2 3
+#' # 2, 2 3, 1 2, 1 2 3
 #' 
 #' ## Retrieves list of all simplices in DFS order, starting with the empty face 
 #' dfs_list <- ltraverse(st %>% preorder(empty_face), identity)
 #' 
 #' ## Get connected components 
 #' print(st$connected_components)
-#' [1] 1 1 1 4 4 5
+#' # [1] 1 1 1 4 4 5
 #' 
 #' ## Use clone() to make copies of the complex (don't use the assignment `<-`)
 #' new_st <- st %>% clone()
@@ -665,7 +665,7 @@ is_face <- function(st, tau, sigma){
 #' st <- simplextree::simplex_tree(1:3)
 #' st %>% print_simplices()
 #' # 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
-#' st %>% collapse(1:2, 1:3)
+#' st %>% collapse(list(1:2, 1:3))
 #' # 1, 2, 3, 1 3, 2 3=
 #' 
 #' st %>% insert(list(1:3, 2:5))
@@ -676,7 +676,7 @@ is_face <- function(st, tau, sigma){
 #' #                                     5
 #' 
 #' st %>% collapse(list(2:4, 2:5))
-#' st %>% print_simplices() 
+#' st %>% print_simplices("column") 
 #' # 1 2 3 4 5 1 1 2 2 2 3 3 4 1 2 2 3
 #' #           2 3 3 4 5 4 5 5 2 3 4 4
 #' #                           3 5 5 5

@@ -101,14 +101,14 @@ print_simplices(st, "tree")
 # 6 (h = 0): 
 ## Print the set of simplices making up the star of the simplex '2'
 print_simplices(st \%>\% cofaces(2))
-2, 2 3, 1 2, 1 2 3
+# 2, 2 3, 1 2, 1 2 3
 
 ## Retrieves list of all simplices in DFS order, starting with the empty face 
 dfs_list <- ltraverse(st \%>\% preorder(empty_face), identity)
 
 ## Get connected components 
 print(st$connected_components)
-[1] 1 1 1 4 4 5
+# [1] 1 1 1 4 4 5
 
 ## Use clone() to make copies of the complex (don't use the assignment `<-`)
 new_st <- st \%>\% clone()
