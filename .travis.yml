@@ -8,6 +8,8 @@ r_check_args: #--as-cran
 
 addons:
   apt:
+    sources: 
+      - sourceline: 'ppa:ubuntu-toolchain-r/test'
     packages:
       - libxml2-dev
       - gfortran
