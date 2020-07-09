@@ -7,6 +7,8 @@
 reindex(st, ids)
 }
 \arguments{
+\item{st}{a simplex tree.}
+
 \item{ids}{vector of new vertex ids. See details.}
 }
 \description{

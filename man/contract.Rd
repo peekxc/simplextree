@@ -31,7 +31,8 @@ st$contract(edge)
 }
 
 \examples{
-st <- simplex_tree(1:3) \%>\% print_simplices()
+st <- simplex_tree(1:3) 
+st \%>\% print_simplices()
 # 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
 st \%>\% contract(c(1, 3)) \%>\% print_simplices()
 # 1, 2, 1 2

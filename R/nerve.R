@@ -3,8 +3,10 @@
 #' @param st a simplex tree.
 #' @param cover list of integers indicating set membership. See details. 
 #' @param k max simplex dimension to consider. 
+#' @param threshold the number of elements in common for \code{k} sets to be considered intersecting. Defaults to 1. 
 #' @param neighborhood which combinations of sets to check. See details. 
-#' @details This computes the nerve of a given cover, adding 
+#' @details This computes the nerve of a given cover, adding a \emph{k}-simplex for each combination of \emph{k+1} sets 
+#' in the given \code{cover} that have at least \code{threshold} elements in their common intersection. 
 #' @export
 nerve <- function(st, cover, k = st$dimension, threshold = 1L, neighborhood=NULL){
   stopifnot(!st %in% .st_classes)

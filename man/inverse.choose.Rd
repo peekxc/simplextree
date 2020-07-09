@@ -8,6 +8,8 @@ inverse.choose(x, k)
 }
 \arguments{
 \item{x}{the binomial coefficient.}
+
+\item{k}{the denominator of the binomial coefficient \code{x}.}
 }
 \value{
 the numerator of the binomial coefficient, if the Otherwise
@@ -19,8 +21,8 @@ Inverts the binomial coefficient for general (n,k).
 Given a quantity x = choose(n, k) with fixed k, finds n.
 }
 \examples{
-100 == inv.choose(choose(100,2), k = 2)
+100 == inverse.choose(choose(100,2), k = 2)
 # TRUE 
-12345 == inv.choose(choose(12345, 5), k = 5)
+12345 == inverse.choose(choose(12345, 5), k = 5)
 # TRUE
 }

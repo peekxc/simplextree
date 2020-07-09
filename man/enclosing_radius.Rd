@@ -6,6 +6,9 @@
 \usage{
 enclosing_radius(d)
 }
+\arguments{
+\item{d}{a \code{\link[stats]{dist}} object.}
+}
 \description{
 Computes the enclosing radius of a set of distances.
 }

@@ -7,7 +7,9 @@
 degree(st, vertices)
 }
 \arguments{
-\item{ids}{the vertex ids to check the degree of.}
+\item{st}{a simplex tree.}
+
+\item{vertices}{the vertex ids to check the degree of.}
 }
 \description{
 Returns the number of edges (degree) for each given vertex id.

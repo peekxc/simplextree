@@ -7,6 +7,8 @@
 is_face(st, tau, sigma)
 }
 \arguments{
+\item{st}{a simplex tree.}
+
 \item{tau}{a simplex which may contain \code{sigma} as a coface.}
 
 \item{sigma}{a simplex which may contain \code{tau} as a face.}
@@ -23,9 +25,9 @@ checks whether that is true. \code{tau} and \code{sigma} are sorted before compa
 }
 \examples{
 st <- simplex_tree()
-st$insert(1:3)
-st$is_face(2:3, 1:3)
-st$is_face(1:3, 2:3)
+st \%>\% insert(1:3)
+st \%>\% is_face(2:3, 1:3)
+st \%>\% is_face(1:3, 2:3)
 }
 \seealso{
 \href{https://en.cppreference.com/w/cpp/algorithm/includes}{std::includes}

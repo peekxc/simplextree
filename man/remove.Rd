@@ -4,10 +4,12 @@
 \alias{remove}
 \title{Remove simplices}
 \usage{
-remove(st, simplices, check_valid = TRUE)
+remove(st, simplices)
 }
 \arguments{
-\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+\item{st}{a simplex tree.}
+
+\item{simplices}{simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details.}
 }
 \description{
 Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
@@ -15,11 +17,15 @@ Removes simplices from the simplex tree. Individual simplices are specified as v
 \details{
 This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
 it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
-Cofaces of \code{simplex} are also removed.
+Cofaces of \code{simplex} are also removed. \cr
+\cr
+If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
+represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
+optionally use a matrix, where each column is assumed to be a simplex.
 }
 \section{Usage}{
  
-st$remove(simplex)
+st %>% remove(simplex)
 }
 
 \seealso{

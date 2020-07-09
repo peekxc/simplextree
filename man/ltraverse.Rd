@@ -6,6 +6,13 @@
 \usage{
 ltraverse(traversal, f, ...)
 }
+\arguments{
+\item{traversal}{the type of traversal.}
+
+\item{f}{the function to apply to each simplex.}
+
+\item{...}{unused.}
+}
 \description{
 ltraverse
 }

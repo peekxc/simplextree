@@ -7,26 +7,26 @@
 traverse(traversal, f, ...)
 }
 \arguments{
-\item{f}{An arbitrary function which accepts as input a simplex. See details.}
+\item{traversal}{The type of traversal to use.}
 
-\item{sigma}{The simplex to initialize the traversal. See details.}
+\item{f}{An arbitrary function to apply to eac simplex of the traversal. See details.}
 
-\item{type}{One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".}
+\item{...}{unused.}
 }
 \value{
 NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
 }
 \description{
-Traverses subsets of a simplicial complex.
+Traverses specific subsets of a simplicial complex.
 }
 \details{
 \code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
-The simplices within each subset are determined by two aspects: the initial simplex \code{sigma} 
-and the traversal \code{type}. Given an initial simplex \code{sigma}, \code{traverse} generates 
-an ordered set of simplices based on the traversal \code{type}, which are iteratively passed to 
-the supplied function \code{f} as the first argument to \code{f}. \cr
-\cr
-\code{sigma} can either be omitted, a simplex, or the \code{empty_face} (which is an alias to NULL).
+The specific subset and order are determined by the choice of \emph{traversal}: examples include 
+the \code{\link{preorder}} traversal, the \code{\link{cofaces}} traversal, etc. See the links below. 
+Each simplex in the traversal is passed as the first and only argument to \code{f}, one per simplex in the traversal.
+\code{\link{traverse}} does nothing with the result; if you want to collect the results of applying \code{f} to each simplex 
+into a list, use \code{\link{ltraverse}} (or \code{\link{straverse}}), which are meant to be used like \code{\link{lapply}} 
+and \code{\link{sapply}}, respectively.
 }
 \examples{
 ## Starter example complex 
@@ -34,7 +34,7 @@ st <- simplex_tree()
 st \%>\% insert(list(1:3, 2:5))
 
 ## Print out complex using depth-first traversal. 
-st \%>\% traverse(preorder(st), print)
+st \%>\% preorder() \%>\% traverse(print)
 }
 \seealso{
 Other traversals: 

@@ -7,7 +7,9 @@
 deserialize(complex, st = NULL)
 }
 \arguments{
-\item{st}{a simplex tree.}
+\item{complex}{The result of \code{\link{serialize}}.}
+
+\item{st}{optionally, the simplex tree to insert into. Otherwise a new one is created.}
 }
 \description{
 Provides a compressed serialization interface for the simplex tree.

@@ -5,9 +5,11 @@
 \alias{id_policy}
 \title{Generates vertex ids.}
 \usage{
-generate_ids(st)
+generate_ids(st, n)
 }
 \arguments{
+\item{st}{a simplex tree.}
+
 \item{n}{the number of ids to generate.}
 }
 \description{
@@ -26,14 +28,16 @@ ids that are strictly greater  \code{max}(\emph{counter}, \emph{max vertex id}).
 st <- simplex_tree()
 print(st$id_policy)
 ## "compressed"
-st$generate_ids(3) 
+st \%>\% generate_ids(3) 
 ## 0 1 2
-st$generate_ids(3) 
+st \%>\% generate_ids(3) 
 ## 0 1 2
-st$insert(as.list(1:3))
+st \%>\% insert(as.list(1:3))
 print(st$vertices) ## 0 1 2
-st$insert(st$generate_ids(2))
-st$print_tree() 
-st$remove(4)
-st$generate_ids(1) # 4
+st \%>\% insert(as.list(st \%>\% generate_ids(2)))
+st \%>\% print_simplices() 
+# 0, 1, 2, 3, 4, 0 4
+st \%>\% remove(4)
+st \%>\% generate_ids(1) 
+# 4
 }

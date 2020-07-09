@@ -41,8 +41,6 @@
 \item{add}{Whether to add to the plot or redraw. Defaults to false. See details.}
 
 \item{...}{unused}
-
-\item{clip_polygons}{Whether to clip the polygons. Useful when visualizing large complexes. See details.}
 }
 \description{
 Plots the simplex tree
@@ -79,7 +77,7 @@ the color palette is recyled and simplices are as such.
 \examples{
 ## Simple 3-simplex 
 st <- simplex_tree()
-st$insert(list(1:4))
+st \%>\% insert(list(1:4))
 
 ## Default is categorical colors w/ diminishing opacity
 plot(st)
@@ -93,7 +91,7 @@ plot(st, color_pal = substring(vpal, first=1, last=7))
 
 ## Bigger example; observe only maximal faces (+vertices and edges) are drawn
 st <- simplex_tree()
-st$insert(list(1:3, 2:5, 5:9, 7:8, 10))
+st \%>\% insert(list(1:3, 2:5, 5:9, 7:8, 10))
 plot(st, color_pal = viridis::viridis(st$dimension + 1))
 
 ## If maximal == FALSE, every simplex is drawn (even on top of each other)
@@ -108,16 +106,16 @@ plot(st, color_pal = sample(rainbow(sum(st$n_simplices))))
 
 ## The order is assumed to follow the level order traversal (first 0-simplices, 1-, etc.)
 ## This example colors simplices on a rainbow gradient based on the sum of their labels
-si_sum <- unlist(st$ltraverse(sum, "bfs"))[-1] # -1 to remove empty_face
+si_sum <- straverse(st \%>\% level_order, sum) 
 rbw_pal <- rev(rainbow(50, start=0,end=4/6))
 plot(st, color_pal=rbw_pal[cut(si_sum, breaks=50, labels = FALSE)])
 
 ## This also makes highlighting simplicial operations fairly trivial 
-four_cofaces <- st$ltraverse(4, identity, "cofaces")
-coface_pal <- st$ltraverse(function(simplex){
-  ifelse(list(simplex) \%in\% four_cofaces, "orange", "blue")
-}, "bfs")
-plot(st, color_pal=unlist(coface_pal)[-1])
+four_cofaces <- as.list(cofaces(st, 4))
+coface_pal <- straverse(level_order(st), function(simplex){ 
+    ifelse(list(simplex) \%in\% four_cofaces, "orange", "blue") 
+})
+plot(st, color_pal=unlist(coface_pal))
 
 ## You can also give a named list to draw individual simplices. 
 ## **Only the maximal simplices in the list are drawn** 

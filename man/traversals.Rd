@@ -6,9 +6,21 @@
 \usage{
 straverse(traversal, f, ...)
 }
+\arguments{
+\item{traversal}{the type of traversal.}
+
+\item{f}{the function to apply to each simplex.}
+
+\item{...}{unused.}
+}
 \description{
 straverse
 }
+\section{Functions}{
+\itemize{
+\item \code{straverse}: \code{\link{sapply}} version of \code{\link{traverse}}.
+}}
+
 \seealso{
 Other traversals: 
 \code{\link{ltraverse}()},

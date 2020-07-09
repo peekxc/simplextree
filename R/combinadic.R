@@ -47,10 +47,11 @@ sub_to_nat  <- function(x, n){
 #' @description Inverts the binomial coefficient for general (n,k).
 #' @details Given a quantity x = choose(n, k) with fixed k, finds n. 
 #' @param x the binomial coefficient. 
+#' @param k the denominator of the binomial coefficient \code{x}. 
 #' @examples 
-#' 100 == inv.choose(choose(100,2), k = 2)
+#' 100 == inverse.choose(choose(100,2), k = 2)
 #' # TRUE 
-#' 12345 == inv.choose(choose(12345, 5), k = 5)
+#' 12345 == inverse.choose(choose(12345, 5), k = 5)
 #' # TRUE
 #' @return the numerator of the binomial coefficient, if the Otherwise  
 #' @export 

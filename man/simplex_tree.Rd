@@ -51,9 +51,6 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 \section{Methods}{
  
 \describe{
-    \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
-    \item{$\code{\link{plot.simplextree}}}{ S3 method to plot the simplicial complex. }
-    \item{$\code{\link{print_tree}}}{ Prints the simplex tree structure. }
     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
@@ -69,10 +66,6 @@ Unlike fields, however, properties are not explicitly stored: they are generated
     \item{$\code{\link{ltraverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
     \item{$\code{\link{is_face}}}{ Checks for faces. }
     \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
-    \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
-    \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
-    \item{$\code{\link{save}}}{ Saves the simplex tree to a file. }
-    \item{$\code{\link{load}}}{ Loads a simplex tree from a file. }
     \item{$\code{as_list}}{ Converts the simplicial complex to a list. }
     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacency list. }

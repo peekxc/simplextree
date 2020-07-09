@@ -7,7 +7,9 @@
 expand(st, k = 2)
 }
 \arguments{
-\item{ids}{the vertex ids to check the degree of.}
+\item{st}{a simplex tree.}
+
+\item{k}{the target dimension of the expansion.}
 }
 \description{
 Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 

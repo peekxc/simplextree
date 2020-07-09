@@ -11,6 +11,8 @@ rips(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE)
 
 \item{eps}{diameter parameter.}
 
+\item{dim}{maximum dimension to construct up to. Defaults to 1 (edges only).}
+
 \item{filtered}{whether to construct the filtration. Defaults to false. See details.}
 }
 \description{

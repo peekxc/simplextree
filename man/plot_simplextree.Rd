@@ -6,6 +6,14 @@
 \usage{
 \method{plot}{Rcpp_Filtration}(...)
 }
+\arguments{
+\item{...}{passed to \code{\link{plot.Rcpp_SimplexTree}}}
+}
 \description{
 plot.Rcpp_Filtration
 }
+\section{Functions}{
+\itemize{
+\item \code{plot.Rcpp_Filtration}: family of plotting methods.
+}}
+

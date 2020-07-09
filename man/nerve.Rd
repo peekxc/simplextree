@@ -13,11 +13,14 @@ nerve(st, cover, k = st$dimension, threshold = 1L, neighborhood = NULL)
 
 \item{k}{max simplex dimension to consider.}
 
+\item{threshold}{the number of elements in common for \code{k} sets to be considered intersecting. Defaults to 1.}
+
 \item{neighborhood}{which combinations of sets to check. See details.}
 }
 \description{
 Compute the nerve of a given cover.
 }
 \details{
-This computes the nerve of a given cover, adding
+This computes the nerve of a given cover, adding a \emph{k}-simplex for each combination of \emph{k+1} sets 
+in the given \code{cover} that have at least \code{threshold} elements in their common intersection.
 }
