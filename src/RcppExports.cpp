@@ -154,9 +154,9 @@ BEGIN_RCPP
 END_RCPP
 }
 
-RcppExport SEXP _rcpp_module_boot_union_find_module();
 RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
 RcppExport SEXP _rcpp_module_boot_filtration_module();
+RcppExport SEXP _rcpp_module_boot_union_find_module();
 
 static const R_CallMethodDef CallEntries[] = {
     {"_simplextree_n_choose_k", (DL_FUNC) &_simplextree_n_choose_k, 2},
@@ -171,9 +171,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_simplextree_traverse_R", (DL_FUNC) &_simplextree_traverse_R, 2},
     {"_simplextree_ltraverse_R", (DL_FUNC) &_simplextree_ltraverse_R, 2},
     {"_simplextree_straverse_R", (DL_FUNC) &_simplextree_straverse_R, 2},
-    {"_rcpp_module_boot_union_find_module", (DL_FUNC) &_rcpp_module_boot_union_find_module, 0},
     {"_rcpp_module_boot_simplex_tree_module", (DL_FUNC) &_rcpp_module_boot_simplex_tree_module, 0},
     {"_rcpp_module_boot_filtration_module", (DL_FUNC) &_rcpp_module_boot_filtration_module, 0},
+    {"_rcpp_module_boot_union_find_module", (DL_FUNC) &_rcpp_module_boot_union_find_module, 0},
     {NULL, NULL, 0}
 };
 

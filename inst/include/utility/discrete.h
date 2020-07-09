@@ -5,6 +5,11 @@
 #include "short_alloc.h"    // stack-based allocation helpers
 #include <assert.h>         // assertions
 #include <array>
+#include <cmath>  // round, sqrt, etc. 
+
+using std::floor; 
+using std::sqrt;
+using std::round; 
 
 template < class T, std::size_t BufSize = 32 >
 using SmallVector = std::vector<T, short_alloc<T, BufSize, alignof(T)>>;
@@ -50,7 +55,7 @@ constexpr auto to_natural_2(cc_int_t i, cc_int_t j, cc_int_t n) noexcept ->
 inline std::array< cc_int_t, 2 > to_subscript_2(const cc_int_t x, const cc_int_t n) noexcept {
 	auto i = static_cast< cc_int_t >( (n - 2 - floor(sqrt(-8*x + 4*n*(n-1)-7)/2.0 - 0.5)) );
 	auto j = static_cast< cc_int_t >( x + i + 1 - n*(n-1)/2 + (n-i)*((n-i)-1)/2 );
-	return { i, j };
+	return (std::array< cc_int_t, 2 >{ i, j });
 }
 
 // static constexpr size_t max_choose = 16;
@@ -108,7 +113,8 @@ inline size_t BinomialCoefficient(const size_t n, const size_t k){
 
 // Given a binomial coefficient 'x' representing (n choose 2), finds 'n'
 inline size_t inv_choose_2(const size_t x) noexcept {
-  const size_t a = floor(sqrt(2*x)), b = ceil(sqrt(2*x)+2);
+  const size_t a = floor(sqrt(2*x));
+  const size_t b = ceil(sqrt(2*x)+2);
   SmallVector< size_t >::allocator_type::arena_type arena;
   SmallVector< size_t > rng{ arena };
   rng.resize((b - a) + 1);
