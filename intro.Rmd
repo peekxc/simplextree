@@ -72,9 +72,9 @@ Notice that modifying `st` after also affects `st2`. This happens because `<-` d
 
 Methods which modify the underlying `simplextree` object follow the same pattern: the first argument is always the complex, and the function always returns the modified object invisibly. This allows many operations which modify the complex to be chained, e.g. yet another way of achieving the insertions above would be to do something like `st %>% insert(c(1,2,3)) %>% insert(c(2,3,4,5)) %>% ...`, etc. This pattern is known as [method chaining](https://adv-r.hadley.nz/r6.html#method-chaining), and has grown commonplace in the [tidyverse](https://www.tidyverse.org/) collection of packages. 
 
-You can use the `print_tree` and `print_cousins` methods to see the structure of the underlying simplex tree, the former showing the subtrees rooted at each vertex per line (top-down), and the latter showing how the simplices are stored per level (from the side):
+You can use the _tree_ and _cousins_ options of the `print_simplices` method to see the structure of the underlying simplex tree, the former showing the subtrees rooted at each vertex per line (top-down), and the latter showing how the simplices are stored per level (from the side):
 ```{r}
-print_tree(st)
+print_simplices(st, "tree")
 ```
 Another way is to just plot the complex, usually with some well-chosen coordinates
 ```{r, fig.width=3, fig.height=3}
@@ -136,6 +136,14 @@ print_simplices(preorder(st), format = "column")
 Observe that in the sequence of simplices printed above, at most one label and at most one dimension changes per visited node. Imagine keeping just one vector around in memory, which is to be populated with the labels of the current node. In going from a $k$-simplex to a $(k+1)$-simplex, the vector has a new label appended and increases in size by 1, but all other labels are unaffected (and are correct). Similarly, in traversing upwards from $(k+1)$-simplex to a $k$-simplex, the vector shrinks by 1 and has its last label modified. Regardless, the time it takes to form the labels corresponding to a simplex is constant: one size change, and one label change. Thus, enumerating the simplices with a preorder traversal takes linear time $\approx O(m)$ in the size of complex. And since each node stores only one label, we achieve an $\approx O(m)$ size as well.
 
 <!-- One could just write a new algorithm from scratch: visit each node in the trie (somehow), and at each node $\eta$, traverse upwards from $\eta$ towards the root, recording the individual labels for each node along the way to create the labels forming the full $k$-simplex.  -->
+
+
+```{r}
+st1 <- simplex_tree(list(c(1,2,3), c(1,2,4,5)))
+st2 <- simplex_tree(list(c(1,3,4), c(2,3,4,5)))
+as.list(maximal(st))
+```
+
 
 ### Building from the blocks
 
@@ -307,7 +315,7 @@ The $k$-cliques correspond set of $k$ vertices which are all pairwise connected.
 
 Let's look more at the trie structure of the simplex tree. 
 ```{r}
-st$print_tree()
+print_simplices(st, "tree")
 ```
 
 Consider how one would go about detecting the clique ${1, 2, 3}$. Starting at vertex $\sigma = \{1\}$, we might start by detecting $\sigma$'s neighbors. By the construction of the simplex tree, if another vertex $\sigma'$ is adjacent to $\sigma$ and its label is greater than $\sigma$'s label, it must be a child of $\sigma$. We know that we can form the 2-simplex ${1, 2, 3}$ if and only if we have all edges accounted for; we see that ${1}$ has children nodes with labels ${2}$ and ${3}$, indicating edges $\{1,2\}$ and $\{1,3\}$ are accounted for. Since no simplex has a label greater than $1$, this covers all of $\{1\}$'s edges. We descend to recurse at the node representing the simplex $\{1, 2\}$. The label stored in the node is $2$. Again, the neighbors of the vertex $\{2\}$ whose labels are greater than $2$ are exactly its children nodes---so if we intersect the previously accounted labels ($2$ and $3$) with $\{2\}$'s children labels, any labels in their common intersection represents an intersection of three pairwise edges, and we know we have detected a clique. Since the labels of any set of children are ordered, this problem computationally reduces to computing the intersection between two sorted ranges, which can be efficiently done in time linear in the size of the ranges using e.g. [std::set_intersection](https://en.cppreference.com/w/cpp/algorithm/set_intersection).
@@ -332,12 +340,7 @@ st %>%
   plot(coords=coords, asp = 1)
 ```
 
-
-
-
 ## TDA application example 2. Computing the Rips complex 
-
-The Rips complex is a very common 
 
 <!-- As a simple example to get started, below are three separate ways of printing the simplices in the complex in a [preorder](https://en.wikipedia.org/wiki/Tree_traversal#Pre-order_(NLR)) traversal.  -->
 
