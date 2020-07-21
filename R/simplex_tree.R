@@ -24,8 +24,8 @@
 #' } 
 #' @section Methods: 
 #' \describe{
-#'     \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
-#'     \item{$\code{\link{clear}}}{ Clears the simplex tree. }
+#'     \item{$\code{as_XPtr}}{ Creates an external pointer. }
+#'     \item{$\code{clear}}{ Clears the simplex tree. }
 #'     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
 #'     \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
 #'     \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
@@ -96,7 +96,7 @@ simplex_tree <- function(simplices = NULL){
 
 #' flag
 #' @description Creates a filtration of flag complexes
-#' @param st a simplicial complex, either as a simplex tree or an ordered list of simplices. See details. 
+#' @param st a simplex tree. See details. 
 #' @param d a vector of edge weights, or a 'dist' object. 
 #' @details A flag complex is a simplicial complex whose k-simplices for k >= 2 are completely determined 
 #' by edges/graph of the complex. This function creates filtered simplicial complex using the supplied edge 
@@ -105,7 +105,7 @@ simplex_tree <- function(simplices = NULL){
 #' weight of any of its edges. 
 #' @export
 flag <- function(st, d){
-  # stopifnot(length(d) != )
+  stopifnot(is.numeric(d), class(st) %in% .st_classes)
   fi <- new(Filtration)
   fi$init_tree(st$as_XPtr())
   fi$flag_filtration(d)

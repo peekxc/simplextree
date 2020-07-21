@@ -5,18 +5,26 @@ output: html_notebook
 
 ## Introduction 
 
-Often in the realm of Topological Data Analysis (TDA), the foundational starting point in moving from a "data set" to some type of analysis is the construction of an (abstract) [simplicial complex](https://en.wikipedia.org/wiki/Simplicial_complex). Many such methods of constructions offer certain theoretical or computational guarantees, with the choice of representation depending on the goal of the analysis. For example, the Čech and Rips are complexes are common choices when studying Persistent Homology due to their theoretical guarentees related to homotopy equivalence. Nerve complexes (e.g. the Mapper construction) and Witness complexes[^2] are preferred when areas of the space can be grouped up meaningfully to yield a simpler, more computationally feasible representation. Delaunay complexes are generally used more geometric settings, such as in mesh-generation, etc. 
+Often in the realm of Topological Data Analysis (TDA), the foundational starting point in moving from a "data set" to some type of analysis is the construction of an (abstract) [simplicial complex](https://en.wikipedia.org/wiki/Simplicial_complex). A _simplicial complex_ $\mathcal{K}$ defined over a finite vertex set $V$ is a set of non-empty subsets of $V$ satisfying the following two conditions:
 
-Each construction admits a certain intrinsic complexity: the Rips complex at parameter $\epsilon$ admits a face for every subset of points which have diameter less than $\epsilon$, the Witness complex scales according to the number of specified landmarks, etc. 
+1) $$ p \in V \implies \{p\} \in \mathcal{K} $$
+2) $$ \sigma \in \mathcal{K}, \tau \subseteq \sigma \implies \tau \in \mathcal{K}$$
 
+Another way of stating the second condition is that every simplex in the complex is _closed under taking faces_. Each element $\sigma in \mathcal{K}$ is called a simplex or a face of $\mathcal{K}$. If $\sigma \in \mathcal{K}$ and $\sigma$ is a $k$-simplex, then $\sigma$ is made up of exactly $k+1$ vertices (or 'labels'), and the dimension of $\sigma$ is $k$. The dimension of the simplicial complex $\mathcal{K}$ is the largest $d$ such that $\mathcal{K}$ contains a $d$-simplex. 
 
-Although there are many difference in what is preserved amongst these constructions, whats common among them all is that their combinatorial descriptions can all be represented as abstract simplicial complexes. It would be nice to have a simple, easy-to-modify data structure capable of representing any simplicial complex, regardless of the chosen construction process. 
+There exist many construction methods which offer certain theoretical or computational guarantees, with the choice of representation depending on the goal of the analysis. For example, the Čech and Rips are complexes are common choices when studying Persistent Homology due to their theoretical guarantees related to homotopy equivalence. Nerve complexes (e.g. the Mapper construction) and Witness complexes[^2] are preferred when a more computationally feasible representation is preferred. Delaunay complexes are often used in more geometric settings, such as in mesh-generation, 3D graphics, etc. Each construction admits a certain intrinsic complexity: the Rips complex at parameter $\epsilon$ admits a face for every subset of points which have diameter less than $\epsilon$, the Witness complex scales according to the number of specified landmarks, etc. Whats common among them all these constructions is that their combinatorial aspects can all be represented as abstract simplicial complexes: they all obey the first two properties given above. It would be nice to have a simple and elegant data structure capable of representing any simplicial complex, regardless of the chosen construction process. 
 
-Enter the _simplex tree_[^1]: a flexible and efficient data structure for representing and manipulating general simplicial complexes of any dimension. The best and quickest way to understand the simplex tree structure is with a picture. Here's one (taken from the paper) depicting a simplicial 3-complex (left) and its corresponding Simplex Tree (right). Each node is in bijection with the faces in the complex: there exactly one node for each face, and each node stores exactly one label.
+Enter the _simplex tree_[^1]: a flexible data structure for representing and manipulating general simplicial complexes of any dimension. The best and quickest way to understand the simplex tree structure is with a picture. Here's one (taken from the paper) depicting a simplicial 3-complex (left) and its corresponding Simplex Tree (right). Each node is in bijection with the faces in the complex: there exactly one node for each face, and each node stores exactly one label.
 
 ![simplex tree figure\label{st_pic}](man/figures/simplextree.png)
 
-The simplex tree can be effectively be thought of as an ordered [Trie](https://en.wikipedia.org/wiki/Trie), a related tree-like data structure that has proven useful in storing and processing words/text corpora. Like a trie, the simplex tree stores just one 'character' per node (+ a constant number of extra pointers to maintain the adjacency structure), and each node is associated with with exactly one face in the complex. Unlike a traditional trie, the simplex tree demands a certain ordering invariant be kept wherein parents only keep children whose labels have values greater than their own. Additionally, each level beyond dimension $0$ stores indexes mapping `cousins', or nodes at the the same label and depth (shown by the dotted lines connected $5$-nodes together). These relatively simple modifications give the trie a richer structure, one that ameneable to modification and scales inline with the intrinsic complexity of corresponding complex, regardles of the construction method. 
+The simplex tree can be effectively be thought of as an ordered [Trie](https://en.wikipedia.org/wiki/Trie), a related tree-like data structure that has proven useful in storing and processing words/text corpora. Like a trie, the simplex tree stores just one 'character' per node (+ a constant number of extra pointers to maintain the adjacency structure), and each node is associated with with exactly one face in the complex. Unlike a traditional trie, the simplex tree requires a few additional invariants be kept to be called a simplex tree: 
+
+1. Each level in the trie is _ordered_
+2. Parents only keep children whose labels have values greater than their own
+3. Each level beyond dimension $0$ stores additional adjacency relations connecting `cousins', or nodes with the same label and depth. 
+
+An example depicting the 3rd property is illustrated above by the dotted lines connected together the $5$-nodes. These relatively simple modifications give the trie a richer structure, one that is amenable to modification and that scales inline with the intrinsic complexity of corresponding complex, regardless of the construction method. 
 
 In what follows, for those interested, I will discuss how some common operations used in tandem with simplicial complexes can be greatly simplified using the simplex tree. I'll also discuss their associated complexities, and give examples of how to execute such operations using the `simplextree` package. 
 
@@ -81,9 +89,9 @@ Other ways to modify or query the complex follow a similar interface, e.g. `remo
 
 ### Traversals
 
-A *traversal* is an ordered path through a subset of the simplices in the simplex tree. If simplices are the atoms from which the simplex tree is created, then traversals are the building blocks from which algorithms can be designed. Traversals form the foundation for many other auxiliary methods---they often provide an elegant starting point when one is tasked with extracting or manipulating parts of the complex. 
+A *traversal* is an ordered path through a subset of simplices in the simplex tree. If simplices are the atoms from which the simplex tree is created, then traversals are the building blocks from which efficient algorithms can be designed. Traversals form the foundation for many other auxiliary methods---they often provide an elegant starting point when one is tasked with extracting or manipulating parts of the complex, such as faces or cofaces. 
 
-As an initial example, consider the classical _preorder_ (or "depth-first") traversal.
+As an initial example, consider the classical _preorder_ (or "depth-first") traversal:
 
 ```
 preorder(node){
@@ -95,21 +103,21 @@ preorder(node){
 }
 ```
 
-Straightforward. On the simplex tree, a preorder traversal can be printed concisely with: 
+Straightforward. On the simplex tree, the simplices along a preorder traversal can be printed concisely with: 
 
 ```{r}
 ## Prints the simplices of each traversal column-wise, i.e. each simplex is a column 
 print_simplices(preorder(st), format = "column")
 ```
 
-Observe that due to the naturally ordered structure of the simplex tree, the preorder traversal corresponds to a [lexicographical ordering](https://en.wikipedia.org/wiki/Lexicographical_order) of the simplices in the complex. Similarly, the level order (not shown) corresponds with the [shortlex](https://en.wikipedia.org/wiki/Shortlex_order) order (i.e. lexicographical per dimension). A related property one can extract from this observation is that every ancestor simplex (a simplex with children) in the trie must be a face of any of its descendants, and similarly every descendant simplex must be a coface of its ancestors. This naturally constructive property can come in handy in crafting efficient algorithms to manipulate the complex. Let's see some examples of this in action. 
+Observe that due to the naturally ordered structure of the simplex tree, the preorder traversal corresponds with a [lexicographical ordering](https://en.wikipedia.org/wiki/Lexicographical_order) of the simplices in the complex. Similarly, the level order traversal (not shown) corresponds with a [shortlex](https://en.wikipedia.org/wiki/Shortlex_order) ordering (i.e. lexicographical per dimension) of the simplices. A related property one can extract from this observation is that every _ancestor_ simplex (i.e. a simplex with children) in the trie must be a _face_ of any of its descendants. Similarly, every _descendant_ simplex must be a _coface_ of its ancestors. This naturally constructive property can come in handy in crafting efficient algorithms to manipulate the complex, and to do many basic operations on complex as a whole. Let's see some examples of this in action. 
 
 
 ### Fundamental building blocks
 
-Consider the problem of enumerating all the simplices in the complex. The complexity of this operation depends on how each simplex is represented in memory. For example, the simplest approach might be to represent every simplex explicitly, collecting all simplices as a simple list of simplices $L = \{ \sigma_1, \sigma_2, \dots, \sigma_m \}$. For example, the full combinatorial description of the 2-simplex $\{1, 2, 3\}$ might be represented with the list $L = \{ \{1\}, \{2\}, \{3\}, \{1, 2\}, \{1, 3\}, \{2, 3\}, \{1, 2, 3\} \}$. Since the simplices are already formed, accessing any element of the list is $O(1)$, and thus enumerating this list takes linear time $O(m)$, where $m$ is the number of simplices in the list; however, the labels representing the simplices are increasingly redundant---each $k$-simplex requires $k+1$ storage, and each simplex has $2^{d+1} - 1$ faces; thus, the number of faces scales exponentially with dimension. An easy upper bound for the size of this list is $\approx O(md)$, where $d = \mathrm{dim}(\mathcal{K})$ is the dimension of the largest face in the complex.
+For a moment, forget about the simplex tree, and consider the problem of enumerating all the simplices in an abstract simplicial complex. You can choose how to represent the complex in memory--the time and space complexities of any operation on the complex inherently depend on this choice. The simplest approach might be to represent every simplex explicitly, collecting all simplices as into a list $L = \{ \sigma_1, \sigma_2, \dots, \sigma_m \}$. For example, the full combinatorial description of the 2-simplex $\{1, 2, 3\}$ is represented by the list $L = \{ \{1\}, \{2\}, \{3\}, \{1, 2\}, \{1, 3\}, \{2, 3\}, \{1, 2, 3\} \}$. Since the simplices are already formed, accessing any element of the list is $O(1)$, and thus enumerating the simplices in the complex takes linear time $O(m)$, where $m$ is the number of simplices in the list. However, there's a tradeoff: although we have constant-time access to any simplex, the simplex labels are increasingly redundant, leading to suboptimal storage complexity. Since each $k$-simplex requires $k+1$ storage, and each simplex has $2^{d+1} - 1$ faces, one can conclude that the storage complexity scales linearly in the number of faces, and exponentially in the dimension of the complex. An easy upper bound for the size of this list is $\approx O(md)$, where $d = \mathrm{dim}(\mathcal{K})$ is the dimension of the largest face in the complex.
 
-Alternatively, suppose we have happen to have the 'largest' simplices on hand, i.e. the largest simplices whose union captures the full complex. The space needed to store the complex is obviously much lower now, but enumerating faces in the complex require forming lower order faces on demand. For example, going back to the example from the picture\ref{st_pic}, one can store just the maximal faces and then enumerate the lower-order ones with the highly useful `combn` function: 
+Alternatively, suppose we have happen to have the *maximal* simplices on hand, i.e. the largest simplices whose union captures the full complex. For example, going back to the example from the picture\ref{st_pic}, one can store just the maximal faces and then enumerate the lower-order ones with the highly useful `combn` function:
 
 ```{r}
 simplices <- list(c(1,2,3), c(2,3,4,5), c(6,7,9), c(7,8), 10)
@@ -120,15 +128,17 @@ for (simplex in simplices){
   }
 }
 ```
-This is a nice, compact way of storing a complex, but it has some drawbacks. Firstly, it assumes that ones has these 'largest' simplices on hand. More importantly, there's little structure here: generating the actual vectors containing the labels of each simplex requires forming a new simplex at each iteration of the inner loop (via `simplex[i]`). For a $k$-simplex, this requires at least $(k+1)$ operations, leading to a loose complexity of $\approx O(md)$, where again $m = \lvert \mathcal{K} \rvert$ represents is the number of simplices in $\mathcal{K}$ and $d = \mathrm{dim}(\mathcal{K})$ the dimension. 
-So one approach uses $O(md)$ storage and then allows $O(m)$ complexity on enumeration, and the other compresses the complex to use $O(m)$ storage, but then requires $O(md)$ time to enumerate faces. The proverbial "you can't have your cake and eat it too" seems to ring true. 
+At first glace, this is a nice and compact solution to representing a complex---but it has some drawbacks. Firstly, it assumes that one already has the maximal simplices on hand. Moreover, non-maximal faces must be generated on the fly (shown above using `simplex[i]`): generating a $k$-face from a higher order face in this way requires at least $(k+1)$ operations. Simplifying a bit, since each face requires at most $d = \mathrm{dim}(\mathcal{K})$ operations to access, enumerating all the simplices in the complex now takes $\approx O(md)$.
+
+
+So one approach uses $O(md)$ storage and then allows $O(m)$ complexity on enumeration, and the other compresses the complex to use $O(m)$ storage, but then requires $O(md)$ time to access all the faces. The proverbial "you can't have your cake and eat it too" seems to ring true. 
 
 Instead, consider again the enumeration problem using the simplex tree using, e.g. the *preorder* traversal. As mentioned above, this corresponds to the lexicographical ordering of the faces.  
 ```{r}
 ## Prints the simplices of each traversal column-wise, i.e. each simplex is a column 
 print_simplices(preorder(st), format = "column")
 ```
-Observe that in the sequence of simplices printed above, at most one label and at most one dimension changes per visited node. Imagine keeping just one vector around in memory, which is to be populated with the labels of the current node. In going from a $k$-simplex to a $(k+1)$-simplex, the vector has a new label appended and increases in size by 1, but all other labels are unaffected (and are correct). Similarly, in traversing upwards from $(k+1)$-simplex to a $k$-simplex, the vector shrinks by 1 and has its last label modified. Regardless, the time it takes to form the labels corresponding to a simplex is constant: one size change, and one label change. Thus, enumerating the simplices with a preorder traversal takes linear time $\approx O(m)$ in the size of complex. And since each node stores only one label, we achieve an $\approx O(m)$ size as well.
+Observe that in the sequence of simplices printed above, at most one label and at most one dimension changes per visited node. Imagine keeping just one vector of length at most $d$ around in memory, which is to be populated with the labels of the current node. In going from a $k$-simplex to a $(k+1)$-simplex, the vector has a new label appended and increases in size by 1---all other labels are unaffected (and are correct). Similarly, in traversing upwards from $(k+1)$-simplex to a $k$-simplex, the vector shrinks by 1 and has its last label modified. Regardless, the time it takes to form the labels corresponding to a simplex is constant: one size change, and one label change. Thus, enumerating the simplices with a preorder traversal takes linear time $\approx O(m)$ in the size of complex. And since each node stores only one label, we achieve an $\approx O(m)$ size as well^[This is admittedly a bit of an oversimplification. It is true that the storage complexity of the simplex tree is linear in the size of the complex: if there are $m$ simplices in the complex, then there are $m$ nodes in the simplex tree. However, here I'm using the word RAM interpretation in reporting the complexities; a more accurate description is that the simplex tree requires $\Theta(m \log n)$ space/bits, since each label requires $\Theta(\log n)$ bits to be represented. ].
 
 <!-- One could just write a new algorithm from scratch: visit each node in the trie (somehow), and at each node $\eta$, traverse upwards from $\eta$ towards the root, recording the individual labels for each node along the way to create the labels forming the full $k$-simplex.  -->
 
@@ -360,29 +370,6 @@ st %>%
 <!-- They are all equivalent, but follow different styles of R programming. To keep up with the more modern way of writing R, I'll use the tidyverse-style of composing operations with [magrittr](https://cran.r-project.org/web/packages/magrittr/vignettes/magrittr.html) pipes.  -->
 
 
-```{r}
-e <- new.env(parent = emptyenv())
-sigma <- c(3, 4)
-traverse(preorder(st), function(tau){ 
-  if (all(sigma %in% tau)){
-    e$cofaces <- append(e$cofaces, list(tau))
-  }
-})
-```
-
-
-```{r}
-e <- new.env(parent = emptyenv())
-e$max_depth <- 0L
-traverse(preorder(st), function(sigma){ 
-  
-  e$max_depth <- max(c(e$max_depth, length(sigma)))
-})
-
-
-```
-
-
 
 
 
@@ -404,16 +391,7 @@ for (sigma in simplices){
 st %>% insert(as.list(1:5)) %>% plot()
 st %>% insert(combn(1:5, 2, simplify = FALSE)) %>%  plot() 
 st %>% insert(1:3) %>% plot()
-  
 
-
-e <- new.env(parent = emptyenv())
-e$max_depth <- 0L
-combn(4:6, 2, function(tau){ max(tau) })
-traverse(preorder(st), function(sigma){ 
-  
-  e$max_depth <- max(c(e$max_depth, length(sigma)))
-})
 ```
 
 ## Example 3. Computing the Euler characteristic curve on a sliding window
@@ -423,6 +401,116 @@ sapply(maximal(st), function(sigma){
   combn(sigma, length(sigma), FUN = function(cc){ })
 })
 ```
+
+
+
+```{r}
+st <- r_geometric_complex(15, 0.20, dim = 2, coords = TRUE)
+xy <- attr(st, "coords")
+
+
+## Use mod 2 + existing fields to calculate characteristic 
+euler_characteristic <- function(st){
+  sum(st$n_simplices*((-1)^(0:st$dimension %% 2)))
+}
+
+
+```
+
+
+```{r}
+## Helper functions to calculate lower-star function values 
+vertex_height <- structure(xy[,2], names = st$vertices)
+lower_star <- function(simplex){ max(vertex_height[as.character(simplex)]) }
+simplex2str <- function(simplex){ paste0(as.character(simplex), collapse = ",") }
+
+## Create the lower-star structure weights, in shortlex order
+shortlex <- level_order(st)
+fy <- structure(
+  .Data = straverse(shortlex, lower_star), 
+  names = straverse(shortlex, simplex2str)
+)
+
+## Plot the lower-stars w/ function values less than the median
+thresholds <- quantile(xy[,2], probs = c(0.20, 0.40, 0.60, 0.80))
+layout(matrix(1:4, ncol = 2, byrow = TRUE))
+for (h in thresholds){
+  plot(st, coords = attr(st, "coords"), color_pal = ifelse(fy <= h, "red", "gray"))
+  abline(h =  h, col = "red", lty = 2, lwd = 2)
+}
+```
+
+```{r}
+shortlex <- level_order(st)
+fy <- structure(
+  .Data = straverse(shortlex, lower_star), 
+  names = straverse(shortlex, simplex2str)
+)
+
+traverse(shortlex, function(simplex){
+  k <- length(simplex)
+  combn(simplex, k-1, simplex2str) lower_star
+  if (k > 1){
+    proper_faces <- combn(simplex, k-1, simplex2str)
+    fy[simplex2str(simplex)] <<- max(fy[proper_faces])
+  }
+})
+
+```
+
+
+```{r}
+traverse(maximal(st), function(simplex){
+  k <- length(simplex)
+  if (k > 1){
+    proper_faces <- combn(simplex, k-1, simplex2str)
+    fy[simplex2str(simplex)] <<- max(fy[proper_faces])
+  }
+})
+
+## Plot the lower-stars w/ function values less than the median
+thresholds <- quantile(xy[,2], probs = c(0.20, 0.40, 0.60, 0.80))
+layout(matrix(1:4, ncol = 2, byrow = TRUE))
+for (h in thresholds){
+  plot(st, coords = attr(st, "coords"), color_pal = ifelse(fy <= h, "red", "gray"))
+  abline(h =  h, col = "red", lty = 2, lwd = 2)
+}
+```
+
+
+```{r}
+thresholds <- quantile(fy, probs = seq(0, 1, length.out = 20))
+
+forder <- order(fy)
+fdim <- rep.int(seq(st$dimension+1), times = st$n_simplices)
+fdim <- fdim[forder]
+fy <- fy[forder]
+
+counts_per_dimension <- sapply(seq(st$dimension+1), function(d){ 
+  cumsum(tabulate(findInterval(fy[fdim == d], thresholds)))
+})
+
+
+## Compute the Euler Characteristic Curve
+modulus <- ((-1)^(0:st$dimension %% 2))
+ecc <- colSums(t(counts_per_dimension)*modulus)
+
+plot.ecdf(ecc, verticals = TRUE)
+```
+
+
+```{r}
+# simplex_to_string <- function(simplex){ paste0(as.character(simplex), collapse = ",") }
+# keys <- 
+# 
+# fx <- structure(rep(0, length(keys)), names = keys)
+# 
+# fx[as.character(st$vertices)] <- xy[,2]
+
+# euler characteristic on a sliding window
+
+```
+
 
 ```{r}
 remove.packages("simplextree")

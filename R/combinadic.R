@@ -22,7 +22,7 @@
 #' 
 #' @export  
 nat_to_sub  <- function(x, n, k){
-	if (length(x) == 0){ return(matrix(integer(0), ncol = k)) }
+	if (length(x) == 0){ return(matrix(integer(0), nrow = k)) }
 	stopifnot(all(x >= 1 & x <= choose(n,k)))
 	if (choose(n, k) > ((2^64) - 2)){ stop("(n,k) combination too big; combinadics limited to 64-bit integer arithmetic.") }
 	return(to_subscript_R(as.integer(x)-1L, n, k)+1L)

@@ -2,6 +2,7 @@
 [![Appveyor Windows Build status](https://img.shields.io/appveyor/ci/peekxc/simplextree/master.svg?logo=windows&logoColor=DDDDDD)](https://ci.appveyor.com/project/peekxc/simplextree)
 [![Travis OS X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.org/peekxc/simplextree)
 [![Travis Linux X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.org/peekxc/simplextree)
+[![Codecov test coverage](https://codecov.io/gh/peekxc/simplextree/branch/master/graph/badge.svg)](https://codecov.io/gh/peekxc/simplextree?branch=master)
 
 `simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing R bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). The underlying library implementation also exports a [C++ header](inst/include/simplextree.h), which can be specified as a dependency and [used in other packages](#usage-with-rcpp) via [Rcpp attributes](http://dirk.eddelbuettel.com/code/rcpp/Rcpp-attributes.pdf).
 
@@ -27,15 +28,15 @@ A stable CRAN release is planned for the future.
 
 ```R
 library(simplextree)
-st <- simplex_tree() ## instantiation wrapper
-st$insert(list(1:3, 4:5, 6)) ## Inserts { 1, 2, 3 }, { 4, 5 }, and { 6 }
+st <- simplex_tree()              ## creates a simplex tree
+st %>% insert(list(1:3, 4:5, 6))  ## Inserts simplices { 1, 2, 3 }, { 4, 5 }, and { 6 }
 
 ## Summary of complex
 print(st) 
 # Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
 
 ## More detailed look at structure
-st$print_tree()
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
@@ -44,27 +45,27 @@ st$print_tree()
 # 6 (h = 0): 
 
 ## Print the set of simplices making up the star of the simplex '2'
-st$traverse(2, function(simplex){ print(simplex) }, "star")
-# [1] 1 2
-# [1] 1 2 3
-# [1] 2
-# [1] 2 3
+print_simplices(st %>% cofaces(2))
+# 2, 2 3, 2 3 4, 2 3 4 5, 2 3 5, 2 4, 2 4 5, 2 5, 1 2, 1 2 3
 
-## Retrieves list of all simplices in DFS order, starting with the empty face 
-dfs_list <- st$ltraverse(empty_face, identity, "dfs")
+## You can also compactly print traversals of the complex  
+dfs <- preorder(st)
+print_simplices(dfs, "column")
+# 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 3 3 3 3 3 4 4 5 6
+#   2 2 3 3 3 3 3 4 4 5 6   3 3 3 3 4 4 5   4 4 5 6   5    
+#     3   4 4 5 6   5         4 4 5   5       5            
+#           5                   5
+
+## Or save them as a list 
+dfs_list <- as.list(dfs)
+# list(1, c(1,2), ...)
 
 ## Get connected components 
 print(st$connected_components)
 # [1] 1 1 1 4 4 5
 
 ## Serialization/persistent storage options available
-print(st$serialize())
-# [[1]]
-# [1] 1 2 3
-# [[2]]
-# [1] 4 5
-# [[3]]
-# [1] 6
+saveRDS(st %>% serialize(), file = tempfile())
 
 ## As are various export options
 list_of_simplices <- st$as_list()
@@ -156,8 +157,8 @@ Inserts *simplices* into the simplex tree. Each _simplex_ is ordered prior to in
 	
 ```R
 st <- simplex_tree()
-st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
-st$insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
+st %>% insert(c(1, 2, 3))       ## insert the simplex { 1, 2, 3 }
+st %>% insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
 print(st)
 # Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
 ```
@@ -175,8 +176,8 @@ Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to re
 	
 ```R
 st <- simplex_tree()
-st$insert(list(c(1, 2, 3), c(4, 5), 6))
-st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
+st %>% insert(list(c(1, 2, 3), c(4, 5), 6))
+st %>% remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
 print(st)
 # Simplex Tree with (6, 3) (0, 1)-simplices
 ```
@@ -193,13 +194,13 @@ Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is e
 	
 ```R
 st <- simplex_tree()
-st$insert(1:3)
-st$print_tree()
+st %>% insert(1:3)
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
-st$contract(c(1, 3))
-st$print_tree()
+st %>% contract(c(1, 3))
+st %>% print_simplices("tree")
 # 1 (h = 1): .( 2 )
 # 2 (h = 0): 
 ```
@@ -229,26 +230,26 @@ Note that an _elementary_ collapse in this sense has an injectivity requirement 
 	
 ```R
 st <- simplex_tree()
-st$insert(1:3)
-st$print_tree()
+st %>% insert(1:3)
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
-st$collapse(1:2, 1:3) ## collapse in the sense of (1)
-st$print_tree()
+st %>% collapse(list(1:2, 1:3)) ## collapse in the sense of (1)
+st %>% print_simplices("tree")
 # 1 (h = 1): .( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
   
-st$insert(list(1:3, 2:5))
-st$print_tree()
+st %>% insert(list(1:3, 2:5))
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
 # 3 (h = 2): .( 4 5 )..( 5 )
 # 4 (h = 1): .( 5 )
 # 5 (h = 0): 
-st$collapse(3, 4, 5) ## collapse in the sense of (2)
-st$print_tree()
+st %>% collapse(list(3, 4), 5) ## collapse in the sense of (2)
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 5 )..( 5 )
 # 2 (h = 2): .( 5 )..( 5 )
 # 5 (h = 1): .( 5 )
@@ -269,14 +270,14 @@ This method assumes the dimension of the simplicial complex before expansion is 
   
 ```R
 st <- simplex_tree()
-st$insert(list(c(1, 2), c(2, 3), c(1, 3)))
-st$print_tree()
+st %>% insert(list(c(1, 2), c(2, 3), c(1, 3)))
+st %>% print_simplices("tree")
 # 1 (h = 1): .( 2 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
   
-st$expand(k=2) ## expand to simplicial 2-complex
-st$print_tree()
+st %>% expand(k=2) ## expand to simplicial 2-complex
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
@@ -334,64 +335,17 @@ Generates _n_ new vertex ids which do not exist in the tree according to the cur
 
 #### Traversals
 
-The _SimplexTree_ data structure supports various types of _traversals_. A _traversal_ is a (possibly optimized) path that allows iteration through a subset of the _SimplexTree_. The traversal _type_  determines the subset and path to iterate through. During the traversal, each simplex is passed to _f_ as its only argument. 
+The _SimplexTree_ data structure supports various types of _traversals_. A _traversal_ is a (possibly optimized) path that allows iteration through a subset of the _SimplexTree_. Once a traversal is parameterized, they can be saved a variables and used as arguments into the free function `traverse`, `straverse`, and `ltraverse`. They can also be converted explicitly to list form via the `as.list` S3 specialization. 
 
-<a href='#traverse' id='traverse' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **traverse** <br /> 
-
-1. (_f_, _type_)
-2. (\[_simplex_\], _f_, _type_)
-3. (\[_simplex_\], _f_, _type_, _params_)
-
-The **traverse** method has three overloads, based on the traversal _type_ and intended usage of _f_.
-
-(1) applies _f_ to each simplex in the traversal path _type_, starting at the root of the tree. 
-
-(2) applies _f_ to each simplex in the traversal path _type_ , starting at the specified _simplex_ in the tree. The root simplex (empty face) may be specified using the _empty\_face_ alias or the _NULL_ keyword. 
-
-(3) applies _f_ to each simplex in the traversal path _type_, starting at the specified _simplex_ in the tree.
-The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias. Additional parameters may be supplied to the traversal _type_ as via _params_ as a list. 
-
-<details>
-	
-<summary> Traversal Examples </summary>
-
-Traverse using first overload (performs depth-first traversal on simplex tree): 
-		
-```R
-st <- simplex_tree()
-st$insert(1:3)
-st$traverse(message, "dfs") # equivalent to 'st$traverse(NULL, message, "dfs")'
-# (empty face)
-# 1
-# 12
-# 123
-# 13
-# 2
-# 23
-# 3
-```
-	
-Traverse using second overload (prints the cofaces of the vertex with label '1'): 
-	
-```R
-st$traverse(1, message, "cofaces")
-# 1
-# 12
-# 123
-# 13
-```
-	
-Traverse using third overload (prints the 1-simplices): 
-	
-```R
-st$traverse(1, message, "maximal-skeleton", list(k=1))
-# 1
-# 12
-# 123
-# 13
-```
-</details>
+preorder(st, sigma)
+level_order(st, sigma)
+faces(st, sigma)
+cofaces(st, sigma)
+coface_roots(st, sigma)
+k_skeleton(st, k, sigma)
+k_simplices(st, k, sigma)
+maximal(st)
+link(st, sigma)
 
 <a href='#ltraverse' id='ltraverse' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **ltraverse**(...)
@@ -400,9 +354,9 @@ Performs a _traversal_, returning a list of the same length as the traversal pat
 
 ##### Traversal types
 
-The _type_ parameter passed to the traverse family of algorithms determines the subset and corresponding path that is enumerated in simplex tree. A traversal _type_ is specified by a string, and its corresponding _params_ are specified in a list. The currently supported traversal types are as follows: 
+The _type_ parameter passed to the traverse family of algorithms determines the subset and corresponding path that is enumerated in simplex tree. A traversal _type_ is specified by function and its corresponding _params_. The currently supported traversal types are as follows: 
 
-<a href='#dfs' id='dfs' class='anchor' aria-hidden='true'>#</a> _type_ = "**dfs**" 
+<a href='#preorder' id='preorder' class='anchor' aria-hidden='true'>#</a> _type_ = "**preorder**" 
 
 Performs a depth-first traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the root node.
 
@@ -522,8 +476,8 @@ Then on the R-side, use [as\_XPtr](#as\_XPtr) method to get an [XPtr](https://cr
 
 ```R
 # my_source.R
-stree <- simplextree::simplex_tree()
-modify_tree(stree$as_XPtr())
+st <- simplex_tree()
+modify_tree(st$as_XPtr())
 ```  
 Note that the C++ class contains a superset of the functionality exported to R, however they do not necessarily have the same bindings. See the header file for a complete list. 
 
@@ -542,12 +496,12 @@ Summarizing the complex can be achieved via either the overridden [S3](https://s
 ```R
 library(simplextree)
 st <- simplex_tree()
-st$insert(list(1:3, 3:6))
+st %>% insert(list(1:3, 3:6))
 
 print(st)
 # Simplex Tree with (6, 9, 5, 1) (0, 1, 2, 3)-simplices
 
-st$print_tree()
+print_simplices(st, "tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 3): .( 4 5 6 )..( 5 6 6 )...( 6 )
@@ -559,7 +513,7 @@ st$print_tree()
 Alternatively, the plot generic is also overridden for _SimplexTree_ objects (of class type 'Rcpp_SimplexTree') to display the complex with [base graphics](https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/graphics-package.html).
 
 ```R
-st$insert(list(6:7, 7:8, 8:10, 11:12))
+st %>% insert(list(6:7, 7:8, 8:10, 11:12))
 plot(st)
 ```
 

@@ -180,24 +180,26 @@ void nerve_expand_f(SEXP stx, vector< size_t > ids, Function include_f, const si
   }
 
   // First insert all the edges w/ a common intersection
-  using it_t = vector< size_t >::iterator; 
+  using it_t = vector< size_t >::iterator;
   for_each_combination(begin(ids), begin(ids)+2, end(ids), [&st, &include_f](it_t b, it_t e){
     IntegerVector edge = IntegerVector(b, e);
-    bool valid_edge = include_f(edge);
+    LogicalVector valid_check = include_f(edge);  // This is needed to coerce correctly to bool
+    bool valid_edge = is_true(all(valid_check));
     if (valid_edge){ st.insert_it(b, e, st.root.get(), 0); }
-    return false; // always continue 
+    return false; // always continue
   });
-  
+
   // Then perform the conditional k-expansion
   st.expansion_f(k, [&](node_ptr parent, idx_t depth, idx_t label){
-    
+
     // Collect simplex to test
     auto k_simplex = st.full_simplex(parent, depth);
     k_simplex.push_back(label);
-    
-    bool valid = include_f(k_simplex);
-    
-    // Test that their intersection is at least 'threshold'; if so, insert 
+
+    LogicalVector valid_check = include_f(k_simplex);  // This is needed to coerce correctly to bool
+    bool valid = is_true(all(valid_check));
+
+    // Test that their intersection is at least 'threshold'; if so, insert
     if (valid){
       std::array< idx_t, 1 > int_label = { label };
       st.insert_it(begin(int_label), end(int_label), parent, depth);

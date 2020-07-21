@@ -212,10 +212,10 @@ List as_list(SimplexTree* st){
   traverse(bfs, [&res, &d, &all](node_ptr cn, idx_t depth, simplex_t sigma){
     if (depth > d){
       const size_t n = all.size() / d;
-      IntegerMatrix tmp = IntegerMatrix(n, d);
+      IntegerMatrix tmp = IntegerMatrix(d,n);
       for (size_t i = 0; i < n; ++i){
-        IntegerVector row = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-        tmp(i, _) = row;
+        IntegerVector col = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
+        tmp(_, i) = col;
       }
       res.push_back(tmp);
       all.clear();
@@ -224,13 +224,6 @@ List as_list(SimplexTree* st){
     all.insert(all.end(), sigma.begin(), sigma.end());
     return true; 
   });
-  const size_t n = all.size() / d;
-  IntegerMatrix tmp = IntegerMatrix(n, d);
-  for (size_t i = 0; i < n; ++i){
-    IntegerVector row = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-    tmp(i, _) = row;
-  }
-  res.push_back(tmp);
   return res;
 }
 

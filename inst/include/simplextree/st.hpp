@@ -227,7 +227,6 @@ inline void SimplexTree::insert_it(Iter s, Iter e, node_ptr c_node, const idx_t 
       if (it == end(c_node->children)){
         auto new_it = c_node->children.emplace_hint(it, make_unique< node >(label, c_node));
         if (child_depth > 1){ // keep track of nodes which share ids at the same depth
-          // level_map[encode_node(label, child_depth)].push_back((*new_it).get());
           add_cousin((*new_it).get(), child_depth);
         }
         record_new_simplexes(child_depth-1, 1);

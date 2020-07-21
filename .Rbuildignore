@@ -6,3 +6,4 @@
 ^ignore$
 ^docs$
 ^doc$
+^codecov\.yml$

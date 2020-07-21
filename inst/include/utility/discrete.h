@@ -18,25 +18,24 @@ using SmallVector = std::vector<T, short_alloc<T, BufSize, alignof(T)>>;
 #include <cstdint>
 using cc_int_t = uint_fast64_t;
 
-// Szudziks pairing function. Takes as input two unsigned integral types (a, b), and uniquely 
+// Szudziks pairing function. Takes as input two unsigned integral types (a, b), and uniquely
 // maps the pair (a, b) to a distinct number c, where c is possibly a different integral type
-// template < typename T1, typename T2 = T1 > 
-// constexpr inline T2 szudzik_pair(T1 x, T1 y){
-//   static_assert(std::is_integral<T1>::value, "Integral-type required as a range storage type.");
-//   static_assert(std::is_unsigned<T1>::value, "Integral-type required as a range storage type.");
-//   T2 a = static_cast< T2 >(x), b = static_cast< T2 >(y);
-//   return a >= b ? a * a + a + b : a + b * b;
-// }
-// template < typename T1, typename T2 = T1 > 
-// inline T2 szudzik_unpair(T1 z) {
-//   static_assert(std::is_integral<T1>::value, "Integral-type required as a range storage type.");
-//   static_assert(std::is_unsigned<T1>::value, "Integral-type required as a range storage type.");
-//   T1 sqrtz = std::floor(std::sqrt(z));
-//   T1 sqz = sqrtz * sqrtz;
-//   return ((z - sqz) >= sqrtz) ? 
-//     std::make_pair(static_cast< T2 >(sqrtz), static_cast< T2 >(z - sqz - sqrtz)) : 
-//     std::make_pair(static_cast< T2 >(z - sqz), static_cast< T2 >(sqrtz));
-// }
+template < typename T1 = uint_fast32_t, typename T2 = uint_fast64_t >
+constexpr inline T2 szudzik_pair(T1 x, T1 y){
+  static_assert(std::is_integral<T1>::value, "Integral-type required as a range storage type.");
+  static_assert(std::is_unsigned<T1>::value, "Integral-type required as a range storage type.");
+  return static_cast< T2 >(x >= y ? x * x + x + y : x + y * y);
+}
+template < typename T1 = uint_fast32_t, typename T2 = uint_fast64_t >
+inline std::pair< T1, T1 > szudzik_unpair(T2 z) {
+  static_assert(std::is_integral<T1>::value, "Integral-type required as a range storage type.");
+  static_assert(std::is_unsigned<T1>::value, "Integral-type required as a range storage type.");
+  T2 sqrtz = std::floor(std::sqrt(z));
+  T2 sqz = sqrtz * sqrtz;
+  return ((z - sqz) >= sqrtz) ?
+    std::make_pair(static_cast< T1 >(sqrtz), static_cast< T1 >(z - sqz - sqrtz)) :
+    std::make_pair(static_cast< T1 >(z - sqz), static_cast< T1 >(sqrtz));
+}
 
 // constexpr implicitly inlined 
 template < bool i_less_j = false >

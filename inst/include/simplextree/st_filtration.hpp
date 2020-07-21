@@ -144,6 +144,7 @@ inline vector< T > match(const vector< T >& x, const vector< T >& ref){
 }
 
 struct sorted_edges {
+  using it_t = vector< size_t >::iterator;
   vector< size_t > keys;
   const vector< double >& values;
   const vector< size_t > vertices; 
@@ -162,9 +163,6 @@ struct sorted_edges {
   // Given a simplex 'sigma' whose values are vertex ids in 'vertices', calculates the maximum weight
   double max_weight(simplex_t sigma){
     auto v_ids = match(sigma, vertices);
-    
-    using it_t = vector< size_t >::iterator;
-    
     double weight = 0.0; 
 		for_each_combination(v_ids.begin(), v_ids.begin()+2, v_ids.end(), [this, &weight](it_t it1, it_t it2){
 			const size_t idx = to_natural_2(*it1, *std::next(it1), vertices.size()); 

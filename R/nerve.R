@@ -9,7 +9,7 @@
 #' in the given \code{cover} that have at least \code{threshold} elements in their common intersection. 
 #' @export
 nerve <- function(st, cover, k = st$dimension, threshold = 1L, neighborhood=NULL){
-  stopifnot(!st %in% .st_classes)
+  stopifnot(class(st) %in% .st_classes)
   stopifnot(all(sapply(cover, is.numeric)))
   
   ## Get the cover names to set as the vertices, if not done already
@@ -17,7 +17,7 @@ nerve <- function(st, cover, k = st$dimension, threshold = 1L, neighborhood=NULL
     stopifnot(all(!is.na(as.integer(names(cover)))))
     cover_ids <- as.vector(as.integer(names(cover)))
   } else {
-    if (st$n_simplices == numeric(0L)){ 
+    if (length(st$n_simplices) == 0){ 
       cover_ids <- seq(length(cover)) 
     } else {
       cover_ids <- st$vertices 
@@ -47,4 +47,9 @@ nerve <- function(st, cover, k = st$dimension, threshold = 1L, neighborhood=NULL
     ## Should take as a function a vector of ids and return a true or false indicating whether to include it
     nerve_expand_f(st$as_XPtr(), ids = cover_ids, include_f = neighborhood, k = k)
   }
+  
+  ## Return the complex invisibly
+  return(invisible(st))
 }
+
+# nfold_intersection()

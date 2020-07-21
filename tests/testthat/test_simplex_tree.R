@@ -280,188 +280,83 @@ testthat::test_that("K-expansion works", {
   testthat::expect_true(st %>% find(4:7))
 })
 
-# testthat::test_that("combinadics work", {
-#   testthat::expect_error(nat_to_sub(0, 10, 10))
-#   testthat::expect_equal(nat_to_sub(1, 10, 10), matrix(seq(10), ncol=1))
-#   testthat::expect_equal(nat_to_sub(1, 10, 1), matrix(seq(10), ncol=1))
-#   simplextree::traverse()
-# })
-# 
-# testthat::test_that("flag construction works", {
-#   simplextree::traverse()
-# })
-# 
-# testthat::test_that("rips filtration works", {
-#   simplextree::traverse()
-# })
-# 
-# 
-# testthat::test_that("intersection testing works", {
-#   
-# })
-# testthat::test_that("nerve construction works", {
-#   simplextree::traverse()
-# })
-
-
-
-# 
-# 
-# testthat::test_that("Facet traversal works", {
-#   st <- simplex_tree()
-#   st$insert(list(1:3, 2:5))
-#   testthat::expect_equivalent(st$ltraverse(2:5, identity, "facets"), list(c(2,3,4), c(2,3,5), c(2,4,5), c(3,4,5)))
-# })
-# 
-# testthat::test_that("Rips filtration works", {
-#   
-#   ## Helper function to turn column matrices into edge lists
-#   matrix_to_list <- function(M){ split(as.vector(M), rep(1:ncol(M), each=nrow(M))) }
-# 
-#   ## Test can build rips filtration 
-#   xy <- replicate(2, runif(20)) # bench at 20
-#   X_dist <- as.matrix(dist(xy))
-# 
-#   st <- simplex_tree()
-#   st$insert(matrix_to_list(combn(nrow(xy),2)))
-#   st$rips(X_dist[st$edges], 2)
-#   
-#   st$threshold_function(0.1)
-#   
-#   ## Test the weights match exactly to what one might compute manually
-#   simplex_weight <- function(sigma){
-#     if (length(sigma) == 1){ return(0); }
-#     idx <- matrix(sigma[combn(length(sigma),2)], nrow=2)
-#     max(apply(idx, 2, function(i){ X_dist[i[1],i[2]] }))
-#   }
-#   test_weights <- sapply(st$rips_simplices[-1], simplex_weight)
-#   all(abs(st$rips_weights[-1] - test_weights) < .Machine$double.eps)
-#   
-#   st <- simplex_tree()
-#   st$insert(list(1:3, 2:5))
-#   st$faces(c(2,4,5))
-#   
-#   st <- simplex_tree()
-#   st$insert(1:5)
-#   test_dist <- matrix(runif(5*5),nrow=st$n_simplices[1], ncol=st$n_simplices[1])
-#   test_dist <- as.matrix(as.dist(test_dist))
-#   st$filtration(test_dist[lower.tri(test_dist)], 2)
-#   
-#   ## Test can build rips filtration 
-#   g <- igraph::sample_grg(10^4, radius = 0.01, coords = TRUE)
-#   X_dist <- parallelDist::parDist(cbind(igraph::vertex_attr(g, "x"), igraph::vertex_attr(g,"y")))
-# 
-#   library(simplextree)
-#   st <- simplex_tree()
-#   edges <- matrix_to_list(t(igraph::as_edgelist(g)))
-#   st$insert(edges)
-#   w_edges <- as.matrix(X_dist)[st$edges]
-#   microbenchmark::microbenchmark({ st$rips(w_edges, 2) }, times = 1L)
-#   
-#   # sapply(unique(sort(test_dist[lower.tri(test_dist)])), function(eps){ 
-#   #   st$threshold_function(eps) 
-#   #   st$connected_components
-#   # })
-#   
-#   ## Test the thresholding function works
-#   testthat::expect_silent(st$threshold_function(Inf))
-#   testthat::expect_equal(st$n_simplices, as.integer(c(5, 10, 10, 5, 1)))
-# 
-#   testthat::expect_silent(st$threshold_function(0))
-#   testthat::expect_equal(st$n_simplices, 5L)
-#   
-#   testthat::expect_silent(st$threshold_function(-1))
-#   testthat::expect_equal(st$n_simplices, numeric(0L))
-#   
-#   testthat::expect_silent(st$threshold_function(Inf))
-#   testthat::expect_equal(st$n_simplices, as.integer(c(5, 10, 10, 5, 1)))
-#   
-#   ## Check the number of simplices changes at each iteration
-#   eps_vals <- unique(sort(test_dist[lower.tri(test_dist)]))
-#   n_simplices_filt <- lapply(eps_vals, function(eps){ 
-#     st$threshold_function(eps) 
-#     st$n_simplices
-#   })
-#   testthat::expect_equal(n_simplices_filt, unique(n_simplices_filt))
-#   
-#   ## Test number of edges at threshold value is always 
-#   num_edges <- sapply(eps_vals, function(eps){ 
-#     st$threshold_function(eps) 
-#     nrow(st$edges) == sum(eps_vals <= eps)
-#   })
-#   testthat::expect_true(all(num_edges))
-# })
-
-# g <- igraph::sample_grg(7, radius = 0.35, coords = TRUE)
-#   X <- cbind(igraph::V(g)$x, igraph::V(g)$y)
-#   
-#   st <- simplextree::simplex_tree()
-#   st$insert(as.list(igraph::V(g)))
-#   st$insert(unname(as.list(as.data.frame(t(igraph::as_edgelist(g))))))
-#   
-#   mst <- dbscan:::prims(dist(X), n = nrow(X))
-#   e_sorted <- apply(mst[,1:2], 1, sort)
-#   
-#   get_edge_weight <- function(edge){
-#     e_idx <- which(apply(e_sorted, 2, function(sigma){ all(sigma == edge) }))
-#     if (length(e_idx) == 1) { mst[e_idx,3] } else { return(Inf) }
-#   }
-#   X_dist <- as.matrix(dist(X))
-#   get_edge_weight <- function(edge){
-#     X_dist[edge[1], edge[2]]
-#   }
-# 
-#   weighted_si <- st$ltraverse(empty_face, function(simplex){
-#     if (length(simplex) == 0){ return(list(NULL, 0)) }
-#     else if (length(simplex) == 1){ return(list(simplex, 0)) }
-#     else if (length(simplex) == 2){ 
-#       return(list(simplex, get_edge_weight(simplex)))
-#     } else {
-#       k <- length(simplex)
-#       eps <- max(tapply(as.vector(simplex[combn(k, 2)]), rep(1:choose(k, 2), each=2), get_edge_weight))
-#       return(list(simplex, eps))
-#     }
-#   }, "bfs")
+testthat::test_that("combinadics work", {
+  # testthat::expect_error(nat_to_sub(0, 10, 10))
+  testthat::expect_equal(nat_to_sub(1, 10, 10), matrix(seq(10), ncol=1))
+  testthat::expect_equal(nat_to_sub(seq(10), 10, 1), matrix(seq(10), nrow=1))
+  testthat::expect_equal(nat_to_sub(seq(choose(10,2)), n = 10, k = 2), combn(10, 2)) 
+  testthat::expect_equal(nat_to_sub(seq(choose(10,3)), n = 10, k = 3), combn(10, 3)) 
   
-  # max(mst[,3])+sqrt(.Machine$double.eps)
-  # 
-  # simplices <- lapply(weighted_si[-1], function(x) x[[1]])
-  # weights <- sapply(weighted_si[-1], function(x) x[[2]])
-  # 
-  # s_simplices <- simplices[order(weights)]
-  # s_weights <- weights[order(weights)]
-  # 
-  # rips_ref <- TDA::ripsFiltration(X, maxdimension = 5, maxscale=max(mst[,3])+sqrt(.Machine$double.eps))
-  # 
-  # library(simplextree)
-  # matrix_to_list <- function(M){ split(as.vector(M), rep(1:ncol(M), each=nrow(M)))  }
-  # 
-  # eps <- quantile(X_dist, 0.60)
-  # rips_ref <- TDA::ripsFiltration(X, maxdimension = 5, maxscale = eps)
-  # 
-  # valid_idx <- (lower.tri(X_dist) & (X_dist <= eps))
-  # row_idx <- row(X_dist)[valid_idx]
-  # col_idx <- col(X_dist)[valid_idx]
-  # rips_test <- simplex_tree()
-  # rips_test$insert(as.list(seq(nrow(X_dist))))
-  # rips_test$insert(matrix_to_list(rbind(row_idx, col_idx)))
-  # rips_test$filtration(X_dist[valid_idx], 5)
-  # 
-  # st$insert(list(1:2, 2:3, c(1, 3)))
-  # st$expand(2)
-  # .fix_order <- order(cbind(rips_ref$values, sapply(rips_ref$cmplx, length)))
-  # 
-  # s1 <- lapply(rips_ref[.fix_order]$cmplx, sort)
-  # s2 <- lapply(rips_test$filtration_simplices[-1], sort)
-  # all.equal(s1, s2)
-  # 
-  # xy <- cmdscale(X_dist)
-  # plot(xy, asp = 1)
-  # text(xy, labels = seq(nrow(X_dist)), pos=3)
-  # 
-  # length(wut$cmplx) == length(s_simplices)
-  # all(abs(wut$values - s_weights) < sqrt(.Machine$double.eps))
-  # all(wut$cmplx == s_simplices)
-  # which(!mapply(function(u, v){ all(sort(u) == sort(v)) }, wut$cmplx, s_simplices))
-  # wut$cmplx[60:65] == s_simplices[60:65]
-  # 
+  # testthat::expect_error(sub_to_nat(0, 10))
+  testthat::expect_equal(sub_to_nat(seq(10),10), 1)
+  testthat::expect_equal(sub_to_nat(matrix(seq(10), ncol=1),10), 1)
+  testthat::expect_equal(sub_to_nat(combn(10,2), n = 10), seq(choose(10,2)))
+  testthat::expect_equal(sub_to_nat(combn(10,3), n = 10), seq(choose(10,3)))
+})
+
+testthat::test_that("flag construction works", {
+  xy <- cbind(runif(10), runif(10))
+	d <- dist(xy, method = "euclidean")
+	st <- simplex_tree(as.list(10)) %>% flag(d)
+	testthat::expect_true("Rcpp_Filtration" %in% class(st))
+	testthat::expect_equal(st$weights, numeric(0))
+  testthat::expect_equal(st$simplices, list())
+  testthat::expect_equal(st$included, logical(0))
+})
+
+testthat::test_that("rips filtration works", {
+  xy <- cbind(runif(10), runif(10))
+	d <- dist(xy, method = "euclidean")
+  expect_silent(rips(d))
+  expect_true("Rcpp_SimplexTree" %in% class(rips(d)))
+  expect_true("Rcpp_SimplexTree" %in% class(rips(d, eps = 1.0)))
+  expect_true("Rcpp_SimplexTree" %in% class(rips(d, dim = 5)))
+  expect_true("Rcpp_Filtration" %in% class(rips(d, filtered = TRUE)))
+  R <- rips(d, dim = 3)
+  eps <- enclosing_radius(d)
+  max_weight <- function(simplex){ max(combn(simplex, 2, function(sigma){ d[sub_to_nat(sigma, 10)] })) }
+  expect_true(all(straverse(k_simplices(R, 1), max_weight) <= eps))
+  expect_true(all(straverse(k_simplices(R, 2), max_weight) <= eps))
+  expect_true(all(straverse(k_simplices(R, 3), max_weight) <= eps))
+  expect_equal(min(apply(as.matrix(d), 1, max)), eps)
+  expect_true(all(combn(10, 2, function(e){ ifelse(d[sub_to_nat(e,10)] <= eps, R %>% find(e), !(R %>% find(e))) })))
+})
+
+
+testthat::test_that("nerve construction works", {
+  alphabet <- seq(50)
+  cover <- lapply(seq(15), function(i){
+    set_size <- as.integer(runif(n = 1, min = 1, max = 15))
+    sample(alphabet, size = set_size, replace = FALSE)
+  })
+  nfold <- function(nt){ function(cc){ length(Reduce(intersect, cover[cc])) >= nt } }
+  
+  ## Testing unsorted n-fold intersections
+  for (nt in seq(1, 5, by = 1)){
+    st <- simplex_tree() %>% nerve(cover, k = 2, threshold = nt)
+    e2 <- nat_to_sub(which(combn(15, 2, nfold(nt))), n = 15, k = 2)
+    e3 <- nat_to_sub(which(combn(15, 3, nfold(nt))), n = 15, k = 3)
+    expect_equal(e2, t(st$edges))
+    expect_equal(e3, t(st$triangles))
+  }
+  
+  ## Testing sorted n-fold intersections
+  cover <- lapply(cover, sort)
+  for (nt in seq(1, 5, by = 1)){
+    st <- nerve(simplex_tree(), cover, k = 2, threshold = nt)
+    e2 <- nat_to_sub(which(combn(15, 2, nfold(nt))), n = 15, k = 2)
+    e3 <- nat_to_sub(which(combn(15, 3, nfold(nt))), n = 15, k = 3)
+    expect_equal(e2, t(st$edges))
+    expect_equal(e3, t(st$triangles))
+  }
+  
+  
+  ## Testing using neighborhood function
+  include_f <- function(ids){ return(all(ids %in% 1:3)) }
+  st <- simplex_tree() %>% nerve(cover, k = 2, neighborhood = include_f)
+  expect_equal(
+    capture.output(print_simplices(st, "short")), 
+    "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1 2, 1 3, 2 3, 1 2 3"
+  )
+})
+

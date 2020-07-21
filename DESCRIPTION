@@ -19,8 +19,9 @@ VignetteBuilder: knitr
 SystemRequirements: C++11
 RoxygenNote: 7.1.0
 Suggests: 
-    testthat, 
-    igraph, 
-    knitr, 
-    rmarkdown, 
-    viridis
+    testthat,
+    igraph,
+    knitr,
+    rmarkdown,
+    viridis,
+    covr
