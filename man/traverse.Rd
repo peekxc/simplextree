@@ -2,14 +2,20 @@
 % Please edit documentation in R/simplex_tree.R
 \name{traverse}
 \alias{traverse}
+\alias{straverse}
+\alias{ltraverse}
 \title{traverse}
 \usage{
 traverse(traversal, f, ...)
+
+straverse(traversal, f, ...)
+
+ltraverse(traversal, f, ...)
 }
 \arguments{
-\item{traversal}{The type of traversal to use.}
+\item{traversal}{the type of traversal.}
 
-\item{f}{An arbitrary function to apply to eac simplex of the traversal. See details.}
+\item{f}{the function to apply to each simplex.}
 
 \item{...}{unused.}
 }
@@ -35,10 +41,8 @@ st \%>\% insert(list(1:3, 2:5))
 
 ## Print out complex using depth-first traversal. 
 st \%>\% preorder() \%>\% traverse(print)
-}
-\seealso{
-Other traversals: 
-\code{\link{ltraverse}()},
-\code{\link{straverse}()}
+
+## Collect the last labels of each simplex in the tree. 
+last_labels <- st \%>\% preorder() \%>\% straverse(function(simplex){ tail(simplex, 1) })
 }
 \concept{traversals}

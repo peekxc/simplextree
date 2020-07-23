@@ -51,8 +51,8 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 \section{Methods}{
  
 \describe{
-    \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
-    \item{$\code{\link{clear}}}{ Clears the simplex tree. }
+    \item{$\code{as_XPtr}}{ Creates an external pointer. }
+    \item{$\code{clear}}{ Clears the simplex tree. }
     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
     \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
     \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }

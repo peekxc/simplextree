@@ -157,7 +157,6 @@ as.list.st_traversal <- function(x, ...){
 #' into a list, use \code{\link{ltraverse}} (or \code{\link{straverse}}), which are meant to be used like \code{\link{lapply}} 
 #' and \code{\link{sapply}}, respectively. 
 #' @family traversals 
-#' @describeIn traversals Base traversal function.
 #' @return NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
 #' @examples
 #' ## Starter example complex 
@@ -166,6 +165,9 @@ as.list.st_traversal <- function(x, ...){
 #' 
 #' ## Print out complex using depth-first traversal. 
 #' st %>% preorder() %>% traverse(print)
+#' 
+#' ## Collect the last labels of each simplex in the tree. 
+#' last_labels <- st %>% preorder() %>% straverse(function(simplex){ tail(simplex, 1) })
 #' @export
 traverse <- function(traversal, f, ...){
   stopifnot("st_traversal" %in% class(traversal))
@@ -174,12 +176,11 @@ traverse <- function(traversal, f, ...){
   traverse_R(traversal, f)
 }
 
-#' straverse 
-#' @describeIn traversals \code{\link{sapply}} version of \code{\link{traverse}}. 
+#' @name straverse 
 #' @param traversal the type of traversal. 
 #' @param f the function to apply to each simplex. 
 #' @param ... unused. 
-#' @family traversals 
+#' @rdname traverse
 #' @export
 straverse <- function(traversal, f, ...){
   stopifnot("st_traversal" %in% class(traversal))
@@ -190,11 +191,10 @@ straverse <- function(traversal, f, ...){
 }
 
 #' ltraverse 
-#' @describeIn traversals
 #' @param traversal the type of traversal. 
 #' @param f the function to apply to each simplex. 
 #' @param ... unused. 
-#' @family traversals 
+#' @rdname traverse
 #' @export
 ltraverse <- function(traversal, f, ...){
   stopifnot("st_traversal" %in% class(traversal))
@@ -946,7 +946,6 @@ is_tree <- function(st){
 #' If \code{length(color_pal)} does not match the dimension or the number of simplices in the complex, 
 #' the color palette is recyled and simplices are as such. 
 #' @importFrom utils modifyList
-#' @describeIn plot_simplextree
 #' @examples 
 #' ## Simple 3-simplex 
 #' st <- simplex_tree()

@@ -7,7 +7,7 @@
 flag(st, d)
 }
 \arguments{
-\item{st}{a simplicial complex, either as a simplex tree or an ordered list of simplices. See details.}
+\item{st}{a simplex tree. See details.}
 
 \item{d}{a vector of edge weights, or a 'dist' object.}
 }
