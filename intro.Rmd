@@ -405,7 +405,7 @@ sapply(maximal(st), function(sigma){
 
 
 ```{r}
-st <- r_geometric_complex(15, 0.20, dim = 2, coords = TRUE)
+st <- pbgrad::r_geometric_complex(15, 0.20, dim = 2, coords = TRUE)
 xy <- attr(st, "coords")
 
 
@@ -413,59 +413,16 @@ xy <- attr(st, "coords")
 euler_characteristic <- function(st){
   sum(st$n_simplices*((-1)^(0:st$dimension %% 2)))
 }
-
-
+print(euler_characteristic(st))
 ```
 
-
 ```{r}
-## Helper functions to calculate lower-star function values 
-vertex_height <- structure(xy[,2], names = st$vertices)
-lower_star <- function(simplex){ max(vertex_height[as.character(simplex)]) }
-simplex2str <- function(simplex){ paste0(as.character(simplex), collapse = ",") }
+## Helper function to calculate lower-star function values 
+vertex_heights <- structure(xy[,2], names = st$vertices)
 
 ## Create the lower-star structure weights, in shortlex order
-shortlex <- level_order(st)
-fy <- structure(
-  .Data = straverse(shortlex, lower_star), 
-  names = straverse(shortlex, simplex2str)
-)
-
-## Plot the lower-stars w/ function values less than the median
-thresholds <- quantile(xy[,2], probs = c(0.20, 0.40, 0.60, 0.80))
-layout(matrix(1:4, ncol = 2, byrow = TRUE))
-for (h in thresholds){
-  plot(st, coords = attr(st, "coords"), color_pal = ifelse(fy <= h, "red", "gray"))
-  abline(h =  h, col = "red", lty = 2, lwd = 2)
-}
-```
-
-```{r}
-shortlex <- level_order(st)
-fy <- structure(
-  .Data = straverse(shortlex, lower_star), 
-  names = straverse(shortlex, simplex2str)
-)
-
-traverse(shortlex, function(simplex){
-  k <- length(simplex)
-  combn(simplex, k-1, simplex2str) lower_star
-  if (k > 1){
-    proper_faces <- combn(simplex, k-1, simplex2str)
-    fy[simplex2str(simplex)] <<- max(fy[proper_faces])
-  }
-})
-
-```
-
-
-```{r}
-traverse(maximal(st), function(simplex){
-  k <- length(simplex)
-  if (k > 1){
-    proper_faces <- combn(simplex, k-1, simplex2str)
-    fy[simplex2str(simplex)] <<- max(fy[proper_faces])
-  }
+fy <- straverse(level_order(st), function(simplex){ 
+  max(vertex_heights[as.character(simplex)]) 
 })
 
 ## Plot the lower-stars w/ function values less than the median
@@ -477,25 +434,88 @@ for (h in thresholds){
 }
 ```
 
-
 ```{r}
+## Choose a set of thresholds
 thresholds <- quantile(fy, probs = seq(0, 1, length.out = 20))
 
-forder <- order(fy)
-fdim <- rep.int(seq(st$dimension+1), times = st$n_simplices)
-fdim <- fdim[forder]
-fy <- fy[forder]
+## How many 
+tabulate(straverse(k_simplices(st, k = 0), function(simplex){ 
+  f <- max(vertex_heights[as.character(simplex)]) 
+  findInterval(f, thresholds)
+}))
 
-counts_per_dimension <- sapply(seq(st$dimension+1), function(d){ 
-  cumsum(tabulate(findInterval(fy[fdim == d], thresholds)))
+sapply(seq(st$dimension+1), function(d){ 
+  cumsum(tabulate(findInterval(fy_ordered[fd_ordered == d], thresholds)))
 })
 
+# ## Helper functions to calculate lower-star function values 
+# vertex_height <- structure(xy[,2], names = st$vertices)
+# lower_star <- function(simplex){ max(vertex_height[as.character(simplex)]) }
+# simplex2str <- function(simplex){ paste0(as.character(simplex), collapse = ",") }
+# 
+# ## Create the lower-star structure weights, in shortlex order
+# shortlex <- level_order(st)
+# fy <- structure(
+#   .Data = straverse(shortlex, lower_star), 
+#   names = straverse(shortlex, simplex2str)
+# )
+# 
+# ## Plot the lower-stars w/ function values less than the median
+# thresholds <- quantile(xy[,2], probs = c(0.20, 0.40, 0.60, 0.80))
+# layout(matrix(1:4, ncol = 2, byrow = TRUE))
+# for (h in thresholds){
+#   plot(st, coords = attr(st, "coords"), color_pal = ifelse(fy <= h, "red", "gray"))
+#   abline(h =  h, col = "red", lty = 2, lwd = 2)
+# }
+```
 
-## Compute the Euler Characteristic Curve
+```{r}
+fy_max <- fy
+rev_shortlex <- rev(as.list(shortlex))
+for (simplex in rev_shortlex){
+  k <- length(simplex)
+  if (k > 1){
+    proper_faces <- combn(simplex, k-1, simplex2str)
+    fy_max[proper_faces] <- fy_max[simplex2str(simplex)]
+  }
+}
+
+thresholds <- quantile(xy[,2], probs = c(0.20, 0.40, 0.60, 0.80))
+layout(matrix(1:4, ncol = 2, byrow = TRUE))
+for (h in thresholds){
+  plot(st, coords = attr(st, "coords"), color_pal = ifelse(fy_max <= h, "red", "gray"))
+  abline(h =  h, col = "red", lty = 2, lwd = 2)
+}
+```
+
+Suppose we want to compute the Euler characteristic on a sliding window 
+
+```{r}
+str2simplex <- function(simplex){ paste0(as.character(simplex), collapse = ",") }
+
+simplices <- lapply(names(fy[fy <= 0.40]), function(s){ as.integer(unlist(strsplit(s, ","))) })
+
+```
+
+
+```{r}
+## Choose a set of thresholds
+thresholds <- quantile(fy, probs = seq(0, 1, length.out = 20))
+
+## Get the simplex function values and dimension, ordered by weight
+fy_ordered <- fy[order(fy)]
+fd_ordered <- rep.int(seq(st$dimension+1), times = st$n_simplices)[order(fy)]
+
+## Bin simplices into buckets by dimension, then cumulatively count the size of the buckets 
+counts_per_dimension <- sapply(seq(st$dimension+1), function(d){ 
+  cumsum(tabulate(findInterval(fy_ordered[fd_ordered == d], thresholds)))
+})
+
+## Euler Characteristic Curve
 modulus <- ((-1)^(0:st$dimension %% 2))
 ecc <- colSums(t(counts_per_dimension)*modulus)
 
-plot.ecdf(ecc, verticals = TRUE)
+plot(ecc, type = "l", main = "")
 ```
 
 
@@ -568,14 +588,15 @@ In summary, the simplex tree provides an efficient data structure for manipulati
 
 ### Detour: Side-effects
 
-Note that `insert` inserts the given simplex(es), and then returns the complex invisibly. That is, `insert` (and many other functions) enact *side-effects*, wherein the underlying object is changed. No copies are made. This can be surprising to some `R` users, who are used to each and every line effectively being independent from the last.
+Note that `insert` inserts the given simplex(es), and then returns the complex invisibly. That is, `insert`, `remove`, `collapse`, and many other functions enact *side-effects*, wherein the underlying object (the simplicial complex) is changed. No copies are made. This can be surprising to some `R` users, who are used to each and every line effectively being independent from the last, or who are used to being able to isolate changes with the assignment operator. For example, consider:
 
 ```{r}
+st <- simplex_tree()
 st2 <- st
-insert(st, 11)
+insert(st, 1)
 print(st)
 print(st2)
 ```
-Notice that modifying `st` after also affects `st2`. This happens because `<-` does not create a copy in this case; `st` and `st2` are references to the same underlying object. You can create a new copy with e.g. `st2 <- clone(st)`. Note this only copies the simplices themselves; nothing else. 
+Notice that modifying `st` after also affects `st2` (and vice versa!). This happens because `<-` does not create a copy in this case; `st` and `st2` are [references](https://en.wikipedia.org/wiki/Reference_(computer_science)) to the same underlying object. You can create a new copy with e.g. `st2 <- clone(st)`. Note this only copies the simplices themselves; nothing else. 
 
-Methods which modify the underlying `simplextree` object follow the same pattern: the first argument is always the complex, and the function always returns the modified object invisibly. This allows many operations which modify the complex to be chained, e.g. yet another way of achieving the insertions above would be to do something like `st %>% insert(c(1,2,3)) %>% insert(c(2,3,4,5)) %>% ...`, etc. This pattern is known as [method chaining](https://adv-r.hadley.nz/r6.html#method-chaining), and has grown commonplace in the [tidyverse](https://www.tidyverse.org/) collection of packages. 
+Methods which modify the underlying `simplextree` object follow the same pattern: the first argument is always the complex, and the function always returns the modified object [invisibly][https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/invisible]. This allows many operations which modify the complex to be chained, e.g. yet another way of achieving the insertions above would be to do something like `st %>% insert(c(1,2,3)) %>% insert(c(2,3,4,5)) %>% ...`, etc. This pattern is known as [method chaining](https://adv-r.hadley.nz/r6.html#method-chaining), and has grown commonplace in the [tidyverse](https://www.tidyverse.org/) collection of packages. 
