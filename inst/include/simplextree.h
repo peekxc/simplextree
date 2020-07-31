@@ -160,8 +160,10 @@ struct SimplexTree {
 	template < typename Lambda >
 	void traverse_cousins(const idx_t label, const idx_t depth, Lambda f) const {
 	  if (depth_index(depth) >= level_map.size()){ return; }
-	  const auto& c_cousins = level_map[depth_index(depth)].at(label);
-	  std::for_each(begin(c_cousins), end(c_cousins), f);
+	  if (cousins_exist(label, depth)){
+	    const auto& c_cousins = level_map[depth_index(depth)].at(label);
+	    std::for_each(begin(c_cousins), end(c_cousins), f);
+	  }
 	};
 	
   // Constructor

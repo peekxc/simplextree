@@ -67,10 +67,6 @@ bool intervals_disjoint(vector< pair< T, T > > intervals){
   auto back1 = std::next(back); 
   
   if (((front->first == front1->first) || (back->first == back1->first)) && front1->second != back1->second){
-    // std::cout << front->first << ", " << front->second << std::endl;
-    // std::cout << front1->first << ", " << front1->second << std::endl;
-    // std::cout << back->first << ", " << back->second << std::endl;
-    // std::cout << back1->first << ", " << back1->second << std::endl;
     return true; 
   }
   return false; 

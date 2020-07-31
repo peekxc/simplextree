@@ -394,7 +394,7 @@ print_simplices <- function (st, format=c("summary", "tree", "cousins", "short",
       simplices_str <- sapply(seq(d), function(i){
         paste0(sapply(simplex_str, function(labels){ 
           width <- max(sapply(labels, nchar))
-          ifelse(length(labels) < i, paste0(rep(" ", width), collapse=""), labels[i])
+          ifelse(length(labels) < i, paste0(rep(" ", width), collapse=""), sprintf(paste0("%", width, "d"), as.integer(labels[i])))
         }), collapse = " ")
       })
       writeLines(simplices_str)
