@@ -103,3 +103,4 @@ void for_each_combination_idx(I n, I k, Function&& f) {
 }
 
 #endif  // COMBINATIONS_H
+

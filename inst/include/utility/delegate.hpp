@@ -354,3 +354,4 @@ namespace std
 }
 
 #endif // DELEGATE_HPP
+

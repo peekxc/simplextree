@@ -562,8 +562,6 @@ adjacent <- function(st, vertices){
 #' @description Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param st a simplex tree.  
 #' @param simplices simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details. 
-#' @section Usage:
-#' st %>% insert(simplices)
 #' @details This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
 #' no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
 #' Faces of \code{simplex} not in the simplex tree are inserted as needed. \cr
@@ -590,8 +588,6 @@ insert <- function(st, simplices){
 #' @description Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param st a simplex tree.  
 #' @param simplices simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details. 
-#' @section Usage: 
-#' st %>% remove(simplex)
 #' @details This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
 #' it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
 #' Cofaces of \code{simplex} are also removed. \cr
@@ -662,9 +658,6 @@ is_face <- function(st, tau, sigma){
 #' @param st a simplex tree.
 #' @param pair list of simplices to collapse. 
 #' @param w vertex to collapse to, if performing a vertex collapse. 
-#' @section Usage:
-#' st %>% collapse(pair)
-#' st %>% collapse(pair, w)
 #' @details This function provides two types of \emph{elementary collapses}. \cr 
 #' \cr 
 #' The first type of collapse is in the sense described by (1), which is 
@@ -747,8 +740,6 @@ threshold <- function(st, index = NULL, value = NULL){
 #' @description Performs an edge contraction. 
 #' @param st a simplex tree.
 #' @param edge an edge to contract, as a 2-length vector. 
-#' @section Usage: 
-#' st$contract(edge)
 #' @details This function performs an \emph{edge contraction} in the sense described by (1), which is 
 #' summarized here. Given an edge \eqn{ {va, vb}}, \eqn{vb} is contracted to \eqn{va} if \eqn{vb} is 
 #' removed from the complex and the link of \eqn{va} is augmented with the link of \eqn{vb}. This may be thought as 

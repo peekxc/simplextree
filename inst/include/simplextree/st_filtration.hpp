@@ -387,39 +387,5 @@ inline vector< idx_t > Filtration::dimensions() const{
   return dims;
 }
 
-//   // 0. Get sorted vertices to match against
-//   const auto v = this->get_vertices();
-//   
-//   // 1. Trnaslate edge ids
-//   size_t i = 0; 
-// 	traverse(st::k_simplices< true >(this, 1), [&w_simplices, &D, &i, &v, n](node_ptr cn, idx_t d, simplex_t sigma){
-// 	  to_natural_2(*it1, *std::next(it1), n); 
-// 	});
-//     // if (req_index > fc.size()) { req_index = fc.size(); };
-  // 
-  // // Get current index; if matches requested index, end
-  // auto current_idx = current_index();
-  // if (current_idx == req_index){ return; }
-  // 
-  // // Insert simplices as needed
-  // if (current_idx < req_index){
-  //   for (size_t i = current_idx; i < req_index; ++i){
-  //     std::cout << i << "," << std::flush << std::endl; 
-  //     included.at(i) = true; 
-  //     insert_simplex(expand_simplex(simplex_idx(i)));
-  //   }
-  //   return; 
-  // } 
-  // 
-  // // Or remove simplices as needed
-  // if (current_idx > req_index){
-  //   int i = current_idx >= fc.size() ? fc.size() - 1 : current_idx; // possibly negative
-  //   for (; i >= req_index && i >= 0; --i){
-  //     std::cout << i << "," << std::flush << std::endl; 
-  //     included.at(i) = false; 
-  //     remove_simplex(expand_simplex(simplex_idx(i)));
-  //   }
-  //   return;
-  // }
-
 #endif 
+

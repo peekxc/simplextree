@@ -33,12 +33,6 @@ Alternatively, this method supports another type of elementary collapse, also ca
 in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first 
 two representing the free pair, and the last representing the target vertex to collapse to.
 }
-\section{Usage}{
-
-st %>% collapse(pair)
-st %>% collapse(pair, w)
-}
-
 \examples{
 st <- simplextree::simplex_tree(1:3)
 st \%>\% print_simplices()

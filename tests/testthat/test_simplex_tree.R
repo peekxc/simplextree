@@ -118,11 +118,22 @@ test_that("serialization/deserialization works", {
 
 ## ---- vertex collapse ----
 ## Example from simplicial maps paper (after converting letters to numbers)
-test_that("vertex collapse works", {
-  st <- simplex_tree()
-  st %>% insert(list(c(1,5), c(4,5), 2:4))
-  st %>% collapse(pair = list(1, 2), 1)
-
+test_that("collapse works", {
+  st <- simplex_tree(list(c(1,5), c(4,5), 2:4))
+  
+  ## Testing elementary collapse 
+  expect_silent(st %>% collapse(list(c(2,3), c(2,3,4))))
+  expect_equal(
+    capture.output(print_simplices(st)), 
+    "1, 2, 3, 4, 5, 1 5, 2 4, 3 4, 4 5"
+  )
+  expect_false(st %>% find(c(2,3)))
+  expect_false(st %>% find(c(2,3,4)))
+  
+  ## Testing vertex collapse 
+  st <- simplex_tree(list(c(1,5), c(4,5), 2:4))
+  expect_silent(st %>% collapse(pair = list(1, 2), 1))
+  
   testthat::expect_true(st %>% find(c(1, 3, 4)))
   testthat::expect_true(st %>% find(c(1, 5)))
   testthat::expect_true(st %>% find(c(4, 5)))
@@ -142,10 +153,46 @@ test_that("vertex collapse works", {
   all.equal(st1$as_list(), st2$as_list())
 })
 
-## ---- edge contractions ----
-# testthat::test_that("edge contractions work", {
-#   simplextree::traverse()
-# })
+# ---- is face ----
+testthat::test_that("face testing works", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_true(st %>% is_face(1:2, 1:3))  ## test face relation 
+  expect_false(st %>% is_face(1:3, 1:2)) ## test non-face relation 
+  expect_false(st %>% is_face(1:2, 1:4)) ## test face relation + existence
+})
+
+# ---- adjacent ----
+testthat::test_that("adjacent", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_equal(st %>% adjacent(1), c(2, 3))  
+  expect_equal(st %>% adjacent(2), c(1, 3))
+  expect_equal(st %>% adjacent(7), numeric(length = 0))
+})
+
+# ---- degree ----
+testthat::test_that("degree", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_silent(st %>% degree(st$vertices))  
+  expect_equal(st %>% degree(st$vertices), c(2, 2, 2, 1, 1, 0))
+  expect_equal(st %>% degree(c(st$vertices, 7)), c(2, 2, 2, 1, 1, 0, 0))
+})
+
+# ---- generate ids  ----
+testthat::test_that("generating ids", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_equal(st$generate_ids(10), c(0, 7:15))  
+  expect_equal(st$generate_ids(10), c(0, 7:15))  
+  expect_silent({ st$id_policy <- "unique" })
+  expect_equal(st$id_policy, "unique")
+})
+
+# ---- clear  ----
+testthat::test_that("clearing the complex", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_equal(st$n_simplices, c(6,4,1))
+  expect_silent(st %>% clear())
+  expect_equal(st$n_simplices, numeric(length = 0L))
+})
 
 ## ---- reindexing ----
 testthat::test_that("reindexing work", {
@@ -282,16 +329,25 @@ testthat::test_that("K-expansion works", {
 
 testthat::test_that("combinadics work", {
   # testthat::expect_error(nat_to_sub(0, 10, 10))
-  testthat::expect_equal(nat_to_sub(1, 10, 10), matrix(seq(10), ncol=1))
-  testthat::expect_equal(nat_to_sub(seq(10), 10, 1), matrix(seq(10), nrow=1))
-  testthat::expect_equal(nat_to_sub(seq(choose(10,2)), n = 10, k = 2), combn(10, 2)) 
-  testthat::expect_equal(nat_to_sub(seq(choose(10,3)), n = 10, k = 3), combn(10, 3)) 
+  expect_equal(nat_to_sub(numeric(0L), 10, 2), matrix(integer(0), nrow = 2, ncol=0))
+  expect_equal(nat_to_sub(1, 10, 10), matrix(seq(10), ncol=1))
+  expect_equal(nat_to_sub(seq(10), 10, 1), matrix(seq(10), nrow=1))
+  expect_equal(nat_to_sub(seq(choose(10,2)), n = 10, k = 2), combn(10, 2)) 
+  expect_equal(nat_to_sub(seq(choose(10,3)), n = 10, k = 3), combn(10, 3)) 
   
   # testthat::expect_error(sub_to_nat(0, 10))
-  testthat::expect_equal(sub_to_nat(seq(10),10), 1)
-  testthat::expect_equal(sub_to_nat(matrix(seq(10), ncol=1),10), 1)
-  testthat::expect_equal(sub_to_nat(combn(10,2), n = 10), seq(choose(10,2)))
-  testthat::expect_equal(sub_to_nat(combn(10,3), n = 10), seq(choose(10,3)))
+  expect_equal(sub_to_nat(numeric(0L), 10), integer(length = 0L))
+  expect_equal(sub_to_nat(seq(10),10), 1)
+  expect_equal(sub_to_nat(matrix(seq(10), ncol=1),10), 1)
+  expect_equal(sub_to_nat(combn(10,2), n = 10), seq(choose(10,2)))
+  expect_equal(sub_to_nat(combn(10,3), n = 10), seq(choose(10,3)))
+  
+})
+
+testthat::test_that("inverse binomial coefficients work", {
+  expect_equal(inverse.choose(choose(10,2), k = 2), 10)
+  expect_equal(inverse.choose(choose(10,3), k = 3), 10)
+  expect_equal(inverse.choose(choose(120, k = 10), k = 10), 120)
 })
 
 testthat::test_that("flag construction works", {
@@ -312,6 +368,8 @@ testthat::test_that("rips filtration works", {
   expect_true("Rcpp_SimplexTree" %in% class(rips(d, eps = 1.0)))
   expect_true("Rcpp_SimplexTree" %in% class(rips(d, dim = 5)))
   expect_true("Rcpp_Filtration" %in% class(rips(d, filtered = TRUE)))
+  
+  ## Testing rips complex
   R <- rips(d, dim = 3)
   eps <- enclosing_radius(d)
   max_weight <- function(simplex){ max(combn(simplex, 2, function(sigma){ d[sub_to_nat(sigma, 10)] })) }
@@ -320,6 +378,28 @@ testthat::test_that("rips filtration works", {
   expect_true(all(straverse(k_simplices(R, 3), max_weight) <= eps))
   expect_equal(min(apply(as.matrix(d), 1, max)), eps)
   expect_true(all(combn(10, 2, function(e){ ifelse(d[sub_to_nat(e,10)] <= eps, R %>% find(e), !(R %>% find(e))) })))
+  expect_true("Rcpp_SimplexTree" %in% class(R))
+  
+  ## Testing rips filtration
+  R <- rips(d, dim = 2, filtered = TRUE)
+  ns <- R$n_simplices
+  expect_silent(R$weights)
+  expect_silent(R$simplices)
+  s <- R$simplices
+  w <- R$weights
+  expect_silent(R %>% threshold(index = 0))
+  expect_equal(R$n_simplices, numeric(length = 0L))
+  expect_silent(R %>% threshold(value = Inf))
+  expect_equal(R$simplices, s)
+  expect_equal(R$weights, w)
+  expect_true(all(R$included))
+  N <- length(R$included)
+  for (i in sample(seq(N))[seq(10)]){
+    expect_silent(R %>% threshold(index = i))
+    expect_equal(sum(R$included), i)
+    expect_equal(R$weights, w[seq(i)])
+    expect_equal(R$simplices, s[seq(i)])
+  }
 })
 
 
@@ -350,7 +430,6 @@ testthat::test_that("nerve construction works", {
     expect_equal(e3, t(st$triangles))
   }
   
-  
   ## Testing using neighborhood function
   include_f <- function(ids){ return(all(ids %in% 1:3)) }
   st <- simplex_tree() %>% nerve(cover, k = 2, neighborhood = include_f)
@@ -358,5 +437,77 @@ testthat::test_that("nerve construction works", {
     capture.output(print_simplices(st, "short")), 
     "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 1 2, 1 3, 2 3, 1 2 3"
   )
+  
+  ## Test matrix input
+  st <- simplex_tree() 
+  expect_silent(st %>% nerve(cover, k = 2, threshold = 1, neighborhood = combn(length(cover),2)))
+  e2 <- nat_to_sub(which(combn(15, 2, nfold(1))), n = 15, k = 2)
+  expect_equal(e2, t(st$edges))
+  
+  ## Test list input
+  cc <- combn(length(cover), 3)
+  neighborhood_lst <- lapply(1:ncol(cc), function(i){ cc[,i] })
+  expect_silent(st %>% nerve(cover, k = 3, threshold = 1, neighborhood = neighborhood_lst))
+  e3 <- nat_to_sub(which(combn(15, 3, nfold(1))), n = 15, k = 3)
+  expect_equal(e3, t(st$triangles))
 })
+
+
+
+## testing union find 
+testthat::test_that("union find works", {
+  expect_silent(simplextree:::union_find())
+  ut <- simplextree:::union_find(10)
+  expect_equal(as.character(class(ut)), "Rcpp_UnionFind")
+  expect_equal(ut$size, 10)
+  expect_equal(ut$connected_components(), seq(0, 9))
+
+  expect_silent(ut$union(0, 1))
+  expect_equal(length(unique(ut$connected_components())), 9)
+  
+  expect_silent(ut$union(1, 2))
+  expect_equal(length(unique(ut$connected_components())), 8)
+  
+  expect_silent(ut$union_all(c(3,4,5,6)))
+  expect_equal(length(unique(ut$connected_components())), 5)
+  
+  expect_silent(ut$add_sets(5))
+  expect_equal(ut$size, 15)
+  expect_equal(length(unique(ut$connected_components())), 10)
+})
+
+testthat::test_that("contraction works", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_equal(
+    capture.output(st %>% print_simplices("short")), 
+    "1, 2, 3, 4, 5, 6, 1 2, 1 3, 2 3, 4 5, 1 2 3"
+  )
+  expect_silent(st %>% contract(c(1, 3)))
+  expect_equal(
+    capture.output(st %>% print_simplices("short")), 
+    "1, 2, 4, 5, 6, 1 2, 4 5"
+  )
+})
+
+testthat::test_that("is tree works", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_false(st$is_tree())
+  st <- simplex_tree(list(1:2, 2:3, 3:4, 4:5, c(4,6), c(1,8)))
+  expect_true(st$is_tree())
+})
+
+testthat::test_that("clone works", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  expect_equal(st, clone(st))
+})
+
+testthat::test_that("plotting is silent", {
+  st <- simplex_tree(list(1:3, 4:5, 6))
+  tfn <- tempfile()
+  png(tfn)
+  expect_silent(plot(st))
+  dev.off()
+  file.remove(tfn)
+})
+
 

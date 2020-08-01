@@ -23,11 +23,6 @@ If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its as
 represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
 optionally use a matrix, where each column is assumed to be a simplex.
 }
-\section{Usage}{
- 
-st %>% remove(simplex)
-}
-
 \seealso{
 find remove
 }

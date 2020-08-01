@@ -165,3 +165,4 @@ operator!=(const short_alloc<T, N, A1>& x, const short_alloc<U, M, A2>& y) noexc
 }
 
 #endif  // SHORT_ALLOC_H
+
