@@ -445,6 +445,7 @@ testthat::test_that("nerve construction works", {
   expect_equal(e2, t(st$edges))
   
   ## Test list input
+  st <- simplex_tree() 
   cc <- combn(length(cover), 3)
   neighborhood_lst <- lapply(1:ncol(cc), function(i){ cc[,i] })
   expect_silent(st %>% nerve(cover, k = 3, threshold = 1, neighborhood = neighborhood_lst))
