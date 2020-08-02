@@ -1,10 +1,11 @@
 Package: simplextree
 Type: Package
 Title: Provides tools for working with general simplicial complexes 
-Version: 0.9.6
-Date: 2020-07-06
+Version: 0.9.8
+Date: 2020-08-01
 Depends: R (>= 3.4.0)
-Author: Matt Piekenbrock
+Authors@R: person("Matt", "Piekenbrock", email = "matt.piekenbrock@gmail.com",
+                  role = c("aut", "cre"))
 Maintainer: Matt Piekenbrock <matt.piekenbrock@gmail.com>
 Description: Provides an Rcpp module interfacing a Simplex Tree data structure implemented in C++.
 License: MIT + file LICENSE
