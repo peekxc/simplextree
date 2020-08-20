@@ -407,16 +407,19 @@ print_simplices <- function (st, format=c("summary", "tree", "cousins", "short",
 }
 
 # ---- print.Rcpp_SimplexTree ----
+# nocov start
 setClass("Rcpp_SimplexTree")
-.print_simplex_tree <- setMethod("show", "Rcpp_SimplexTree", function (object) {
+.print_simplex_tree <- setMethod("show", "Rcpp_SimplexTree", function (object) { 
   max_k <- length(object$n_simplices)
   if (max_k == 0){ cat("< empty simplex tree >\n") }
   else {
     cat(sprintf("Simplex Tree with (%s) (%s)-simplices\n", paste0(object$n_simplices, collapse = ", "), paste0(0L:(max_k-1L), collapse = ", ")))
   }
-})
+}) 
+# nocov end
 
 # ---- print.Rcpp_Filtration ----
+# nocov start
 setClass("Rcpp_Filtration")
 .print_filtration <- setMethod("show", "Rcpp_Filtration", function (object) {
   # cat(format(object))
@@ -429,6 +432,7 @@ setClass("Rcpp_Filtration")
     ))
   }
 })
+# nocov end
 
 # ---- as_XPtr ----
 #' @name as_XPtr
@@ -1005,7 +1009,7 @@ is_tree <- function(st){
 #'   }, movie.name = "si_animation.gif", interval=0.2)
 #' }
 #' @export
-plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE,...) {
+plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE,...) { # nocov start
   stopifnot(class(x) %in% .st_classes)
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
@@ -1146,7 +1150,7 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
     do.call(graphics::points, modifyList(list(x=coords[v_subset,,drop=FALSE], pch=21, bg=simplex_colors[subset], col=simplex_colors[subset], cex=2), as.list(vertex_opt)))
     do.call(graphics::text, modifyList(list(x=coords[v_subset,,drop=FALSE], labels=as.character(x$vertices)[v_subset], col="white", cex=0.75), as.list(text_opt))) 
   }
-}
+} # nocov end
 
 #' plot.Rcpp_Filtration
 #' @param ... passed to \code{\link{plot.Rcpp_SimplexTree}}
