@@ -3,6 +3,12 @@
 \name{clear}
 \alias{clear}
 \title{Clears the simplex tree}
+\usage{
+clear(st)
+}
+\arguments{
+\item{st}{a simplex tree object.}
+}
 \description{
 Removes all simplices from the simplex tree, except the root node.
 }

@@ -6,3 +6,5 @@
 ^ignore$
 ^docs$
 ^doc$
+^codecov\.yml$
+^cran-comments\.md$

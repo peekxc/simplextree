@@ -3,7 +3,12 @@
 \name{contract}
 \alias{contract}
 \title{Edge contraction}
+\usage{
+contract(st, edge)
+}
 \arguments{
+\item{st}{a simplex tree.}
+
 \item{edge}{an edge to contract, as a 2-length vector.}
 }
 \description{
@@ -20,22 +25,12 @@ and identity otherwise, to all simplices in the complex. \cr
 \code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
 Note that edge contraction is not symmetric.
 }
-\section{Usage}{
- 
-st$contract(edge)
-}
-
 \examples{
-st <- simplextree::simplex_tree()
-st$insert(1:3)
-st$print_tree()
-# 1 (h = 2): .( 2 3 )..( 3 )
-# 2 (h = 1): .( 3 )
-# 3 (h = 0): 
-st$contract(c(1, 3))
-st$print_tree()
-# 1 (h = 1): .( 2 )
-# 2 (h = 0): 
+st <- simplex_tree(1:3) 
+st \%>\% print_simplices()
+# 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
+st \%>\% contract(c(1, 3)) \%>\% print_simplices()
+# 1, 2, 1 2
 }
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

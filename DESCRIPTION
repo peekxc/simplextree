@@ -1,22 +1,27 @@
 Package: simplextree
 Type: Package
-Title: Provides tools for working with general Simplicial Complexes 
-Version: 0.9.1
-Date: 2019-06-08
-Author: Matt Piekenbrock
+Title: Provides tools for working with general simplicial complexes 
+Version: 1.0.0
+Date: 2020-08-01
+Depends: R (>= 3.4.0)
+Authors@R: person("Matt", "Piekenbrock", email = "matt.piekenbrock@gmail.com",
+                  role = c("aut", "cre"))
 Maintainer: Matt Piekenbrock <matt.piekenbrock@gmail.com>
-Description: Provides an efficient data structure as an Rcpp module for storing and operating on simplicial complexes of any dimension.
+Description: Provides an interface to an efficient Simplex Tree data structure.
 License: MIT + file LICENSE
 LinkingTo: Rcpp
-Imports: Rcpp, methods
+Imports: 
+    Rcpp (>= 0.12.10),
+    methods,
+    magrittr
 Encoding: UTF-8
 LazyData: true
 VignetteBuilder: knitr
 SystemRequirements: C++11
-RoxygenNote: 6.1.0
+RoxygenNote: 7.1.0
 Suggests: 
-    testthat, 
-    igraph, 
-    knitr, 
-    rmarkdown, 
-    viridis
+    testthat,
+    igraph,
+    knitr,
+    rmarkdown,
+    covr

@@ -2,26 +2,44 @@
 % Please edit documentation in R/simplex_tree.R
 \name{serialize}
 \alias{serialize}
-\alias{deserialize}
-\title{Serializes/Deserializes the simplex tree.}
+\title{Serializes the simplex tree.}
+\usage{
+serialize(st)
+}
 \arguments{
-\item{x}{a list of simplices to insert into the tree.}
+\item{st}{a simplex tree.}
 }
 \description{
-Provides basic deserialization interface for the simplex tree.
+Provides a compressed serialization interface for the simplex tree.
 }
 \details{
-Saves the simplex tree as a compressed RDS file with \code{\link{saveRDS}}. Only the (generally higher order) 
-simplices which have themselves as a unique coface are saved.
+The serialize/deserialize commands can be used to compress/uncompress the complex into 
+smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
+The serialization.
 }
 \examples{
-st <- simplex_tree()
-st$insert(c(1, 2, 3))
-tmp <- st$serialize()
-print(tmp)
-# [[1]]
-# [1] 1 2 3
-st$clear()
-st$deserialize(tmp)
-st$print_tree()
+st <- simplex_tree(list(1:5, 7:9))
+st2 <- deserialize(serialize(st))
+all.equal(as.list(preorder(st)), as.list(preorder(st2)))
+# TRUE 
+
+set.seed(1234)
+R <- rips(dist(replicate(2, rnorm(150))), eps = pnorm(0.20), dim = 2)
+print(R$n_simplices)
+# 50 137 229
+
+## Approx. size of the full complex 
+print(utils::object.size(as.list(preorder(R))), units = "Kb")
+# 345.7 Kb
+
+## Approx. size of serialized version 
+print(utils::object.size(serialize(R)), units = "Kb")
+# 14.4 Kb
+
+## You can save these to disk via e.g. saveRDS(serialize(R), ...)
 }
+\seealso{
+Other serialization: 
+\code{\link{deserialize}()}
+}
+\concept{serialization}

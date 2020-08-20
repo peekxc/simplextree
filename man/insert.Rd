@@ -3,10 +3,13 @@
 \name{insert}
 \alias{insert}
 \title{Insert simplices}
+\usage{
+insert(st, simplices)
+}
 \arguments{
-\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex.}
+\item{st}{a simplex tree.}
 
-\item{simplices}{a list of simplices.}
+\item{simplices}{simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details.}
 }
 \description{
 Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
@@ -14,18 +17,17 @@ Inserts simplices into the simplex tree. Individual simplices are specified as v
 \details{
 This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
 no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
-Faces of \code{simplex} not in the simplex tree are inserted as needed.
+Faces of \code{simplex} not in the simplex tree are inserted as needed. \cr
+\cr
+If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
+represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
+optionally use a matrix, where each column is assumed to be a simplex.
 }
-\section{Usage}{
-
-st$insert(simplex)
-st$insert(simplices)
-}
-
 \examples{
 st <- simplex_tree()
-st$insert(1:3) ## inserts the 2-simplex { 1, 2, 3 }
-st$insert(list(4:5, 6)) ## inserts a 1-simplex { 4, 5 } and a 0-simplex { 6 }.
+st \%>\% insert(1:3) ## inserts the 2-simplex { 1, 2, 3 }
+st \%>\% insert(list(4:5, 6)) ## inserts a 1-simplex { 4, 5 } and a 0-simplex { 6 }.
+st \%>\% insert(combn(5,3)) ## inserts all the 2-faces of a 4-simplex
 }
 \seealso{
 find remove

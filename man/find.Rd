@@ -3,28 +3,34 @@
 \name{find}
 \alias{find}
 \title{Find simplices}
+\usage{
+find(st, simplices)
+}
 \arguments{
-\item{simplex}{a k-length vector of vertex ids representing a (k-1)-simplex. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.}
+\item{st}{a simplex tree.}
 
-\item{simplices}{a list of simplices.}
+\item{simplices}{simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details.}
 }
 \value{
 boolean indicating whether or not \code{simplex} exists in the tree.
 }
 \description{
-Finds whether simplices exist the simplex tree.
+Returns whether supplied simplices exist in the complex.
 }
 \details{
 Traverses the simplex tree looking for \code{simplex}, returning whether or not it exists.
 \code{simplex} can be specified as vector to represent a single simplex, and a list to represent a set of simplices. 
-\code{simplex} is sorted before traversing the trie.
+Each \code{simplex} is sorted before traversing the trie. \cr
+\cr
+If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
+represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
+optionally use a matrix, where each column is assumed to be a simplex.
 }
 \section{Usage}{
 
-st$find(simplex)
-st$find(simplices)
+st %>% find(simplices)
 }
 
 \seealso{
-find remove
+insert remove
 }

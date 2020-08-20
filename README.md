@@ -2,6 +2,7 @@
 [![Appveyor Windows Build status](https://img.shields.io/appveyor/ci/peekxc/simplextree/master.svg?logo=windows&logoColor=DDDDDD)](https://ci.appveyor.com/project/peekxc/simplextree)
 [![Travis OS X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.org/peekxc/simplextree)
 [![Travis Linux X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.org/peekxc/simplextree)
+[![Codecov test coverage](https://codecov.io/gh/peekxc/simplextree/branch/master/graph/badge.svg)](https://codecov.io/gh/peekxc/simplextree?branch=master)
 
 `simplextree` is an [R](https://www.r-project.org/) package aimed at simplifying computation for general [simplicial complexes](https://en.wikipedia.org/wiki/Simplicial_complex) of any dimension. This package facilitates this aim by providing R bindings to a _Simplex Tree_ data structure, implemented using _modern_ [C++11](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3690.pdf) and exported as a [Rcpp module](https://cran.r-project.org/web/packages/Rcpp/vignettes/Rcpp-modules.pdf). The underlying library implementation also exports a [C++ header](inst/include/simplextree.h), which can be specified as a dependency and [used in other packages](#usage-with-rcpp) via [Rcpp attributes](http://dirk.eddelbuettel.com/code/rcpp/Rcpp-attributes.pdf).
 
@@ -12,7 +13,7 @@ The Simplex Tree was originally introduced in the following paper:
 A _Simplex Tree_ is an ordered, [trie](https://en.wikipedia.org/wiki/Trie)-like structure whose nodes are in bijection with the faces of the complex. Here's a picture (taken from the paper) of a simplicial 3-complex (left) and its corresponding _Simplex Tree_ (right):
 
 ![simplex tree picture](./man/figures/simplextree.png)
- 
+
 ## Installation 
 The current development version can be installed with the [devtools](https://github.com/r-lib/devtools) package: 
 
@@ -27,15 +28,15 @@ A stable CRAN release is planned for the future.
 
 ```R
 library(simplextree)
-st <- simplex_tree() ## instantiation wrapper
-st$insert(list(1:3, 4:5, 6)) ## Inserts { 1, 2, 3 }, { 4, 5 }, and { 6 }
+st <- simplex_tree()              ## creates a simplex tree
+st %>% insert(list(1:3, 4:5, 6))  ## Inserts simplices { 1, 2, 3 }, { 4, 5 }, and { 6 }
 
 ## Summary of complex
 print(st) 
 # Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
 
 ## More detailed look at structure
-st$print_tree()
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
@@ -44,27 +45,27 @@ st$print_tree()
 # 6 (h = 0): 
 
 ## Print the set of simplices making up the star of the simplex '2'
-st$traverse(2, function(simplex){ print(simplex) }, "star")
-# [1] 1 2
-# [1] 1 2 3
-# [1] 2
-# [1] 2 3
+print_simplices(st %>% cofaces(2))
+# 2, 2 3, 2 3 4, 2 3 4 5, 2 3 5, 2 4, 2 4 5, 2 5, 1 2, 1 2 3
 
-## Retrieves list of all simplices in DFS order, starting with the empty face 
-dfs_list <- st$ltraverse(empty_face, identity, "dfs")
+## You can also compactly print traversals of the complex  
+dfs <- preorder(st)
+print_simplices(dfs, "column")
+# 1 1 1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 3 3 3 3 3 4 4 5 6
+#   2 2 3 3 3 3 3 4 4 5 6   3 3 3 3 4 4 5   4 4 5 6   5    
+#     3   4 4 5 6   5         4 4 5   5       5            
+#           5                   5
+
+## Or save them as a list 
+dfs_list <- as.list(dfs)
+# list(1, c(1,2), ...)
 
 ## Get connected components 
 print(st$connected_components)
 # [1] 1 1 1 4 4 5
 
 ## Serialization/persistent storage options available
-print(st$serialize())
-# [[1]]
-# [1] 1 2 3
-# [[2]]
-# [1] 4 5
-# [[3]]
-# [1] 6
+saveRDS(st %>% serialize(), file = tempfile())
 
 ## As are various export options
 list_of_simplices <- st$as_list()
@@ -96,18 +97,15 @@ _SimplexTree_ instances can be created with either `simplex_tree()` or `new(Simp
 
 Fields are data attributes associated with the _SimplexTree_ instance containing useful information about the simplex tree. Writeable fields can be set by the user to change the behaviour of certain methods, whereas read-only fields are automatically updated as the tree is modified.
 
-<a href='#n_simplices' id='n_simplices' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **n\_simplices** 
+<a href='#n_simplices' id='n_simplices' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **n\_simplices** 
 
 An integer vector, where each index *k* denotes the number of (*k-1*)-simplices. _( Read-only )_
 
-<a href='#dimension' id='dimension' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **dimension**
+<a href='#dimension' id='dimension' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **dimension**
 
 The dimension of a simplicial complex *K* is the highest dimension of any of *K*'s simplices.  _( Read-only )_
 
-<a href='#id_policy' id='id_policy' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **id_policy**
+<a href='#id_policy' id='id_policy' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **id_policy**
 
 The _id\_policy_  of the _SimplexTree_ instance determines how new vertex ids are generated by the [generate_ids](#generate_ids) method. Can be either "compressed" or "unique". Defaults to "compressed".  
 
@@ -115,77 +113,67 @@ The _id\_policy_  of the _SimplexTree_ instance determines how new vertex ids ar
 
 Properties are aliases to methods that act as data fields, but on access dynamically generate and return their values, much like [active bindings](https://stat.ethz.ch/R-manual/R-devel/library/base/html/bindenv.html) in R. Unlike _fields_, properties do not store their results with the instance, and do not contribute to the memory footprint of the simplicial complex.
 
-<a href='#connected_components' id='connected_components' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **connected_components**
+<a href='#connected_components' id='connected_components' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **connected_components**
 
 Returns the connected components of the simplicial complex. 
 
 Each connected component is associated with an integer; the result of this function is an integer vector mapping the (ordered) set vertices to their corresponding connected component.  
 
-<a href='#vertices' id='vertices' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **vertices**
+<a href='#vertices' id='vertices' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **vertices**
 
 Returns the 0-simplices in the simplicial complex as an _n_-length vector, where _n_ is the number of 0-simplices.
 
-<a href='#edges' id='edges' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **edges**
- 
+<a href='#edges' id='edges' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **edges**
+
 Returns the 1-simplices in the simplicial complex as an _( n x 2 )_ matrix, where _n_ is the number of 1-simplices.
 
-<a href='#triangles' id='triangles' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **triangles**
- 
+<a href='#triangles' id='triangles' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **triangles**
+
 Returns the 2-simplices in the simplicial complex as an _( n x 3 )_ matrix, where _n_ is the number of 2-simplices.
 
-<a href='#quads' id='quads' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **quads**
- 
+<a href='#quads' id='quads' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **quads**
+
 Returns the 3-simplices in the simplicial complex as an _( n x 4 )_ matrix, where _n_ is the number of 3-simplices.
 
 
 #### Modifying the tree 
 
-<a href='#insert' id='insert' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **insert**(\[*simplices*\])
+<a href='#insert' id='insert' class='anchor' aria-hidden='true'>#</a> **insert**(_SimplexTree_, \[*simplices*\])
 
 Inserts *simplices* into the simplex tree. Each _simplex_ is ordered prior to insertion. If a _simplex_ already exists, the tree is not modified. To keep the property of being a simplex tree, the proper faces of _simplex_ are also inserted. 
 
-Note that the _SimplexTree_ structure does not track orientation, e.g. the simplices _(1, 2, 3)_ and _(2, 1, 3)_ are considered identical. 
-
 <details>
-
 <summary> Insertion examples </summary>
-	
+​	
+
 ```R
 st <- simplex_tree()
-st$insert(c(1, 2, 3)) ## insert the simplex { 1, 2, 3 }
-st$insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
+st %>% insert(c(1, 2, 3))       ## insert the simplex { 1, 2, 3 }
+st %>% insert(list(c(4, 5), 6)) ## insert the simplices { 4, 5 } and { 6 }
 print(st)
 # Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
 ```
-	
+
 </details>
 
-<a href='#remove' id='remove' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **remove**(\[*simplices*\])
+<a href='#remove' id='remove' class='anchor' aria-hidden='true'>#</a> **remove**(_SimplexTree_, \[*simplices*\])
 
 Removes *simplices* from the simplex tree. Each _simplex_ is ordered prior to removal. If a _simplex_ doesn't exist, the tree is not modified. To keep the property of being a simplex tree, the cofaces of _simplex_ are also removed. 
 
 <details>
-
 <summary> Removal examples </summary>
-	
+​	
+
 ```R
 st <- simplex_tree()
-st$insert(list(c(1, 2, 3), c(4, 5), 6))
-st$remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
+st %>% insert(list(c(1, 2, 3), c(4, 5), 6))
+st %>% remove(c(2, 3)) ## { 2, 3 } and { 1, 2, 3 } both removed
 print(st)
-# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+# Simplex Tree with (6, 3) (0, 1)-simplices
 ```
 </details>
 
-<a href='#contract' id='contract' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **contract**(\[*a, b*\])
+<a href='#contract' id='contract' class='anchor' aria-hidden='true'>#</a> **contract**(_SimplexTree_, \[*a, b*\])
 
 Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is equivalent to removing vertex *b* from the simplex tree and augmenting the link of vertex *a* with the link of vertex *b*. If the edge does not exist in the tree, the tree is not modified.
 
@@ -195,23 +183,22 @@ Performs and *edge contraction*, contracting vertex *b* to vertex *a*. This is e
 	
 ```R
 st <- simplex_tree()
-st$insert(1:3)
-st$print_tree()
+st %>% insert(1:3)
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
-st$contract(c(1, 3))
-st$print_tree()
+st %>% contract(c(1, 3))
+st %>% print_simplices("tree")
 # 1 (h = 1): .( 2 )
 # 2 (h = 0): 
 ```
 </details>
 
-<a href='#collapse' id='collapse' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **collapse**(...)
+<a href='#collapse' id='collapse' class='anchor' aria-hidden='true'>#</a> **collapse**(_SimplexTree_, ...)
 
 1. (\[_tau_\], \[_sigma_\])
-2. (_u_, _v_, _w_)
+2. ((_u_, _v_), _w_)
 
 Performs an _elementary collapse_. There are multiple simplifying operations that have been referred to as elementary collapses; this method provides two such operations.
 
@@ -231,59 +218,58 @@ Note that an _elementary_ collapse in this sense has an injectivity requirement 
 	
 ```R
 st <- simplex_tree()
-st$insert(1:3)
-st$print_tree()
+st %>% insert(1:3)
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
-st$collapse(1:2, 1:3) ## collapse in the sense of (1)
-st$print_tree()
+st %>% collapse(list(1:2, 1:3)) ## collapse in the sense of (1)
+st %>% print_simplices("tree")
 # 1 (h = 1): .( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
   
-st$insert(list(1:3, 2:5))
-st$print_tree()
+st %>% insert(list(1:3, 2:5))
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 3): .( 3 4 5 )..( 4 5 5 )...( 5 )
 # 3 (h = 2): .( 4 5 )..( 5 )
 # 4 (h = 1): .( 5 )
 # 5 (h = 0): 
-st$collapse(3, 4, 5) ## collapse in the sense of (2)
-st$print_tree()
+st %>% collapse(list(3, 4), 5) ## collapse in the sense of (2)
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 5 )..( 5 )
 # 2 (h = 2): .( 5 )..( 5 )
 # 5 (h = 1): .( 5 )
 ```
-	
+
 </details>
 
-<a href='#expand' id='expand' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **expand**(_k_)
+<a href='#expand' id='expand' class='anchor' aria-hidden='true'>#</a> **expand**(_SimplexTree_, _k_)
 
 Performs a _k-expansion_, constructing the _k_-skeleton as a flag complex. The expansion is performed by successively inserting all the simplices of _k_-skeleton into the tree. 
 
 This method assumes the dimension of the simplicial complex before expansion is 1. 
 
 <details>
-	
+
 <summary> Expansion example </summary>
-  
+
 ```R
 st <- simplex_tree()
-st$insert(list(c(1, 2), c(2, 3), c(1, 3)))
-st$print_tree()
+st %>% insert(list(c(1, 2), c(2, 3), c(1, 3)))
+st %>% print_simplices("tree")
 # 1 (h = 1): .( 2 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
   
-st$expand(k=2) ## expand to simplicial 2-complex
-st$print_tree()
+st %>% expand(k=2) ## expand to simplicial 2-complex
+st %>% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0): 
 ```
-	
+
 </details>
 
 <a href='#as_XPtr' id='as_XPtr' class='anchor' aria-hidden='true'>#</a>
@@ -295,157 +281,106 @@ This method does _not_ register a delete finalizer.
 
 #### Querying the tree 
 
-<a href='#print_tree' id='print_tree' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **print_tree**()
+<a href='#print_tree' id='print_tree' class='anchor' aria-hidden='true'>#</a> **print_simplices**(_SimplexTree_, format = "short")
 
-Prints the simplicial complex to _standard out_. By default, this is set to R's buffered output, which is shown in the R console. The printed format is: 
-
-> \[*vertex*\] (h = \[*subtree height*\]): \[*subtree depth*\](\[*subtree*\])
-
-Where each line corresponds to a *vertex* and its corresponding subtree. The *subtree depth* represents the set of _sibling_ *k*-simplices at that level in tree, represented by a sequence of dots ('**.**').  
+Prints a formatted summary of the simplicial complex to R's buffered output. By default, this shows up on the R console. Available outputs include "summary", "tree", "cousins", "short", "column", or "row". See the internal R documentation for more details. 
 
 <a href='#find' id='find' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **find**(\[*simplices*\])
+**find**(_SimplexTree_, \[*simplices*\])
 
 Traverses the simplex tree downard starting at the root by successively using each of the ordered labels in _simplex_ as keys. Returns a logical indicating whether _simplex_ was found, for each _simplex_ in _simplices_. Each _simplex_ is sorted prior to traversing. 
 
 <a href='#degree' id='degree' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **degree**(\[*vertices*\])
+**degree**(_SimplexTree_, \[*vertices*\])
 
 Returns the degree of a given vertex or set of vertices.
 
 <a href='#adjacent' id='adjacent' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **adjacent**(_vertex_)
+**adjacent**(_SimplexTree_, _vertex_)
 
 Returns the set of vertices adjacent to a given _vertex_. 
 
 <a href='#is_face' id='is_face' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **is_face**(_[tau]_, _[sigma]_)
+**is_face**(_SimplexTree_, _[tau]_, _[sigma]_)
 
 Returns a logical indicating whether tau is a face of sigma. 
 
 <a href='#is_tree' id='is_tree' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **is_tree**()
+**is_tree**(_SimplexTree_)
 
 Returns a logical indicating whether the simplex tree is fully connected and acyclic. 
 
 <a href='#generate_ids' id='generate_ids' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **generate_ids**(_n_)
+**generate_ids**(_SimplexTree_, _n_)
 
 Generates _n_ new vertex ids which do not exist in the tree according to the current _id\_policy_. 
 
 #### Traversals
 
-The _SimplexTree_ data structure supports various types of _traversals_. A _traversal_ is a (possibly optimized) path that allows iteration through a subset of the _SimplexTree_. The traversal _type_  determines the subset and path to iterate through. During the traversal, each simplex is passed to _f_ as its only argument. 
-
-<a href='#traverse' id='traverse' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **traverse** <br /> 
-
-1. (_f_, _type_)
-2. (\[_simplex_\], _f_, _type_)
-3. (\[_simplex_\], _f_, _type_, _params_)
-
-The **traverse** method has three overloads, based on the traversal _type_ and intended usage of _f_.
-
-(1) applies _f_ to each simplex in the traversal path _type_, starting at the root of the tree. 
-
-(2) applies _f_ to each simplex in the traversal path _type_ , starting at the specified _simplex_ in the tree. The root simplex (empty face) may be specified using the _empty\_face_ alias or the _NULL_ keyword. 
-
-(3) applies _f_ to each simplex in the traversal path _type_, starting at the specified _simplex_ in the tree.
-The root simplex (empty face) may be specified using the _NULL_ keyword or the _empty\_face_ alias. Additional parameters may be supplied to the traversal _type_ as via _params_ as a list. 
-
-<details>
-	
-<summary> Traversal Examples </summary>
-
-Traverse using first overload (performs depth-first traversal on simplex tree): 
-		
-```R
-st <- simplex_tree()
-st$insert(1:3)
-st$traverse(message, "dfs") # equivalent to 'st$traverse(NULL, message, "dfs")'
-# (empty face)
-# 1
-# 12
-# 123
-# 13
-# 2
-# 23
-# 3
-```
-	
-Traverse using second overload (prints the cofaces of the vertex with label '1'): 
-	
-```R
-st$traverse(1, message, "cofaces")
-# 1
-# 12
-# 123
-# 13
-```
-	
-Traverse using third overload (prints the 1-simplices): 
-	
-```R
-st$traverse(1, message, "maximal-skeleton", list(k=1))
-# 1
-# 12
-# 123
-# 13
-```
-</details>
+The _SimplexTree_ data structure supports various types of _traversals_. A _traversal_ is a (possibly optimized) path that allows iteration through a subset of the _SimplexTree_. Once a traversal is parameterized, they can be saved as variables and used as arguments into the free function `traverse`, `straverse`, and `ltraverse`. They can also be converted explicitly to list form via the `as.list` S3 specialization. 
 
 <a href='#ltraverse' id='ltraverse' class='anchor' aria-hidden='true'>#</a>
 _SimplexTree_ $ **ltraverse**(...)
 
 Performs a _traversal_, returning a list of the same length as the traversal path, with each element containing the result of _f_. The parameters *...* are the same as in [traverse](#traverse). **ltraverse** is meant to used in a similar way as lapply.
 
-##### Traversal types
+The currently supported traversal types are as follows: 
 
-The _type_ parameter passed to the traverse family of algorithms determines the subset and corresponding path that is enumerated in simplex tree. A traversal _type_ is specified by a string, and its corresponding _params_ are specified in a list. The currently supported traversal types are as follows: 
+<a href='#preorder' id='preorder' class='anchor' aria-hidden='true'>#</a> 
+**preorder**(_SimplexTree_, _simplex_)
 
-<a href='#dfs' id='dfs' class='anchor' aria-hidden='true'>#</a> _type_ = "**dfs**" 
+Performs a preorder traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the first vertex in the complex.
 
-Performs a depth-first traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the root node.
+<a href='#level_order' id='level_order' class='anchor' aria-hidden='true'>#</a>
+**level_order**(_SimplexTree_, _simplex_)
 
-<a href='#bfs' id='bfs' class='anchor' aria-hidden='true'>#</a> _type_ = "**bfs**" 
+Performs a level order  traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the first vertex in the complex.
 
-Performs a breadth-first traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the root node.
+<a href='#faces' id='faces' class='anchor' aria-hidden='true'>#</a>
+**faces**(_SimplexTree_, _simplex_)
 
-<a href='#cofaces' id='cofaces' class='anchor' aria-hidden='true'>#</a> _type_ = "**cofaces**" or _type_ = "**star**"
+Performs a traversal over the faces of _simplex_ in the _SimplexTree_. Supplying _simplex_ is required. 
 
-Traverse all of the cofaces (the star) of _simplex_ in the _SimplexTree_. If _simplex_ is not supplied, the traversal starts at the root node.
+<a href='#cofaces' id='cofaces' class='anchor' aria-hidden='true'>#</a>
+**cofaces**(_SimplexTree_, _simplex_)
 
-<a href='#link' id='link' class='anchor' aria-hidden='true'>#</a> _type_ = "**link**"
+Traverse all of the cofaces (the star) of _simplex_ in the _SimplexTree_. Supplying _simplex_ is required. 
 
-Traverse all of the link of _simplex_ in the _SimplexTree_. If _simplex_ is not supplied, the traversal starts at the root node.
+<a href='#cofaces' id='cofaces' class='anchor' aria-hidden='true'>#</a>
+**coface_roots**(_SimplexTree_, _simplex_)
 
-<a href='#skeleton' id='skeleton' class='anchor' aria-hidden='true'>#</a> _type_ = "**skeleton**"
+Traverse all of the _roots_ whose subtrees comprise the cofaces of _simplex_ in the _SimplexTree_. Supplying _simplex_ is required. 
 
-Traverses all of simplices in the the _k-skeleton_ of the _SimplexTree_, where the dimension _k_ must be supplied via _params_. If _simplex_ is not supplied, the traversal starts at the root node.
+<a href='#link' id='link' class='anchor' aria-hidden='true'>#</a> 
+**link**"(_SimplexTree_, _simplex_)
 
-<a href='#maximal-skeleton' id='maximal-skeleton' class='anchor' aria-hidden='true'>#</a> _type_ = "**maximal-skeleton**"
+Traverse all of the simplices of the link of _simplex_ in the _SimplexTree_. Supplying _simplex_ is required. 
 
-Traverses all of simplices in the the _maximal k-skeleton_ of the _SimplexTree_, where the dimension _k_ must be supplied via _params_. If _simplex_ is not supplied, the traversal starts at the root node.
+<a href='#skeleton' id='skeleton' class='anchor' aria-hidden='true'>#</a> 
+**k_skeleton**(_SimplexTree_, _k_, _simplex_)
+
+Traverses all of simplices of dimension _k_ or less in the _SimplexTree_. If _simplex_ is not supplied, the traversal starts at the first vertex in the complex.
+
+<a href='#k_simplices' id='k-simplices' class='anchor' aria-hidden='true'>#</a>
+**k_simplices**(_SimplexTree_, _k_, _simplex_)
+
+Traverses all of simplices of dimension _k_ in the _SimplexTree_. If _simplex_ is not supplied, the traversal starts at the first vertex in the complex.
+
+<a href='#maximal' id='maximal' class='anchor' aria-hidden='true'>#</a>
+**maximal**(_SimplexTree_)
+
+Performs a traversal over the _maximal faces_ in the _SimplexTree_. A simplex is considered maximal in this case if it has itself as its only coface.
 
 #### Import / Export options 
 
-<a href='#serialize' id='serialize' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **serialize**()
+<a href='#serialize' id='serialize' class='anchor' aria-hidden='true'>#</a> 
+**serialize**(_SimplexTree_)
 
-Serializes the simplex tree _K_ into a minimal set of maximal faces of _K_ needed to recover the simplex tree. Returns the set as list of simplices.
+Serializes the simplex tree _K_ into some of smaller representation needed to recover the simplex tree .Should only be used in conjunction with _deserialize_
 
-<a href='#deserialize' id='deserialize' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **deserialize**()
+<a href='#deserialize' id='deserialize' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **deserialize**(_complex_, _SimplexTree_)
 
-Deserializes a list of simplices by successively inserting them into the simplex tree.
-
-<a href='#save' id='save' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **save**(_filename_)
-
-Saves a serialized version the simplex tree to _filename_ in the [RDS](https://www.rdocumentation.org/packages/base/versions/3.6.0/topics/readRDS) file.
-
-<a href='#load' id='load' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **load**(_filename_)
-
-Loads a [RDS](https://www.rdocumentation.org/packages/base/versions/3.6.0/topics/readRDS) file saved to _filename_ into 
-the simplex tree.
+Deserializes _complex_, the result of _serialize_, into _SimplexTree_ if supplied, or an empty _SimplexTree_ if not supplied. Should only be used in conjunction with _serialize_.
 
 #### Conversions
 
@@ -505,7 +440,7 @@ A _SimplexTree_ Rcpp module can be passed directly from R to any Rcpp method. To
 <summary>Example Usage with R and Rcpp</summary>
 
 For example, on the C++ side, one might do:
- 
+
 ```C
 // my_source.cpp
 #include "Rcpp.h"
@@ -524,9 +459,9 @@ Then on the R-side, use [as\_XPtr](#as\_XPtr) method to get an [XPtr](https://cr
 
 ```R
 # my_source.R
-stree <- simplextree::simplex_tree()
-modify_tree(stree$as_XPtr())
-```  
+st <- simplex_tree()
+modify_tree(st$as_XPtr())
+```
 Note that the C++ class contains a superset of the functionality exported to R, however they do not necessarily have the same bindings. See the header file for a complete list. 
 
 </details> 
@@ -544,12 +479,12 @@ Summarizing the complex can be achieved via either the overridden [S3](https://s
 ```R
 library(simplextree)
 st <- simplex_tree()
-st$insert(list(1:3, 3:6))
+st %>% insert(list(1:3, 3:6))
 
 print(st)
 # Simplex Tree with (6, 9, 5, 1) (0, 1, 2, 3)-simplices
 
-st$print_tree()
+print_simplices(st, "tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 3): .( 4 5 6 )..( 5 6 6 )...( 6 )
@@ -561,11 +496,11 @@ st$print_tree()
 Alternatively, the plot generic is also overridden for _SimplexTree_ objects (of class type 'Rcpp_SimplexTree') to display the complex with [base graphics](https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/graphics-package.html).
 
 ```R
-st$insert(list(6:7, 7:8, 8:10, 11:12))
+st %>% insert(list(6:7, 7:8, 8:10, 11:12))
 plot(st)
 ```
 
-![](https://i.imgur.com/mo6069L.png)
+![simplex tree vis picture](./man/figures/st_vis.png)
 
 There are many other options for controlling how the complex is displayed (e.g. the positions of the simplices, the sizes/linewidths of the vertices/edges, the vertex labels, whether to color only maximal faces or individual simplices, etc.). For the full documentation, see `?plot.simplextree`.
 

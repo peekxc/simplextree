@@ -3,33 +3,30 @@
 \name{reindex}
 \alias{reindex}
 \title{reindexes vertex ids}
+\usage{
+reindex(st, ids)
+}
 \arguments{
-\item{ids}{Either a vector of new ids, or a named list mapping olds ids to new ids. See details.}
+\item{st}{a simplex tree.}
+
+\item{ids}{vector of new vertex ids. See details.}
 }
 \description{
 This function allows one to 'reorder' or 'reindex' vertex ids.
 }
 \details{
-The \code{ids} parameter can either be an integer vector or a list. If it's an integer
-vector, it must be the same length as the number of vertices. The simplex tree is then modified 
-to replace the vertex label at index \code{i} with \code{ids}[i]. See examples. \cr
-\cr
-Alternatively, a named list whose names yield the vertex ids to map from and whose values yield the vertex
-ids to map to.
+The \code{ids} parameter must be a sorted integer vector of new ids with length matching the 
+number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with 
+\code{ids}[i]. See examples.
 }
 \examples{
 st <- simplex_tree()
-st$insert(1:3)
-st$print_tree()
+st \%>\% insert(1:3) \%>\% print_simplices("tree")
 # 1 (h = 2): .( 2 3 )..( 3 )
 # 2 (h = 1): .( 3 )
 # 3 (h = 0):
-st$reindex(4:6)
+st \%>\% reindex(4:6) \%>\% print_simplices("tree")
 # 4 (h = 2): .( 5 6 )..( 6 )
 # 5 (h = 1): .( 6 )
 # 6 (h = 0):
-st$reindex(list("5"=7))
-# 4 (h = 2): .( 6 7 )..( 7 )
-# 6 (h = 1): .( 7 )
-# 7 (h = 0): 
 }

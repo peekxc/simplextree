@@ -7,7 +7,10 @@
 \alias{SimplexTree}
 \title{Simplex Tree}
 \usage{
-simplex_tree()
+simplex_tree(simplices = NULL)
+}
+\arguments{
+\item{simplices}{optional simplices to initialize the simplex tree with. See \code{\link{insert}}.}
 }
 \value{
 A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module).
@@ -48,11 +51,8 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 \section{Methods}{
  
 \describe{
-    \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
-    \item{$\code{\link{plot.simplextree}}}{ S3 method to plot the simplicial complex. }
-    \item{$\code{\link{print_tree}}}{ Prints the simplex tree structure. }
-    \item{$\code{\link{as_XPtr}}}{ Creates an external pointer. }
-    \item{$\code{\link{clear}}}{ Clears the simplex tree. }
+    \item{$\code{as_XPtr}}{ Creates an external pointer. }
+    \item{$\code{clear}}{ Clears the simplex tree. }
     \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
     \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
     \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
@@ -66,10 +66,6 @@ Unlike fields, however, properties are not explicitly stored: they are generated
     \item{$\code{\link{ltraverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
     \item{$\code{\link{is_face}}}{ Checks for faces. }
     \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
-    \item{$\code{\link{serialize}}}{ Serializes the simplex tree. }
-    \item{$\code{\link{deserialize}}}{ Unserializes a stored simplex tree. }
-    \item{$\code{\link{save}}}{ Saves the simplex tree to a file. }
-    \item{$\code{\link{load}}}{ Loads a simplex tree from a file. }
     \item{$\code{as_list}}{ Converts the simplicial complex to a list. }
     \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
     \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacency list. }
@@ -80,11 +76,40 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 \examples{
 ## Recreating simplex tree from figure. 
 st <- simplex_tree()
-st$insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
+st \%>\% insert(list(1:3, 2:5, c(6, 7, 9), 7:8, 10))
 plot(st)
 
 ## Example insertion
-st$insert(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
+st <- simplex_tree(list(1:3, 4:5, 6)) ## Inserts one 2-simplex, one 1-simplex, and one 0-simplex
+print(st) 
+# Simplex Tree with (6, 4, 1) (0, 1, 2)-simplices
+
+## More detailed look at structure
+print_simplices(st, "tree")
+# 1 (h = 2): .( 2 3 )..( 3 )
+# 2 (h = 1): .( 3 )
+# 3 (h = 0): 
+# 4 (h = 1): .( 5 )
+# 5 (h = 0): 
+# 6 (h = 0): 
+## Print the set of simplices making up the star of the simplex '2'
+print_simplices(st \%>\% cofaces(2))
+# 2, 2 3, 1 2, 1 2 3
+
+## Retrieves list of all simplices in DFS order, starting with the empty face 
+dfs_list <- ltraverse(st \%>\% preorder(empty_face), identity)
+
+## Get connected components 
+print(st$connected_components)
+# [1] 1 1 1 4 4 5
+
+## Use clone() to make copies of the complex (don't use the assignment `<-`)
+new_st <- st \%>\% clone()
+
+## Other more internal methods available via `$` 
+list_of_simplices <- st$as_list()
+adj_matrix <- st$as_adjacency_matrix()
+# ... see also as_adjacency_list(), as_edge_list(), etc 
 }
 \references{
 Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.

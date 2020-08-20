@@ -3,11 +3,19 @@
 \name{adjacent}
 \alias{adjacent}
 \title{Adjacent vertices.}
+\usage{
+adjacent(st, vertices)
+}
+\arguments{
+\item{st}{a simplex tree.}
+
+\item{vertices}{vertex ids.}
+}
 \description{
 Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 }
 \examples{
-st <- simplex_tree()
-st$insert(1:3)
-st$adjacent(2) ## 1 3
+st <- simplex_tree(1:3)
+st \%>\% adjacent(2) 
+# 1 3
 }

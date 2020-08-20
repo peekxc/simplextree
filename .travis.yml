@@ -33,3 +33,6 @@ matrix:
       env: BADGE=osx
     - os: osx
       env: BADGE=linux
+      
+after_success:
+  - Rscript -e 'covr::codecov()'

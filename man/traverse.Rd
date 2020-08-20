@@ -2,60 +2,47 @@
 % Please edit documentation in R/simplex_tree.R
 \name{traverse}
 \alias{traverse}
-\alias{ltraverse}
 \alias{straverse}
+\alias{ltraverse}
 \title{traverse}
+\usage{
+traverse(traversal, f, ...)
+
+straverse(traversal, f, ...)
+
+ltraverse(traversal, f, ...)
+}
 \arguments{
-\item{sigma}{The simplex to initialize the traversal. See details.}
+\item{traversal}{the type of traversal.}
 
-\item{f}{An arbitrary function which accepts as input a simplex. See details.}
+\item{f}{the function to apply to each simplex.}
 
-\item{type}{One of "dfs", "bfs", "cofaces", "star", "link", "skeleton", or "maximal-skeleton".}
+\item{...}{unused.}
 }
 \value{
 NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
 }
 \description{
-Traverses subsets of a simplicial complex.
+Traverses specific subsets of a simplicial complex.
 }
 \details{
 \code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
-The simplices within each subset are determined by two aspects: the initial simplex \code{sigma} 
-and the traversal \code{type}. Given an initial simplex \code{sigma}, \code{traverse} generates 
-an ordered set of simplices based on the traversal \code{type}, which are iteratively passed to 
-the supplied function \code{f} as the first argument to \code{f}. \cr
-\cr
-\code{sigma} can either be omitted, a simplex, or the \code{empty_face} (which is an alias to NULL).
+The specific subset and order are determined by the choice of \emph{traversal}: examples include 
+the \code{\link{preorder}} traversal, the \code{\link{cofaces}} traversal, etc. See the links below. 
+Each simplex in the traversal is passed as the first and only argument to \code{f}, one per simplex in the traversal.
+\code{\link{traverse}} does nothing with the result; if you want to collect the results of applying \code{f} to each simplex 
+into a list, use \code{\link{ltraverse}} (or \code{\link{straverse}}), which are meant to be used like \code{\link{lapply}} 
+and \code{\link{sapply}}, respectively.
 }
 \examples{
 ## Starter example complex 
 st <- simplex_tree()
-st$insert(list(1:3, 2:5))
+st \%>\% insert(list(1:3, 2:5))
 
 ## Print out complex using depth-first traversal. 
-## 'empty_face' implies that the DFS will start at the root. 
-st$traverse(empty_face, print, "dfs")
-st$traverse(print, "dfs") ## overload available that assumes start is the empty_face 
+st \%>\% preorder() \%>\% traverse(print)
 
-## Print of subtree rooted at vertex 1 using depth-first traversal. 
-st$traverse(1L, print, "dfs")
-
-## Print simplices in the star of the edge [4, 5]
-st$traverse(c(4, 5), print, "star")
-
-## Traversals can be chained. Here's an example that prints the link of each vertex.
-st$traverse(function(simplex){
-  if (length(simplex) == 1){
-    print(sprintf("Link of \%d:", simplex))    
-    st$traverse(simplex, print, "link")
-  }
-}, "bfs")
-
-## To see the cofaces of a given simplex 
-st <- simplex_tree()
-st$insert(c(1, 2, 3))
-st$traverse(1L, print, "cofaces")
-
-## Alternatively, collect results into a list 
-three_cofaces <- st$ltraverse(3L, identity, "cofaces")
+## Collect the last labels of each simplex in the tree. 
+last_labels <- st \%>\% preorder() \%>\% straverse(function(simplex){ tail(simplex, 1) })
 }
+\concept{traversals}
