@@ -319,12 +319,22 @@ Generates _n_ new vertex ids which do not exist in the tree according to the cur
 
 The _SimplexTree_ data structure supports various types of _traversals_. A _traversal_ is a (possibly optimized) path that allows iteration through a subset of the _SimplexTree_. Once a traversal is parameterized, they can be saved as variables and used as arguments into the free function `traverse`, `straverse`, and `ltraverse`. They can also be converted explicitly to list form via the `as.list` S3 specialization. 
 
+<a href='#traverse' id='traverse' class='anchor' aria-hidden='true'>#</a>
+**traverse**(_traversal_ , _f_)
+
+Executes a given _traversal_, passing each simplex in the traversal as the only argument to _f_.
+
+<a href='#straverse' id='straverse' class='anchor' aria-hidden='true'>#</a>
+**ltraverse**(_traversal_ , _f_)
+
+Executes a given _traversal_, returning a list of the same length as the traversal path, with each element containing the result of _f_.  **ltraverse** is meant to used in a similar way as lapply.
+
 <a href='#ltraverse' id='ltraverse' class='anchor' aria-hidden='true'>#</a>
-_SimplexTree_ $ **ltraverse**(...)
+**straverse**(_traversal_ , _f_)
 
-Performs a _traversal_, returning a list of the same length as the traversal path, with each element containing the result of _f_. The parameters *...* are the same as in [traverse](#traverse). **ltraverse** is meant to used in a similar way as lapply.
+Executes a given _traversal_, returning a vector of the same length as the traversal path, with each element containing the result of _f_.  **straverse** is meant to used in a similar way as sapply.
 
-The currently supported traversal types are as follows: 
+The currently supported _traversals_ are the following: 
 
 <a href='#preorder' id='preorder' class='anchor' aria-hidden='true'>#</a> 
 **preorder**(_SimplexTree_, _simplex_)
@@ -334,7 +344,7 @@ Performs a preorder traversal of the _SimplexTree_ starting at _simplex_. If _si
 <a href='#level_order' id='level_order' class='anchor' aria-hidden='true'>#</a>
 **level_order**(_SimplexTree_, _simplex_)
 
-Performs a level order  traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the first vertex in the complex.
+Performs a level order traversal of the _SimplexTree_ starting at _simplex_. If _simplex_ is not supplied, the traversal starts at the first vertex in the complex.
 
 <a href='#faces' id='faces' class='anchor' aria-hidden='true'>#</a>
 **faces**(_SimplexTree_, _simplex_)
