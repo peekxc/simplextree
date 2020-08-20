@@ -950,19 +950,18 @@ is_tree <- function(st){
 #' plot(st)
 #' 
 #' ## If supplied colors have alpha defined, use that 
-#' vpal <- viridis::viridis(st$dimension + 1)
+#' vpal <- rainbow(st$dimension + 1)
 #' plot(st, color_pal = vpal)
 #' 
 #' ## If alpha not supplied, decreasing opacity applied
 #' plot(st, color_pal = substring(vpal, first=1, last=7))
 #' 
 #' ## Bigger example; observe only maximal faces (+vertices and edges) are drawn
-#' st <- simplex_tree()
-#' st %>% insert(list(1:3, 2:5, 5:9, 7:8, 10))
-#' plot(st, color_pal = viridis::viridis(st$dimension + 1))
+#' st <- simplex_tree(list(1:3, 2:5, 5:9, 7:8, 10))
+#' plot(st, color_pal = rainbow(st$dimension + 1))
 #' 
 #' ## If maximal == FALSE, every simplex is drawn (even on top of each other)
-#' vpal <- viridis::viridis(st$dimension + 1)[c(1,2,5,4,3)]
+#' vpal <- rainbow(st$dimension + 1)[c(1,2,5,4,3)]
 #' pal_alpha <- c(1, 1, 0.2, 0.35, 0.35)
 #' vpal <- sapply(seq_along(vpal), function(i) adjustcolor(vpal[i], alpha.f = pal_alpha[i]))
 #' plot(st, color_pal = vpal, maximal = FALSE)

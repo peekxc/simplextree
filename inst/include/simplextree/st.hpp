@@ -362,8 +362,8 @@ inline void SimplexTree::print_subtree(OutputStream& os, node_ptr cn) const {
   for (const auto& ch: cn->children){
     idx_t h = max_depth(ch.get())-1; 
     os << ch->label << " (h = " << h << "): ";
-    for (int i = 1; i <= h; ++i){ 
-      for (int j = 1; j <= i; ++j){ os << "."; }
+    for (size_t i = 1; i <= h; ++i){ 
+      for (size_t j = 1; j <= i; ++j){ os << "."; }
       os << "("; 
       print_level(os, ch.get(), i); 
       os << " )";

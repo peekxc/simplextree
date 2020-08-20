@@ -24,5 +24,4 @@ Suggests:
     igraph,
     knitr,
     rmarkdown,
-    viridis,
     covr

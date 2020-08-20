@@ -403,6 +403,7 @@ testthat::test_that("rips filtration works", {
 })
 
 
+
 testthat::test_that("nerve construction works", {
   alphabet <- seq(50)
   cover <- lapply(seq(15), function(i){
@@ -452,8 +453,6 @@ testthat::test_that("nerve construction works", {
   e3 <- nat_to_sub(which(combn(15, 3, nfold(1))), n = 15, k = 3)
   expect_equal(e3, t(st$triangles))
 })
-
-
 
 ## testing union find 
 testthat::test_that("union find works", {

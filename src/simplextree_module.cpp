@@ -287,10 +287,10 @@ void make_flag_filtration(Filtration* st, const NumericVector& D){
   const size_t ne = st->n_simplexes.at(1);
   const auto v = st->get_vertices();
   const size_t N = BinomialCoefficient(v.size(), 2);
-  if (ne == D.size()){
+  if (size_t(ne) == size_t(D.size())){
     vector< double > weights(D.begin(), D.end());
     st->flag_filtration(weights, false);
-  } else if (D.size() == N){ // full distance vector passed in
+  } else if (size_t(D.size()) == size_t(N)){ // full distance vector passed in
     auto edge_iter = st::k_simplices< true >(st, st->root.get(), 1);
     vector< double > weights;
     weights.reserve(ne);
@@ -382,7 +382,7 @@ NumericVector profile(SEXP st){
   
   NumericVector res(timer);
   const size_t n = 1000;
-  for (size_t i=0; i < res.size(); ++i) { res[i] = res[i] / n; }
+  for (size_t i=0; i < size_t(res.size()); ++i) { res[i] = res[i] / n; }
   return res;
 }
 
@@ -525,7 +525,7 @@ param_pack validate_params(List args){
   if (init == nullptr){ stop("Invalid starting simplex"); }
   
   // Extract traversal type 
-  int tt = args["traversal_type"];
+  size_t tt = (size_t) args["traversal_type"];
   if (tt < 0 || tt >= N_TRAVERSALS){ stop("Unknown traversal type."); }
   
   return(std::make_tuple(static_cast< SimplexTree* >(st), init, static_cast< TRAVERSAL_TYPE >(tt)));

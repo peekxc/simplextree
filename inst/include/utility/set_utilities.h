@@ -19,7 +19,7 @@ using std::unordered_set;
 template <class Iter, class Incr>
 Iter safe_advance(const Iter& curr, const Iter& end, Incr n) {
   size_t remaining(std::distance(curr, end));
-  if (remaining < n) { n = remaining; }
+  if (remaining < size_t(n)) { n = remaining; }
   return std::next(curr, n);
 }
 
@@ -61,15 +61,20 @@ bool intervals_disjoint(vector< pair< T, T > > intervals){
     return p1.second < p2.second; 
   });
   
-  auto front = interval_ids.begin();
-  auto front1 = std::next(front); 
-  auto back = interval_ids.rbegin();
-  auto back1 = std::next(back); 
+  // Check if any adjacent values are equal
+  auto adj_it = std::adjacent_find(begin(interval_ids), end(interval_ids), [](const rng_t& p1, const rng_t& p2){
+    return(p1.second == p2.second);
+  });
+  if (adj_it != end(interval_ids)){ return(false); }
   
-  if (((front->first == front1->first) || (back->first == back1->first)) && front1->second != back1->second){
-    return true; 
-  }
-  return false; 
+  // Check if sequence is strictly increasing
+  auto sinc_it = std::adjacent_find(begin(interval_ids), end(interval_ids), [](const rng_t& p1, const rng_t& p2){
+    return(p1.first > p2.first);
+  });
+  if (sinc_it != end(interval_ids)){ return(false); }
+  
+  // Otherwise they are disjoint
+  return(true);
 }
 
 // Given two random-access iterator ranges, (a1, a2), (b1, b2), return a boolean indicating 
@@ -197,7 +202,6 @@ bool n_intersects_unsorted(vector< pair< Iter, Iter > > ranges, const size_t n, 
   return(false);
 }
 
-
 // Tests a set of ranges to see if they all have at least n elements in their intersection.
 template < typename Iter >
 bool n_intersects(const vector< pair< Iter, Iter > >& ranges, const size_t n){
@@ -205,7 +209,7 @@ bool n_intersects(const vector< pair< Iter, Iter > >& ranges, const size_t n){
   using rng_t = pair< Iter, Iter >;
   
   // Check if any of the ranges don't even have n elements
-  const bool too_small = std::any_of(begin(ranges), end(ranges), [n](const rng_t& rng){ return std::distance(rng.first, rng.second) < n; });
+  const bool too_small = std::any_of(begin(ranges), end(ranges), [n](const rng_t& rng){ return size_t(std::distance(rng.first, rng.second)) < size_t(n); });
   if (too_small){ return(false); }
   
   // Do linear O(n) scan to determine if everything is sorted
@@ -226,7 +230,9 @@ bool n_intersects(const vector< pair< Iter, Iter > >& ranges, const size_t n){
   });
   
   // Do initial check to see if they are all disjoint
-  if (intervals_disjoint(minmaxes)){ return(false); }
+  if (intervals_disjoint(minmaxes)){ 
+    return(false); 
+  }
 
   // Use the appropriate intersection check
   if (is_sorted && n == 1 && ranges.size() == 2){
