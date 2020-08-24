@@ -362,7 +362,7 @@ Traverse all of the cofaces (the star) of _simplex_ in the _SimplexTree_. Supply
 Traverse all of the _roots_ whose subtrees comprise the cofaces of _simplex_ in the _SimplexTree_. Supplying _simplex_ is required. 
 
 <a href='#link' id='link' class='anchor' aria-hidden='true'>#</a> 
-**link**"(_SimplexTree_, _simplex_)
+**link**(_SimplexTree_, _simplex_)
 
 Traverse all of the simplices of the link of _simplex_ in the _SimplexTree_. Supplying _simplex_ is required. 
 
