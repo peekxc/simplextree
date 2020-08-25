@@ -249,8 +249,6 @@ st %>% print_simplices("tree")
 
 Performs a _k-expansion_, constructing the _k_-skeleton as a flag complex. The expansion is performed by successively inserting all the simplices of _k_-skeleton into the tree. 
 
-This method assumes the dimension of the simplicial complex before expansion is 1. 
-
 <details>
 
 <summary> Expansion example </summary>
@@ -303,7 +301,7 @@ Returns the set of vertices adjacent to a given _vertex_.
 <a href='#is_face' id='is_face' class='anchor' aria-hidden='true'>#</a>
 **is_face**(_SimplexTree_, _[tau]_, _[sigma]_)
 
-Returns a logical indicating whether tau is a face of sigma. 
+Returns a logical indicating whether _tau_ is a face of _sigma_. 
 
 <a href='#is_tree' id='is_tree' class='anchor' aria-hidden='true'>#</a>
 **is_tree**(_SimplexTree_)
@@ -313,26 +311,26 @@ Returns a logical indicating whether the simplex tree is fully connected and acy
 <a href='#generate_ids' id='generate_ids' class='anchor' aria-hidden='true'>#</a>
 **generate_ids**(_SimplexTree_, _n_)
 
-Generates _n_ new vertex ids which do not exist in the tree according to the current _id\_policy_. 
+Generates _n_ new vertex ids which do not exist in the tree according to the current [id_policy](#id_policy). 
 
 #### Traversals
 
 The _SimplexTree_ data structure supports various types of _traversals_. A _traversal_ is a (possibly optimized) path that allows iteration through a subset of the _SimplexTree_. Once a traversal is parameterized, they can be saved as variables and used as arguments into the free function `traverse`, `straverse`, and `ltraverse`. They can also be converted explicitly to list form via the `as.list` S3 specialization. 
 
 <a href='#traverse' id='traverse' class='anchor' aria-hidden='true'>#</a>
-**traverse**(_traversal_ , _f_)
+**traverse**(_traversal_, _f_)
 
-Executes a given _traversal_, passing each simplex in the traversal as the only argument to _f_.
+Executes a given _traversal_, passing each simplex in the traversal as the only argument to _f_. Output returned by _f_, if any, is discarded. This function does not return a value.
 
 <a href='#straverse' id='straverse' class='anchor' aria-hidden='true'>#</a>
-**ltraverse**(_traversal_ , _f_)
+**ltraverse**(_traversal_, _f_)
 
-Executes a given _traversal_, returning a list of the same length as the traversal path, with each element containing the result of _f_.  **ltraverse** is meant to used in a similar way as lapply.
+Executes a given _traversal_, passing each simplex in the traversal as the only argument to _f_, returning a list of the same length as the traversal path whose elements contain the result of _f_.  **ltraverse** is meant to used in a similar way as [lapply](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/lapply).
 
 <a href='#ltraverse' id='ltraverse' class='anchor' aria-hidden='true'>#</a>
-**straverse**(_traversal_ , _f_)
+**straverse**(_traversal_, _f_)
 
-Executes a given _traversal_, returning a vector of the same length as the traversal path, with each element containing the result of _f_.  **straverse** is meant to used in a similar way as sapply.
+Executes a given _traversal_, passing each simplex in the traversal as the only argument to _f_, returning a vector of the same length as the traversal path whose elements contain the result of _f_.  **straverse** is meant to used in a similar way as [sapply](https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/lapply).
 
 The currently supported _traversals_ are the following: 
 
@@ -386,11 +384,11 @@ Performs a traversal over the _maximal faces_ in the _SimplexTree_. A simplex is
 <a href='#serialize' id='serialize' class='anchor' aria-hidden='true'>#</a> 
 **serialize**(_SimplexTree_)
 
-Serializes the simplex tree _K_ into some of smaller representation needed to recover the simplex tree .Should only be used in conjunction with _deserialize_
+Serializes the simplex tree _K_ into some of smaller representation needed to recover the simplex tree.
 
 <a href='#deserialize' id='deserialize' class='anchor' aria-hidden='true'>#</a> _SimplexTree_ $ **deserialize**(_complex_, _SimplexTree_)
 
-Deserializes _complex_, the result of _serialize_, into _SimplexTree_ if supplied, or an empty _SimplexTree_ if not supplied. Should only be used in conjunction with _serialize_.
+Deserializes _complex_, the result of [serialize](#serialize), into the given _SimplexTree_ if supplied, or an empty _SimplexTree_ otherwise. 
 
 #### Conversions
 
@@ -476,12 +474,6 @@ Note that the C++ class contains a superset of the functionality exported to R, 
 
 </details> 
 
-## References 
-
-> <a name="simplex-tree-paper">1.</a> Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427. 
-
-> <a name="simplicial-map-paper">2.</a> Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
-
 ## Visualizing the complex
 
 Summarizing the complex can be achieved via either the overridden [S3](https://stat.ethz.ch/R-manual/R-devel/library/methods/html/Methods_for_S3.html) print generic or the more detailed [print_tree](#print_tree) method.
@@ -514,6 +506,7 @@ plot(st)
 
 There are many other options for controlling how the complex is displayed (e.g. the positions of the simplices, the sizes/linewidths of the vertices/edges, the vertex labels, whether to color only maximal faces or individual simplices, etc.). For the full documentation, see `?plot.simplextree`.
 
+
 ## More information 
 
 The full documentation for both the plot package is available in the man pages.
@@ -521,3 +514,9 @@ The full documentation for both the plot package is available in the man pages.
 ```R
 ## see ?simplextree
 ```
+
+## References 
+
+> <a name="simplex-tree-paper">1.</a> Boissonnat, Jean-Daniel, and Clément Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427. 
+
+> <a name="simplicial-map-paper">2.</a> Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.

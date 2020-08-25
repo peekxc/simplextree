@@ -1,8 +1,8 @@
 Package: simplextree
 Type: Package
-Title: Provides tools for working with general simplicial complexes 
+Title: Provides Tools for Working with General Simplicial Complexes
 Version: 1.0.0
-Date: 2020-08-01
+Date: 2020-08-25
 Depends: R (>= 3.4.0)
 Authors@R: person("Matt", "Piekenbrock", email = "matt.piekenbrock@gmail.com",
                   role = c("aut", "cre"))
@@ -16,7 +16,6 @@ Imports:
     magrittr
 Encoding: UTF-8
 LazyData: true
-VignetteBuilder: knitr
 SystemRequirements: C++11
 RoxygenNote: 7.1.0
 Suggests: 
