@@ -8,3 +8,4 @@
 ^doc$
 ^codecov\.yml$
 ^cran-comments\.md$
+^README.md$
