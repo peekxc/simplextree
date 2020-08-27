@@ -918,6 +918,8 @@ is_tree <- function(st){
 #' the color palette is recyled and simplices are as such. 
 #' @importFrom utils modifyList
 #' @examples 
+#' library(igraph)
+#' 
 #' ## Simple 3-simplex 
 #' st <- simplex_tree()
 #' st %>% insert(list(1:4))
