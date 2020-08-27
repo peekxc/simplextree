@@ -2,6 +2,7 @@
 
 * Added a `NEWS.md` file to track changes to the package.
 * First CRAN release.
+* Removed igraph from dependency list. This changes the default plotting layout. 
 
 # simplextree 0.9.9
 
