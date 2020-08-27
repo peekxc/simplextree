@@ -24,18 +24,17 @@ all.equal(as.list(preorder(st)), as.list(preorder(st2)))
 # TRUE 
 
 set.seed(1234)
-R <- rips(dist(replicate(2, rnorm(150))), eps = pnorm(0.20), dim = 2)
+R <- rips(dist(replicate(2, rnorm(100))), eps = pnorm(0.10), dim = 2)
 print(R$n_simplices)
-# 50 137 229
+# 100 384 851
 
 ## Approx. size of the full complex 
 print(utils::object.size(as.list(preorder(R))), units = "Kb")
-# 345.7 Kb
+# 106.4 Kb
 
 ## Approx. size of serialized version 
 print(utils::object.size(serialize(R)), units = "Kb")
-# 14.4 Kb
-
+# 5.4 Kb
 ## You can save these to disk via e.g. saveRDS(serialize(R), ...)
 }
 \seealso{

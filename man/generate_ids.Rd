@@ -32,11 +32,12 @@ st \%>\% generate_ids(3)
 ## 0 1 2
 st \%>\% generate_ids(3) 
 ## 0 1 2
-st \%>\% insert(as.list(1:3))
-print(st$vertices) ## 0 1 2
+st \%>\% insert(list(1,2,3))
+print(st$vertices) 
+## 1 2 3
 st \%>\% insert(as.list(st \%>\% generate_ids(2)))
 st \%>\% print_simplices() 
-# 0, 1, 2, 3, 4, 0 4
+# 0, 1, 2, 3, 4
 st \%>\% remove(4)
 st \%>\% generate_ids(1) 
 # 4

@@ -26,16 +26,14 @@ In general, this function is \emph{not} intended to be used to \emph{generate} a
 \examples{
 library(simplextree)
 all(nat_to_sub(seq(choose(100,2)), n = 100, k = 2) == combn(100,2))
-\dontrun{
-  ## Generating pairwise combinadics is particularly fast
-  microbenchmark(
-    { nat_to_sub(x, n = 120L, k = 2L) }, 
-    times = 100, 
-    setup = { x = seq(choose(120,2)) }
-  )
-  microbenchmark({ combn(120,2) }, times = 100)
-}
 
+## Generating pairwise combinadics is particularly fast
+microbenchmark::microbenchmark(
+  { nat_to_sub(x, n = 120L, k = 2L) }, 
+  times = 100, 
+  setup = { x = seq(choose(120,2)) }
+)
+microbenchmark::microbenchmark({ combn(120,2) }, times = 10)
 }
 \references{
 McCaffrey, J. D. "Generating the mth lexicographical element of a mathematical combination." MSDN Library (2004).

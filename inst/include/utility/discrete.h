@@ -1,7 +1,6 @@
 #ifndef DISCRETE_H_
 #define DISCRETE_H_
 
-#include "meta_utilities.h" // template-utilities
 #include "short_alloc.h"    // stack-based allocation helpers
 #include <assert.h>         // assertions
 #include <array>

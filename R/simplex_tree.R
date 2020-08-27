@@ -434,31 +434,6 @@ setClass("Rcpp_Filtration")
 })
 # nocov end
 
-# ---- as_XPtr ----
-#' @name as_XPtr
-#' @title Convert to external pointer
-#' @description Exports the simplex tree as an \code{externalptr} (i.e. \code{Rcpp::Xptr}) for passing to and from C++ and R. 
-#' This method does not register a finalizer. An example is given below using the Rcpp \emph{depends} attribute.
-#' @examples 
-#' 
-#' ## Below is an example of casting an XPtr created in R to a SimplexTree type in C++. 
-#' \dontrun{
-#' // my_source.cpp
-#' #include "Rcpp.h"
-#' // [[Rcpp::depends(simplextree)]]
-#' #include "simplextree.h"
-#' 
-#' [[Rcpp::export]]
-#' void print_tree(SEXP stree){
-#'  Rcpp::XPtr<SimplexTree> stree_ptr(stree);
-#'  stree_ptr->print_tree();
-#' }
-#' }
-#' ## Pass to Rcpp as follows
-#' st <- simplextree::simplex_tree()
-#' print(st$as_XPtr())
-NULL
-
 # ---- clear ----
 #' @name clear
 #' @title Clears the simplex tree
@@ -466,10 +441,11 @@ NULL
 #' @description Removes all simplices from the simplex tree, except the root node.
 #' @examples 
 #' st <- simplex_tree()
-#' st$insert(1:3)
+#' st %>% insert(1:3)
 #' print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
-#' st$clear()
+#' st %>% clear()
 #' print(st) ## < empty simplex tree >
+#' @export
 clear <- function(st){
   stopifnot(class(st) %in% .st_classes)
   st$clear()
@@ -499,11 +475,12 @@ clear <- function(st){
 #' ## 0 1 2
 #' st %>% generate_ids(3) 
 #' ## 0 1 2
-#' st %>% insert(as.list(1:3))
-#' print(st$vertices) ## 0 1 2
+#' st %>% insert(list(1,2,3))
+#' print(st$vertices) 
+#' ## 1 2 3
 #' st %>% insert(as.list(st %>% generate_ids(2)))
 #' st %>% print_simplices() 
-#' # 0, 1, 2, 3, 4, 0 4
+#' # 0, 1, 2, 3, 4
 #' st %>% remove(4)
 #' st %>% generate_ids(1) 
 #' # 4
@@ -785,18 +762,17 @@ contract <- function(st, edge){
 #' # TRUE 
 #' 
 #' set.seed(1234)
-#' R <- rips(dist(replicate(2, rnorm(150))), eps = pnorm(0.20), dim = 2)
+#' R <- rips(dist(replicate(2, rnorm(100))), eps = pnorm(0.10), dim = 2)
 #' print(R$n_simplices)
-#' # 50 137 229
+#' # 100 384 851
 #' 
 #' ## Approx. size of the full complex 
 #' print(utils::object.size(as.list(preorder(R))), units = "Kb")
-#' # 345.7 Kb
+#' # 106.4 Kb
 #' 
 #' ## Approx. size of serialized version 
 #' print(utils::object.size(serialize(R)), units = "Kb")
-#' # 14.4 Kb
-#' 
+#' # 5.4 Kb
 #' ## You can save these to disk via e.g. saveRDS(serialize(R), ...)
 #' @export
 serialize <- function(st){
@@ -987,26 +963,6 @@ is_tree <- function(st){
 #' ## **Only the maximal simplices in the list are drawn** 
 #' blue_vertices <- structure(as.list(rep("blue", 5)), names=as.character(seq(5, 9)))
 #' plot(st, color_pal=append(blue_vertices, list("5,6,7,8,9"="red")))
-#' 
-#' ## You can specify add=TRUE to add to the current plot
-#' ## This makes e.g. animations easier. 
-#' \dontrun{
-#'   ## Fix coordinates
-#'   g <- igraph::graph_from_adjacency_matrix(st$as_adjacency_matrix())
-#'   coords <- igraph::layout.auto(g)
-#'   
-#'   ## Create rainbow colors 
-#'   si_to_str <- function(simplex) { paste0(simplex, collapse=",") }
-#'   si_names <- sapply(st$ltraverse(identity, "bfs"), si_to_str)[-1]
-#'   si_colors <- structure(as.list(rainbow(sum(st$n_simplices))), names=si_names)
-#'   
-#'   ## Make animation
-#'   animation::saveGIF({
-#'     for (i in seq(sum(st$n_simplices))){
-#'       plot(st, coords=coords, color_pal=si_colors[1L:i])
-#'     }
-#'   }, movie.name = "si_animation.gif", interval=0.2)
-#' }
 #' @export
 plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NULL, edge_opt=NULL, polygon_opt=NULL, color_pal=NULL, maximal=TRUE, by_dim=TRUE, add=FALSE,...) { # nocov start
   stopifnot(class(x) %in% .st_classes)

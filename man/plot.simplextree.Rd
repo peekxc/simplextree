@@ -120,24 +120,4 @@ plot(st, color_pal=unlist(coface_pal))
 ## **Only the maximal simplices in the list are drawn** 
 blue_vertices <- structure(as.list(rep("blue", 5)), names=as.character(seq(5, 9)))
 plot(st, color_pal=append(blue_vertices, list("5,6,7,8,9"="red")))
-
-## You can specify add=TRUE to add to the current plot
-## This makes e.g. animations easier. 
-\dontrun{
-  ## Fix coordinates
-  g <- igraph::graph_from_adjacency_matrix(st$as_adjacency_matrix())
-  coords <- igraph::layout.auto(g)
-  
-  ## Create rainbow colors 
-  si_to_str <- function(simplex) { paste0(simplex, collapse=",") }
-  si_names <- sapply(st$ltraverse(identity, "bfs"), si_to_str)[-1]
-  si_colors <- structure(as.list(rainbow(sum(st$n_simplices))), names=si_names)
-  
-  ## Make animation
-  animation::saveGIF({
-    for (i in seq(sum(st$n_simplices))){
-      plot(st, coords=coords, color_pal=si_colors[1L:i])
-    }
-  }, movie.name = "si_animation.gif", interval=0.2)
-}
 }

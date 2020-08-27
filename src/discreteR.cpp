@@ -8,58 +8,6 @@ size_t n_choose_k(const size_t n, const size_t k){
   return BinomialCoefficient(n,k);
 }
 
-// size_t R_choose(double n, double k){
-//   double r, k0 = k;
-//   k = round(k);
-//   if (k < 30) {
-//   	int j;
-//   	if(n-k < k && n >= 0)
-//   	    k = round(n-k); /* <- Symmetry, ensure k still integer */
-//   	if (k <	 0) return 0.;
-//   	if (k == 0) return 1.;
-//   	/* else: k >= 1 */
-//   	r = n;
-//   	for(j = 2; j <= k; j++)
-//   	    r *= (n-j+1)/j;
-//   	return round(r);
-//   }
-//   return(0);
-// }
-
-// NumericVector bench_bc(const size_t max_cc, const size_t n_runs){
-//   // start the timer
-//   Timer timer;
-//   std::vector< size_t > res(n_runs);
-//   
-//   timer.step("init");        // record the starting point
-//   for (size_t i = 0; i < n_runs; ++i){
-//     for (int n = 0; n < max_cc; ++n){
-//       for (int k = 0; k < max_cc; ++k){
-//         res[i] = std::max(res[i], R_choose(double(n),double(k))); 
-//       }
-//     }
-//   }
-//   timer.step("base R"); 
-//   
-//   for (size_t i = 0; i < n_runs; ++i){
-//     size_t j = 0; 
-//     for (int n = 0; n < max_cc; ++n){
-//       for (int k = 0; k < max_cc; ++k){
-//         res[i] = std::max(res[i], n_choose_k(n,k)); 
-//       }
-//     }
-//   }
-//   timer.step("custom");
-//   
-//   timer.step("stop");   // record the final step
-//   
-//   NumericVector times(timer); 
-//   for (int i=0; i<times.size(); i++) {
-//     times[i] = times[i] / n_runs;
-//   }
-//   return(times);
-// }
-
 // [[Rcpp::export]]
 size_t inv_choose_2_R(const size_t x){
   return inv_choose_2(x);

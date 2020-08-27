@@ -1,8 +1,16 @@
 #ifndef COMBINATIONS_H
 #define COMBINATIONS_H
 
-// Original copyright Howard Hinnant 2005-2011, adapted from: 
+//  (C) Copyright Howard Hinnant 2005-2011.
+//  Use, modification and distribution are subject to the Boost Software License,
+//  Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt).
+//
+//  See http://www.boost.org/libs/type_traits for most recent version including documentation.
+
+// This code was adapted from Howard Hinnants excellent combinations header:
 // https://github.com/HowardHinnant/combinations
+// The original copyright is included above. 
 
 #include <iterator>
 #include <algorithm>
@@ -61,13 +69,6 @@ namespace detail {
 		return false;
 	}
 	
-	// template < typename Lambda, class... Ts > 
-	// struct NullaryPredicate {
-	// 	Lambda f_; 
-	// 	std::tuple< Ts... > params;
-	// 	NullaryPredicate(Lambda& f, Ts ... args) : f_(f), params(std::make_tuple(std::move(args)...)) {};
-	// 	bool operator()() { return std::apply(f_, params); } 
-	// };
 	template < typename Lambda, class... Ts >
 	struct NullaryPredicate {
 		Lambda f_;
@@ -81,7 +82,6 @@ using namespace detail;
 	
 template < class It, class Function >
 Function for_each_combination(It first, It mid, It last, Function&& f) {
-	// NullaryPredicate< Function&, It, It > nullary_f(f, first, mid);
 	combine_discontinuous(first, mid, std::distance(first, mid),
 												mid, last, std::distance(mid, last),
 												[&f, &first, &mid]() -> bool { return f(first, mid); });

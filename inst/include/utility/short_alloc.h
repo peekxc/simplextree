@@ -23,6 +23,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+// This code was adapted from Howard Hinnants excellent arena-based allocator header:
+// https://howardhinnant.github.io/short_alloc.h
+// The original copyright is included above. 
+
 // To use alloca portably
 #ifdef __GNUC__
 /* Includes GCC, clang and Intel compilers */
