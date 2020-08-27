@@ -890,6 +890,10 @@ is_tree <- function(st){
 ## @param clip_polygons Whether to clip the polygons. Useful when visualizing large complexes. See details. 
 #' @param ... unused
 #' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
+#' If not (x,y) coordinates are supplied via \code{coords}, a default layout is generated via phyllotaxis arrangement. This layout is 
+#' not in general does not optimize the embedding towards any usual visualization criteria e.g. it doesn't try to separate connected components, 
+#' minimize the number of crossings, etc. For those, the user is recommended to look in existing code graph drawing libraries, e.g. \link[igraph]{layout.auto}. 
+#' The primary benefit of the default phyllotaxis arrangement is that it is deterministic and fast to generate. 
 #' \cr
 #' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
 #' override default parameters and are passed to \code{\link[graphics]{points}}, \code{\link[graphics]{text}}, \code{\link[graphics]{segments}}, 
@@ -918,11 +922,9 @@ is_tree <- function(st){
 #' the color palette is recyled and simplices are as such. 
 #' @importFrom utils modifyList
 #' @examples 
-#' library(igraph)
-#' 
+#'
 #' ## Simple 3-simplex 
-#' st <- simplex_tree()
-#' st %>% insert(list(1:4))
+#' st <- simplex_tree() %>% insert(list(1:4))
 #' 
 #' ## Default is categorical colors w/ diminishing opacity
 #' plot(st)
@@ -970,6 +972,7 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
   stopifnot(class(x) %in% .st_classes)
   if (sum(x$n_simplices) == 0){ graphics::plot.new(); return() } 
 
+  
   ## Default color palette; categorical diverging if (# colors) <= 9, o/w rainbow
   if (missing(color_pal) || is.null(color_pal)){  
     n_colors <- if (by_dim) x$dimension+1 else sum(x$n_simplices)
@@ -1040,9 +1043,9 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
   ## Get coordinates of vertices
   if (!missing(coords)){ stopifnot(is.matrix(coords) && all(dim(coords) == c(x$n_simplices[1], 2))) }
   else {
-    requireNamespace("igraph", quietly = TRUE)
-    g <- igraph::graph_from_adjacency_matrix(x$as_adjacency_matrix())
-    coords <- igraph::layout_with_fr(g)
+    ## If no coordinates specified, use phyllotaxis arrangement as default 
+    t <- seq(x$n_simplices[1])*pi * (3 - sqrt(5))
+    coords <- cbind(sin(t)*t, cos(t)*t)
   }
   
   ## Create a new plot by default unless specified otherwise 

@@ -25,9 +25,7 @@ LazyData: true
 SystemRequirements: C++11
 RoxygenNote: 7.1.0
 Suggests: 
-    microbenchmark, 
     testthat,
-    igraph,
     knitr,
     rmarkdown,
     covr

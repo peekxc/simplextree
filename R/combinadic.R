@@ -12,12 +12,14 @@
 #' all(nat_to_sub(seq(choose(100,2)), n = 100, k = 2) == combn(100,2))
 #' 
 #' ## Generating pairwise combinadics is particularly fast
-#' microbenchmark::microbenchmark(
-#'   { nat_to_sub(x, n = 120L, k = 2L) }, 
-#'   times = 100, 
-#'   setup = { x = seq(choose(120,2)) }
-#' )
-#' microbenchmark::microbenchmark({ combn(120,2) }, times = 10)
+#' ## Below: test to generate ~ 45k combinadics (note: better to use microbenchmark) 
+#' system.time({
+#'   x <- seq(choose(300,2))
+#'   nat_to_sub(x, n = 300, k = 2L)
+#' })
+#' 
+#' ## Compare with generating raw combinations
+#' system.time(combn(300,2))
 #' @export  
 nat_to_sub  <- function(x, n, k){
 	if (length(x) == 0){ return(matrix(integer(0), nrow = k)) }

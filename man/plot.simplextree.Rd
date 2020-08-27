@@ -47,6 +47,10 @@ Plots the simplex tree
 }
 \details{
 This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
+If not (x,y) coordinates are supplied via \code{coords}, a default layout is generated via phyllotaxis arrangement. This layout is 
+not in general does not optimize the embedding towards any usual visualization criteria e.g. it doesn't try to separate connected components, 
+minimize the number of crossings, etc. For those, the user is recommended to look in existing code graph drawing libraries, e.g. \link[igraph]{layout.auto}. 
+The primary benefit of the default phyllotaxis arrangement is that it is deterministic and fast to generate. 
 \cr
 All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
 override default parameters and are passed to \code{\link[graphics]{points}}, \code{\link[graphics]{text}}, \code{\link[graphics]{segments}}, 
@@ -75,9 +79,9 @@ If \code{length(color_pal)} does not match the dimension or the number of simpli
 the color palette is recyled and simplices are as such.
 }
 \examples{
+
 ## Simple 3-simplex 
-st <- simplex_tree()
-st \%>\% insert(list(1:4))
+st <- simplex_tree() \%>\% insert(list(1:4))
 
 ## Default is categorical colors w/ diminishing opacity
 plot(st)

@@ -28,12 +28,14 @@ library(simplextree)
 all(nat_to_sub(seq(choose(100,2)), n = 100, k = 2) == combn(100,2))
 
 ## Generating pairwise combinadics is particularly fast
-microbenchmark::microbenchmark(
-  { nat_to_sub(x, n = 120L, k = 2L) }, 
-  times = 100, 
-  setup = { x = seq(choose(120,2)) }
-)
-microbenchmark::microbenchmark({ combn(120,2) }, times = 10)
+## Below: test to generate ~ 45k combinadics (note: better to use microbenchmark) 
+system.time({
+  x <- seq(choose(300,2))
+  nat_to_sub(x, n = 300, k = 2L)
+})
+
+## Compare with generating raw combinations
+system.time(combn(300,2))
 }
 \references{
 McCaffrey, J. D. "Generating the mth lexicographical element of a mathematical combination." MSDN Library (2004).
