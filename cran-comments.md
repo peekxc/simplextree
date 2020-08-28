@@ -1,6 +1,8 @@
 ## Resubmission
 This is a resubmission. In this version I have:
 
+* Fixed the Authors@R field again so that the maintainer matches the author field. 
+
 * Fixed the Authors@R field to be a vector of person objects as opposed to as.person
 
 * Added Howard Hinnant to the author list in the DESCRIPTION file as a copyright holder, and fixed the LICENSE.
