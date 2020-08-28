@@ -4,10 +4,9 @@ Title: Provides Tools for Working with General Simplicial Complexes
 Version: 1.0.0
 Date: 2020-08-25
 Depends: R (>= 3.4.0)
-Authors@R: as.person(c(
-    "Matt Piekenbrock <matt.piekenbrock@gmail.com> [aut, cre]", 
-    "Howard Hinnant <howard.hinnant@gmail.com> [cph]"
-  ))
+Authors@R: c(
+  person("Matthew", "Piekenbrock", email = "matt.piekenbrock@gmail.com", role = c("cre", "aut")),
+  person("Howard", "Hinnant", email = "howard.hinnant@gmail.com", role = "cph"))
 Maintainer: Matt Piekenbrock <matt.piekenbrock@gmail.com>
 Description: Provides an interface to a Simplex Tree data structure, which is 
   a data structure aimed at enabling efficient manipulation of simplicial complexes 
