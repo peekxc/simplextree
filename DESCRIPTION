@@ -5,15 +5,17 @@ Version: 1.0.0
 Date: 2020-08-25
 Depends: R (>= 3.4.0)
 Authors@R: c(
-  person("Matt", "Piekenbrock", email = "matt.piekenbrock@gmail.com", role = c("cre", "aut")),
+  person("Matt", "Piekenbrock", role = c("cre", "aut"), email = "matt.piekenbrock@gmail.com"),
+  person("Jason Cory", "Brunson", role = c("ctb"), email = "cornelioid@gmail.com"),
   person("Howard", "Hinnant", email = "howard.hinnant@gmail.com", role = "cph"))
 Maintainer: Matt Piekenbrock <matt.piekenbrock@gmail.com>
 Description: Provides an interface to a Simplex Tree data structure, which is 
-  a data structure aimed at enabling efficient manipulation of 'simplicial' complexes 
+  a data structure aimed at enabling efficient manipulation of simplicial complexes 
   of any dimension. The Simplex Tree data structure was originally introduced by 
   Jean-Daniel Boissonnat and Clément Maria (2014) <doi:10.1007/s00453-014-9887-3>. 
 Language: en-US
 License: MIT + file LICENSE
+URL: https://github.com/peekxc/simplextree
 LinkingTo: Rcpp
 Imports: 
     Rcpp (>= 0.12.10),
