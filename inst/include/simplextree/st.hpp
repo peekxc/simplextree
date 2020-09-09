@@ -37,7 +37,8 @@ inline SimplexTree& SimplexTree::operator=(const SimplexTree& sc) {
 inline void SimplexTree::clear(){
   root.reset(new node(-1, nullptr));
 	level_map.clear(); 
-  n_simplexes.clear();
+  n_simplexes.fill(0);
+  // n_simplexes.clear();
   tree_max_depth = 0; 
   max_id = 0; 
 }
@@ -147,11 +148,15 @@ inline vector< idx_t > SimplexTree::adjacent_vertices(const size_t v) const {
 }
 
 // Modifies the number of simplices at dimension k by +/- n. Shrinks the n_simplexes array as needed. 
-inline void SimplexTree::record_new_simplexes(const idx_t k, const idx_t n){
-  if (n_simplexes.size() < k+1){ n_simplexes.resize(k+1); }
-  n_simplexes.at(k) += n;
-  while(n_simplexes.back() == 0 && n_simplexes.size() > 0){ n_simplexes.resize(n_simplexes.size() - 1); }
-  tree_max_depth = n_simplexes.size();
+inline void SimplexTree::record_new_simplexes(const idx_t k, const int n){
+  if (k >= 32){ std::invalid_argument("Invalid dimension to record."); }
+  n_simplexes[k] += n; 
+  auto first_zero = std::find(n_simplexes.begin(), n_simplexes.end(), 0);
+  tree_max_depth = std::distance(n_simplexes.begin(), first_zero);
+  // if (n_simplexes.size() < k+1){ n_simplexes.resize(k+1); }
+  // n_simplexes.at(k) += n;
+  // while(n_simplexes.back() == 0 && n_simplexes.size() > 0){ n_simplexes.resize(n_simplexes.size() - 1); }
+  // tree_max_depth = n_simplexes.size();
 }
 
 // Remove a child node directly from the parent, if it exists
@@ -780,7 +785,7 @@ inline simplex_t SimplexTree::full_simplex(node_ptr cn, const idx_t depth) const
 // }
 
 inline vector< idx_t > SimplexTree::get_vertices() const{
-  if (n_simplexes.size() == 0){ return vector< idx_t >(0); }
+  if (tree_max_depth == 0){ return vector< idx_t >(0); }
   vector< idx_t > v;
   v.reserve(n_simplexes[0]);
   for (auto& cn: node_children(root)){ v.push_back(node_label(cn)); }
@@ -789,7 +794,7 @@ inline vector< idx_t > SimplexTree::get_vertices() const{
 
 // Returns whether the graph is acyclic.
 inline bool SimplexTree::is_tree() const{
-	if (n_simplexes.size() == 0){ return false; }
+	if (tree_max_depth == 0){ return false; }
   UnionFind ds = UnionFind(n_simplexes.at(0));
 
   // Traverse the 1-skeleton, unioning all edges. If any of them are part of the same CC, there is a cycle. 

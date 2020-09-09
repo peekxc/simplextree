@@ -892,7 +892,7 @@ is_tree <- function(st){
 #' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
 #' If not (x,y) coordinates are supplied via \code{coords}, a default layout is generated via phyllotaxis arrangement. This layout is 
 #' not in general does not optimize the embedding towards any usual visualization criteria e.g. it doesn't try to separate connected components, 
-#' minimize the number of crossings, etc. For those, the user is recommended to look in existing code graph drawing libraries, e.g. \link[igraph]{layout.auto}. 
+#' minimize the number of crossings, etc. For those, the user is recommended to look in existing code graph drawing libraries, e.g. igraphs 'layout.auto' function, etc. 
 #' The primary benefit of the default phyllotaxis arrangement is that it is deterministic and fast to generate. 
 #' \cr
 #' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 

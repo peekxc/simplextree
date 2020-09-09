@@ -83,7 +83,8 @@ struct SimplexTree {
   // Fields 
   node_uptr root; 															// empty face; initialized to id = 0, parent = nullptr
   vector< cousin_map_t > level_map;	            // adjacency map between cousins
-  vector< size_t > n_simplexes; 								// tracks the number of simplices if each order
+  std::array< size_t, 32 > n_simplexes = { 0 }; 
+  // vector< size_t > n_simplexes; 								// tracks the number of simplices if each order
   size_t tree_max_depth; 												// maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
   size_t max_id;										 						// maximum vertex id used so far. Only needed by the id generator. 
   size_t id_policy;  														// policy type to generate new ids
@@ -173,7 +174,7 @@ struct SimplexTree {
   auto generate_ids(size_t) -> vector< size_t >;
   auto degree(idx_t) const -> size_t;
   auto adjacent_vertices(const idx_t) const -> simplex_t;
-  auto record_new_simplexes(const idx_t k, const idx_t n) -> void;// record keeping
+  auto record_new_simplexes(const idx_t k, const int n) -> void;// record keeping
   auto dimension() const -> idx_t { return tree_max_depth == 0 ? 0 : tree_max_depth - 1; }
   
   template< typename Iterable > 

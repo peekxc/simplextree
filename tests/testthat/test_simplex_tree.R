@@ -353,7 +353,7 @@ testthat::test_that("inverse binomial coefficients work", {
 testthat::test_that("flag construction works", {
   xy <- cbind(runif(10), runif(10))
 	d <- dist(xy, method = "euclidean")
-	st <- simplex_tree(as.list(10)) %>% flag(d)
+	st <- simplex_tree(as.list(1:10)) %>% flag(d)
 	testthat::expect_true("Rcpp_Filtration" %in% class(st))
 	testthat::expect_equal(st$weights, numeric(0))
   testthat::expect_equal(st$simplices, list())

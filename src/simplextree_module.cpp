@@ -38,9 +38,7 @@ void vector_handler(SEXP sigma, Lambda&& f){
 // R-facing Inserter 
 void insert_R(SimplexTree* st, SEXP x){
   SimplexTree& st_ref = *st; 
-  vector_handler(x, [&st_ref](simplex_t&& sigma){ 
-    st_ref.insert(sigma); 
-  });
+  vector_handler(x, [&st_ref](simplex_t&& sigma){ st_ref.insert(sigma); });
 }
 
 // R-facing Inserter for lexicographically-sorted column matrix
@@ -231,13 +229,20 @@ List as_list(SimplexTree* st){
 void print_tree(SimplexTree* st){ st->print_tree(Rcout); }
 void print_cousins(SimplexTree* st){ st->print_cousins(Rcout); }
 
+IntegerVector simplex_counts(SimplexTree* st){
+  auto zero_it = std::find(st->n_simplexes.begin(), st->n_simplexes.end(), 0); 
+  auto ne = std::vector< size_t >(st->n_simplexes.begin(), zero_it);
+  return(wrap(ne));
+}
+
 // Exposed Rcpp Module 
 RCPP_MODULE(simplex_tree_module) {
   using namespace Rcpp;
   Rcpp::class_<SimplexTree>("SimplexTree")
     .constructor()
     .method( "as_XPtr", &as_XPtr)
-    .field_readonly("n_simplices", &SimplexTree::n_simplexes)
+    .property("n_simplices", &simplex_counts, "Gets simplex counts")
+    // .field_readonly("n_simplices", &SimplexTree::n_simplexes)
     .property("dimension", &SimplexTree::dimension)
     .property("id_policy", &SimplexTree::get_id_policy, &SimplexTree::set_id_policy)
     .property("vertices", &get_vertices, "Returns the vertex labels as an integer vector.")
@@ -324,7 +329,8 @@ RCPP_MODULE(filtration_module) {
   Rcpp::class_< SimplexTree >("SimplexTree")
     .constructor()
     .method( "as_XPtr", &as_XPtr)
-    .field_readonly("n_simplices", &SimplexTree::n_simplexes)
+    .property("n_simplices", &simplex_counts, "Gets simplex counts")
+    // .field_readonly("n_simplices", &SimplexTree::n_simplexes)
     .property("dimension", &SimplexTree::dimension)
     .property("id_policy", &SimplexTree::get_id_policy, &SimplexTree::set_id_policy)
     .property("vertices", &get_vertices, "Returns the vertex labels as an integer vector.")

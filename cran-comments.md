@@ -1,4 +1,13 @@
-## Resubmission
+## Patch release (2020-09-09)
+
+This is a patch release. In this version I have: 
+
+* Modified a method that produced many reallocations that would induce a recurring valgrind invalid read and address sanitizer error. 
+
+* Removed a cross reference to a package not included in suggests. 
+
+## Resubmission (2020-09-02)
+
 This is a resubmission. In this version I have:
 
 * Fixed the Authors@R field again so that the maintainer matches the author field. 

@@ -180,7 +180,7 @@ struct sorted_edges {
 // constructs a std::function object which accepts as an argument some weight value 'epsilon' and 
 // returns the simplex tree object.  
 inline void Filtration::flag_filtration(const vector< double >& D, const bool fixed){
-  if (this->n_simplexes.size() <= 1){ return; }
+  if (this->tree_max_depth <= 1){ return; }
   if (D.size() != this->n_simplexes.at(1)){ throw std::invalid_argument("Must have one weight per edge."); }
   
   // 0. Create the sorted map between the edges and their weights
