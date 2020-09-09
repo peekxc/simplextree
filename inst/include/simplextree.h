@@ -83,7 +83,7 @@ struct SimplexTree {
   // Fields 
   node_uptr root; 															// empty face; initialized to id = 0, parent = nullptr
   vector< cousin_map_t > level_map;	            // adjacency map between cousins
-  std::array< size_t, 32 > n_simplexes = { 0 }; 
+  std::array< size_t, 32 > n_simplexes = { { 0 } }; 
   // vector< size_t > n_simplexes; 								// tracks the number of simplices if each order
   size_t tree_max_depth; 												// maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
   size_t max_id;										 						// maximum vertex id used so far. Only needed by the id generator. 
