@@ -780,10 +780,10 @@ serialize <- function(st){
   n <- st$n_simplices[1]
   complex <- local({
     ids <- st$vertices
-    minimal <- straverse(maximal(st), function(simplex){ 
+    minimal <- matrix(straverse(maximal(st), function(simplex){ 
       c(length(simplex), sub_to_nat(match(simplex, ids), n)) 
-    })
-    minimal <- minimal[,order(minimal[1,])]
+    }), nrow = 2)
+    minimal <- minimal[,order(minimal[1,]),drop=FALSE]
     ids <- structure(rle(diff(ids)), head=ids[1])
     list(ids = ids, dims = rle(minimal[1,]), maps = minimal[2,])
   })
