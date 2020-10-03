@@ -2,11 +2,11 @@
 % Please edit documentation in R/sample.R
 \name{sample}
 \alias{sample}
-\alias{sample_linial_meshulam}
+\alias{sample_linial_meshulam_wallach}
 \alias{sample_costa_farber}
 \title{Sample random simplicial complexes}
 \usage{
-sample_linial_meshulam(n, dimension, prob)
+sample_linial_meshulam_wallach(n, dimension, prob)
 
 sample_costa_farber(n, prob)
 }
@@ -15,14 +15,14 @@ sample_costa_farber(n, prob)
 
 \item{dimension}{an integer dimension at which to randomly insert simplices.}
 
-\item{prob}{a numeric simplex insertion probability (Linial-Meshulam) or a
-vector of probabilities for all dimensions (Costa-Farber). The dimension of
-a Costa-Farber random simplicial complex will be at most \code{length(prob)
-- 1L}.}
+\item{prob}{a numeric simplex insertion probability (Linial-Meshulam-Wallach)
+or a vector of probabilities for all dimensions (Costa-Farber). The
+dimension of a Costa-Farber random simplicial complex will be at most
+\code{length(prob) - 1L}.}
 }
 \description{
 Generate random simplicial complexes following the models of
-  Linial and Meshulam (2009) and of Costa and Farber (2016).
+  Meshulam and Wallach (2009) and of Costa and Farber (2016).
 }
 \details{
 The random simplicial complex model of Costa and Farber (2016)
@@ -42,23 +42,24 @@ The random simplicial complex model of Costa and Farber (2016)
           on each subcomplex that forms a \eqn{k}-simplex boundary
           with probability \eqn{p_k}.}
   }
-  The model of Linial and Meshulam (2009) is a special case in which
-  \eqn{p_k=1} for \eqn{0\le k\le d-1}; the only parameters are \eqn{n}
-  (\code{n}) and \eqn{p_d} (\code{prob}).
+  The model of Meshulam and Wallach (2009), generalized from that of Linial
+  and Meshulam (2006) is a special case in which \eqn{p_k=1} for \eqn{0\le
+  k\le d-1}; the only parameters are \eqn{n} (\code{n}) and \eqn{p_d}
+  (\code{prob}).
 }
 \examples{
 set.seed(1)
 ## Generate Linial-Meshulam random simplicial complexes
-sample_linial_meshulam(n = 6L, dimension = 0L, prob = .5)
-sample_linial_meshulam(n = 6L, dimension = 1L, prob = .5)
-sample_linial_meshulam(n = 6L, dimension = 2L, prob = .5)
-sample_linial_meshulam(n = 6L, dimension = 3L, prob = .5)
+sample_linial_meshulam_wallach(n = 6L, dimension = 0L, prob = .5)
+sample_linial_meshulam_wallach(n = 6L, dimension = 1L, prob = .5)
+sample_linial_meshulam_wallach(n = 6L, dimension = 2L, prob = .5)
+sample_linial_meshulam_wallach(n = 6L, dimension = 3L, prob = .5)
 ## Generate Costa-Farber random simplicial complexes
 plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
 plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
 plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
 ## Construct a complete complex of a given size and dimension
-sample_linial_meshulam(n = 6L, dimension = 4L, prob = 0)
+sample_linial_meshulam_wallach(n = 6L, dimension = 4L, prob = 0)
 sample_costa_farber(n = 6L, prob = rep(1, 4L))
 ## Construct the clique complex of a random 1-skeleton
 plot(sample_costa_farber(n = 10L, prob = c(.7, .4, rep(1, 11L))))
@@ -67,6 +68,10 @@ plot(sample_costa_farber(n = 10L, prob = c(.7, .4, rep(1, 11L))))
 Linial N. and Meshulam R. (2006) Homological Connectivity of
   Random 2-Complexes. Combinatorica 26, 4, 475–487.
   DOI:https://doi.org/10.1007/s00493-006-0027-9
+
+Meshulam, R. and Wallach, N. (2009) Homological Connectivity of
+  Random k‐Dimensional Complexes. Random Struct. Alg., 34: 408-417.
+  doi:10.1002/rsa.20238
 
 Costa A. and Farber M. (2016) Random Simplicial Complexes. In:
   Callegaro F., Cohen F., De Concini C., Feichtner E., Gaiffi G., Salvetti M.
