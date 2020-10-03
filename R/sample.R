@@ -119,9 +119,9 @@ sample_costa_farber <- function(n, prob) {
   if (length(prob) == 2L) return(st)
   
   ## Iteravely sample higher-dimensional simplices
-  for (k in seq(3L, length(prob))) {
-    expand_f_bernoulli(st$as_XPtr(), k = k - 1L, p = prob[[k]])
-    if (st$dimension < k - 1L) break
+  for (d in seq(2L, length(prob) - 1L)) {
+    expand_f_bernoulli(st$as_XPtr(), k = d, p = prob[[d + 1L]])
+    if (st$dimension < d) break
   }
   
   ## Return the complex
