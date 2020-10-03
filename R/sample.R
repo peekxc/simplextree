@@ -1,11 +1,13 @@
 #' @name sample
 #' @title Sample random simplicial complexes
-#' @description Generate random simplicial complexes following the model of
-#'   Costa and Farber (2016).
+#' @description Generate random simplicial complexes following the models of
+#'   Linial and Meshulam (2009) and of Costa and Farber (2016).
 #' @param n an integer number of starting vertices.
-#' @param prob a numeric vector of simplex insertion probabilities. The
-#'   dimension of the resulting simplicial complex will be at most
-#'   \code{length(prob) - 1L}.
+#' @param dimension an integer dimension at which to randomly insert simplices.
+#' @param prob a numeric simplex insertion probability (Linial-Meshulam) or a
+#'   vector of probabilities for all dimensions (Costa-Farber). The dimension of
+#'   a Costa-Farber random simplicial complex will be at most \code{length(prob)
+#'   - 1L}.
 
 #' @details The random simplicial complex model of Costa and Farber (2016)
 #'   begins with a finite number of vertices \eqn{n} (\code{n}) and proceeds as
@@ -26,24 +28,68 @@
 #'           with probability \eqn{p_k}.}
 #'   }
 
-#' @references Costa A., Farber M. (2016) Random Simplicial Complexes. In:
+#'   The model of Linial and Meshulam (2009) is a special case in which
+#'   \eqn{p_k=1} for \eqn{0\le k\le d-1}; the only parameters are \eqn{n}
+#'   (\code{n}) and \eqn{p_d} (\code{prob}).
+
+#' @references Linial N. and Meshulam R. (2006) Homological Connectivity of
+#'   Random 2-Complexes. Combinatorica 26, 4, 475–487.
+#'   DOI:https://doi.org/10.1007/s00493-006-0027-9
+#' @references Costa A. and Farber M. (2016) Random Simplicial Complexes. In:
 #'   Callegaro F., Cohen F., De Concini C., Feichtner E., Gaiffi G., Salvetti M.
 #'   (eds) Configuration Spaces. Springer INdAM Series, vol 14. Springer, Cham.
 #'   https://doi.org/10.1007/978-3-319-31580-5_6
 #' @examples
 #' set.seed(1)
+#' ## Generate Linial-Meshulam random simplicial complexes
+#' sample_linial_meshulam(n = 6L, dimension = 0L, prob = .5)
+#' sample_linial_meshulam(n = 6L, dimension = 1L, prob = .5)
+#' sample_linial_meshulam(n = 6L, dimension = 2L, prob = .5)
+#' sample_linial_meshulam(n = 6L, dimension = 3L, prob = .5)
 #' ## Generate Costa-Farber random simplicial complexes
 #' plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
 #' plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
 #' plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
 #' ## Construct a complete complex of a given size and dimension
-#' sample_costa_farber(n = 6L, prob = rep(1, 5L))
+#' sample_linial_meshulam(n = 6L, dimension = 4L, prob = 0)
+#' sample_costa_farber(n = 6L, prob = rep(1, 4L))
 #' ## Construct the clique complex of a random 1-skeleton
 #' plot(sample_costa_farber(n = 10L, prob = c(.7, .4, rep(1, 11L))))
-#' ## Generate Linial-Meshulam random simplicial complexes
-#' sample_costa_farber(n = 6L, prob = c(rep(1, 1L), .5))
-#' sample_costa_farber(n = 6L, prob = c(rep(1, 2L), .5))
-#' sample_costa_farber(n = 6L, prob = c(rep(1, 3L), .5))
+
+#' @rdname sample
+#' @export
+sample_linial_meshulam <- function(n, dimension, prob) {
+  stopifnot(
+    n >= 0L,
+    dimension >= 0L,
+    inherits(prob, "numeric"),
+    length(prob) == 1L
+  )
+  
+  ## Create an empty simplicial complex
+  st <- simplex_tree()
+  
+  if (dimension == 0L) {
+    ## Retain vertices independently with probability p
+    vs <- which(as.logical(stats::rbinom(n, 1L, prob)))
+    insert(st, as.list(vs))
+  } else if (dimension == 1L) {
+    ## Insert edges independently with probability p
+    m1 <- choose(n, 2L)
+    n1 <- stats::rbinom(n = 1L, size = m1, prob = prob)
+    ex <- sort(sample.int(n = m1, size = n1))
+    es <- nat_to_sub(ex, n = n, k = 2L)
+    st$insert_lex(es)
+  } else {
+    ## Make `st` (d-1)-complete
+    insert(st, simplices = utils::combn(n, dimension))
+    ## Insert d-simplices with probability p 
+    expand_f_bernoulli(st$as_XPtr(), k = dimension, p = prob)
+  }
+  
+  ## Return the complex
+  return(st)
+}
 
 #' @rdname sample
 #' @export
@@ -77,6 +123,7 @@ sample_costa_farber <- function(n, prob) {
     expand_f_bernoulli(st$as_XPtr(), k = k - 1L, p = prob[[k]])
     if (st$dimension < k - 1L) break
   }
+  
   ## Return the complex
   return(st)
 }
