@@ -19,11 +19,9 @@ void expand_f_bernoulli(SEXP stx, const size_t k, const double p){
   // Perform Bernoulli trials for given k, with success probability p
   st.expansion_f(k, [&](node_ptr parent, idx_t depth, idx_t label){
     double q = bernoulli(random_engine);
-    if (q >= 1 - p){ // if successful trial
+    if (p == 1.0 | q < p){ // if successful trial
       std::array< idx_t, 1 > int_label = { label };
       st.insert_it(begin(int_label), end(int_label), parent, depth);
     }
   });
-  
-  return; // Return nothing
 }
