@@ -24,6 +24,4 @@ void expand_f_bernoulli(SEXP stx, const size_t k, const double p){
       st.insert_it(begin(int_label), end(int_label), parent, depth);
     }
   });
-  
-  return; // Return nothing
 }
