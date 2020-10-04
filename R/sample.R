@@ -1,17 +1,20 @@
 #' @name sample
 #' @title Sample random simplicial complexes
 #' @description Generate random simplicial complexes following the models of
-#'   Meshulam and Wallach (2009) and of Costa and Farber (2016).
+#'   Meshulam and Wallach (2009), Kahle (2009), and Costa and Farber (2016).
 #' @param n an integer number of starting vertices.
 #' @param dimension an integer dimension at which to randomly insert simplices.
-#' @param prob a numeric simplex insertion probability (Linial-Meshulam-Wallach)
-#'   or a vector of probabilities for all dimensions (Costa-Farber). The
+#' @param prob a numeric simplex insertion probability (Linial-Meshulam-Wallach,
+#'   Kahle) or a vector of probabilities for all dimensions (Costa-Farber). The
 #'   dimension of a Costa-Farber random simplicial complex will be at most
 #'   \code{length(prob) - 1L}.
 
-#' @details The random simplicial complex model of Costa and Farber (2016)
-#'   begins with a finite number of vertices \eqn{n} (\code{n}) and proceeds as
-#'   follows, based on the \eqn{d+1}-dimensional vector of probabilities
+#' @details The random clique complex model of Kahle (2009) samples a random
+#'   graph \eqn{G(n,p)} and inserts all complete subgraphs as faces.
+#'
+#'   The random simplicial complex model of Costa and Farber (2016) begins with
+#'   a finite number of vertices \eqn{n} (\code{n}) and proceeds as follows,
+#'   based on the \eqn{d+1}-dimensional vector of probabilities
 #'   \eqn{p_0,\ldots,p_d} (\code{prob}):
 
 #'   \itemize{
@@ -35,14 +38,16 @@
 
 #' @references Linial N. and Meshulam R. (2006) Homological Connectivity of
 #'   Random 2-Complexes. Combinatorica 26, 4, 475–487.
-#'   DOI:https://doi.org/10.1007/s00493-006-0027-9
+#'   doi:10.1007/s00493-006-0027-9
 #' @references Meshulam, R. and Wallach, N. (2009) Homological Connectivity of
 #'   Random k‐Dimensional Complexes. Random Struct. Alg., 34: 408-417.
 #'   doi:10.1002/rsa.20238
+#' @references Kahle, M. (2009) Topology of Random Clique Complexes. Discrete
+#'   Math., 309(6): 1658-1671. doi:10.1016/j.disc.2008.02.037
 #' @references Costa A. and Farber M. (2016) Random Simplicial Complexes. In:
 #'   Callegaro F., Cohen F., De Concini C., Feichtner E., Gaiffi G., Salvetti M.
 #'   (eds) Configuration Spaces. Springer INdAM Series, vol 14. Springer, Cham.
-#'   https://doi.org/10.1007/978-3-319-31580-5_6
+#'   doi:10.1007/978-3-319-31580-5_6
 #' @examples
 #' set.seed(1)
 #' ## Generate Linial-Meshulam random simplicial complexes
@@ -97,6 +102,40 @@ sample_linial_meshulam_wallach <- function(n, dimension, prob) {
 
 #' @rdname sample
 #' @export
+sample_random_d_complex <- sample_linial_meshulam_wallach
+
+#' @rdname sample
+#' @export
+sample_kahle <- function(n, prob) {
+  stopifnot(
+    n >= 0L,
+    inherits(prob, "numeric"),
+    length(prob) == 1L
+  )
+  
+  ## Create an empty simplicial complex
+  st <- simplex_tree()
+  
+  ## Insert edges independently with probability p
+  m1 <- choose(n, 2L)
+  n1 <- stats::rbinom(n = 1L, size = m1, prob = prob)
+  ex <- sort(sample.int(n = m1, size = n1))
+  es <- nat_to_sub(ex, n = n, k = 2L)
+  st$insert_lex(es)
+  
+  ## Insert simplices at maximal cliques
+  # -+- Use combinatorial maximal cliques algorithm? -+-
+  
+  ## Return the complex
+  return(st)
+}
+
+#' @rdname sample
+#' @export
+sample_random_clique_complex <- sample_kahle
+
+#' @rdname sample
+#' @export
 sample_costa_farber <- function(n, prob) {
   stopifnot(
     n >= 0L,
@@ -131,3 +170,7 @@ sample_costa_farber <- function(n, prob) {
   ## Return the complex
   return(st)
 }
+
+#' @rdname sample
+#' @export
+sample_multiparameter_complex <- sample_costa_farber
