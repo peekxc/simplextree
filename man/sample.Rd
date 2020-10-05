@@ -31,12 +31,12 @@ Generate random simplicial complexes following the models of
   Meshulam and Wallach (2009), Kahle (2009), and Costa and Farber (2016).
 }
 \details{
-The random graph model of Erdős and Rényi (1959) powers parts of
-  other models and is exported for convenience.
+The random graph model \eqn{G(n,p)} of Erdős and Rényi (1959) powers
+  parts of other models and is exported for convenience.
 
-  The random clique complex model of Kahle (2009) samples a random graph
-  \eqn{G(n,p)}, then inserts all complete subgraphs as faces, using
-  \code{\link{expand}}.
+  The random clique complex model of Kahle (2009) samples an Erdős-Rényi
+  random graph, then uses \code{\link{expand}} to insert all complete
+  subgraphs.
 
   The random simplicial complex model of Costa and Farber (2016) begins with
   a finite number of vertices \eqn{n} (\code{n}) and proceeds as follows,
@@ -56,7 +56,7 @@ The random graph model of Erdős and Rényi (1959) powers parts of
           with probability \eqn{p_k}.}
   }
   The model of Meshulam and Wallach (2009), generalized from that of Linial
-  and Meshulam (2006) is a special case in which \eqn{p_k=1} for \eqn{0\le
+  and Meshulam (2006), is a special case in which \eqn{p_k=1} for \eqn{0\le
   k\le d-1}; the only parameters are \eqn{n} (\code{n}) and \eqn{p_d}
   (\code{prob}).
 }
