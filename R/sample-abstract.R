@@ -1,12 +1,12 @@
-#' @name sample
-#' @title Sample random simplicial complexes
+#' @name sample-abstract
+#' @title Sample random abstract simplicial complexes
 #' @description Generate random simplicial complexes following the models of
 #'   Meshulam and Wallach (2009), Kahle (2009), and Costa and Farber (2016).
 #' @param n an integer number of starting vertices.
 #' @param dimension an integer dimension at which to randomly insert simplices.
-#' @param prob a numeric simplex insertion probability (Linial-Meshulam-Wallach,
-#'   Kahle) or a vector of probabilities for all dimensions (Costa-Farber). The
-#'   dimension of a Costa-Farber random simplicial complex will be at most
+#' @param prob a numeric simplex insertion probability (Linial–Meshulam–Wallach,
+#'   Kahle) or a vector of probabilities for all dimensions (Costa–Farber). The
+#'   dimension of a Costa–Farber random simplicial complex will be at most
 #'   \code{length(prob) - 1L}.
 
 #' @details The random graph model of Erdős and Rényi (1959) powers parts of
@@ -79,7 +79,7 @@
 #' ## Construct the clique complex of a random 1-skeleton
 #' plot(sample_costa_farber(n = 10L, prob = c(.7, .5, rep(1, 11L))))
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_erdos_renyi <- function(n, prob) {
   stopifnot(
@@ -102,7 +102,7 @@ sample_erdos_renyi <- function(n, prob) {
   return(st)
 }
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_kahle <- function(n, prob) {
   
@@ -117,11 +117,11 @@ sample_kahle <- function(n, prob) {
   return(st)
 }
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_random_clique_complex <- sample_kahle
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_linial_meshulam_wallach <- function(n, dimension, prob) {
   stopifnot(
@@ -151,11 +151,11 @@ sample_linial_meshulam_wallach <- function(n, dimension, prob) {
   return(st)
 }
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_random_d_complex <- sample_linial_meshulam_wallach
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_costa_farber <- function(n, prob) {
   stopifnot(
@@ -192,6 +192,6 @@ sample_costa_farber <- function(n, prob) {
   return(st)
 }
 
-#' @rdname sample
+#' @rdname sample-abstract
 #' @export
 sample_multiparameter_complex <- sample_costa_farber
