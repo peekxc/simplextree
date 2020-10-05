@@ -4,26 +4,17 @@
 \alias{sample}
 \alias{sample_erdos_renyi}
 \alias{sample_kahle}
-\alias{sample_random_clique_complex}
 \alias{sample_linial_meshulam_wallach}
-\alias{sample_random_d_complex}
 \alias{sample_costa_farber}
-\alias{sample_multiparameter_complex}
 \title{Sample random simplicial complexes}
 \usage{
 sample_erdos_renyi(n, prob)
 
 sample_kahle(n, prob)
 
-sample_random_clique_complex(n, prob)
-
 sample_linial_meshulam_wallach(n, dimension, prob)
 
-sample_random_d_complex(n, dimension, prob)
-
 sample_costa_farber(n, prob)
-
-sample_multiparameter_complex(n, prob)
 }
 \arguments{
 \item{n}{an integer number of starting vertices.}

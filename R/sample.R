@@ -91,11 +91,14 @@ sample_erdos_renyi <- function(n, prob) {
   ## Create an empty simplicial complex
   st <- simplex_tree()
   
-  ## Insert edges independently with probability p
+  ## Select edges independently with probability p
   m1 <- choose(n, 2L)
   n1 <- stats::rbinom(n = 1L, size = m1, prob = prob)
   ex <- sort(sample.int(n = m1, size = n1))
   es <- nat_to_sub(ex, n = n, k = 2L)
+  
+  ## Populate simplicial complex with vertices and edges
+  insert(st, as.list(seq(n)))
   st$insert_lex(es)
   
   ## Return the complex
@@ -116,10 +119,6 @@ sample_kahle <- function(n, prob) {
   ## Return the complex
   return(st)
 }
-
-#' @rdname sample
-#' @export
-sample_random_clique_complex <- sample_kahle
 
 #' @rdname sample
 #' @export
@@ -153,34 +152,36 @@ sample_linial_meshulam_wallach <- function(n, dimension, prob) {
 
 #' @rdname sample
 #' @export
-sample_random_d_complex <- sample_linial_meshulam_wallach
-
-#' @rdname sample
-#' @export
 sample_costa_farber <- function(n, prob) {
   stopifnot(
     n >= 0L,
     inherits(prob, "numeric")
   )
   
-  ## Create an empty simplicial complex
-  st <- simplex_tree()
+  if (length(prob) == 0L) {
+    ## Create an empty simplicial complex
+    st <- simplex_tree()
+    ## Return the complex if done
+    return(st)
+  }
   
-  ## Retain vertices independently with probability p_0
+  ## Retain vertices independently with probability p
   vs <- which(as.logical(stats::rbinom(n, 1L, prob[[1L]])))
-  st %>% insert(as.list(vs))
-  ## Return the complex if done
-  if (length(prob) == 1L) return(st)
   
-  ## Insert edges independently with probability p_1
-  m1 <- choose(st$n_simplices[[1L]], 2L)
-  n1 <- stats::rbinom(n = 1L, size = m1, prob = prob[[2L]])
-  ex <- sort(sample.int(n = m1, size = n1))
-  es <- nat_to_sub(ex, n = st$n_simplices[[1L]], k = 2L)
-  es[] <- st$vertices[es]
-  st$insert_lex(es)
+  ## Create and return the complex if done
+  if (length(prob) == 1L || length(vs) == 0L) {
+    ## Create an empty simplicial complex
+    st <- simplex_tree()
+    insert(st, as.list(vs))
+    return(st)
+  }
+  
+  ## Generate an Erdos-Renyi random graph
+  st <- sample_erdos_renyi(length(vs), prob[[2L]])
+  ## Reindex vertices
+  reindex(st, vs)
   ## Return the complex if done
-  if (length(prob) == 2L) return(st)
+  if (length(prob) == 2L || st$dimension < 1L) return(st)
   
   ## Iteravely sample higher-dimensional simplices
   for (d in seq(2L, length(prob) - 1L)) {
@@ -191,7 +192,3 @@ sample_costa_farber <- function(n, prob) {
   ## Return the complex
   return(st)
 }
-
-#' @rdname sample
-#' @export
-sample_multiparameter_complex <- sample_costa_farber
