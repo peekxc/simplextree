@@ -20,23 +20,22 @@
 #' @details (Add details.)
 #' @examples
 #' set.seed(1)
+#' ## Construct geometric simplicial complexes from a sample point cloud
+#' theta <- stats::runif(n = 24L, min = 0, max = 2*pi)
+#' x <- cbind(x = cos(theta), y = sin(theta))
+#' plot(x)
+#' make_geometric(x, radius = .03, dimension = 2L)
+#' make_geometric(x, radius = .3, dimension = 2L)
 #' ## Check distance ranges for square and toroidal samples
 #' sqrt(2)
-#' sqrt(2)/2
 #' range(sample_unit(n = 1e3L))
+#' sqrt(2)/2
 #' range(sample_unit(n = 1e3L, torus = TRUE))
 #' ## Construct random geometric simplicial complexes, square and toroidal
 #' plot(sample_geometric(24L, radius = .1, dimension = 1L))
 #' plot(sample_geometric(24L, radius = .1, dimension = 1L, torus = TRUE))
 #' plot(sample_geometric(24L, radius = .1, dimension = 2L))
 #' plot(sample_geometric(24L, radius = .1, dimension = 2L, torus = TRUE))
-#' \dontrun{
-#' ## Construct geometric simplicial complexes from a sample point cloud
-#' x <- tdaunif::sample_circle(24L)
-#' plot(x)
-#' make_geometric(x, radius = .03, dimension = 2L)
-#' make_geometric(x, radius = .3, dimension = 2L)
-#' }
 
 #' @rdname sample-geometric
 #' @export
