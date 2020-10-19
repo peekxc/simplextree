@@ -2,19 +2,15 @@
 % Please edit documentation in R/sample.R
 \name{sample}
 \alias{sample}
-\alias{sample_erdos_renyi}
-\alias{sample_kahle}
-\alias{sample_linial_meshulam_wallach}
-\alias{sample_costa_farber}
+\alias{sample_abstract}
 \title{Sample random simplicial complexes}
 \usage{
-sample_erdos_renyi(n, prob)
-
-sample_kahle(n, prob)
-
-sample_linial_meshulam_wallach(n, dimension, prob)
-
-sample_costa_farber(n, prob)
+sample_abstract(
+  n,
+  prob,
+  dimension = NULL,
+  method = c("costa_farber", "linial_meshulam_wallach", "kahle", "erdos_renyi")
+)
 }
 \arguments{
 \item{n}{an integer number of starting vertices.}
@@ -25,6 +21,10 @@ dimension of a Costa-Farber random simplicial complex will be at most
 \code{length(prob) - 1L}.}
 
 \item{dimension}{an integer dimension at which to randomly insert simplices.}
+
+\item{method}{a character string indicating the model to use; matched to
+`"erdos_renyi"`, `"kahle"`, `"linial_meshulam_wallach"`, and
+`"costa_farber"`, allowing for spaces in place of underscores.}
 }
 \description{
 Generate random simplicial complexes following the models of
@@ -63,27 +63,33 @@ The random graph model \eqn{G(n,p)} of Erdős and Rényi (1959) powers
 \examples{
 set.seed(1)
 ## Generate Erdos-Renyi random graphs
-plot(sample_erdos_renyi(n = 12L, prob = .2))
-plot(sample_erdos_renyi(n = 12L, prob = .5))
-plot(sample_erdos_renyi(n = 12L, prob = .8))
+plot(sample_abstract(n = 12L, prob = .2, method = "erdos_renyi"))
+plot(sample_abstract(n = 12L, prob = .5, method = "erdos_renyi"))
+plot(sample_abstract(n = 12L, prob = .8, method = "erdos_renyi"))
 ## Generate Kahle random clique complexes
-sample_kahle(n = 6L, prob = .2)
-sample_kahle(n = 6L, prob = .5)
-sample_kahle(n = 6L, prob = .8)
+sample_abstract(n = 6L, prob = .2, method = "kahle")
+sample_abstract(n = 6L, prob = .5, method = "kahle")
+sample_abstract(n = 6L, prob = .8, method = "kahle")
 ## Generate Linial-Meshulam random simplicial complexes
-sample_linial_meshulam_wallach(n = 6L, dimension = 0L, prob = .6)
-sample_linial_meshulam_wallach(n = 6L, dimension = 1L, prob = .6)
-sample_linial_meshulam_wallach(n = 6L, dimension = 2L, prob = .6)
-sample_linial_meshulam_wallach(n = 6L, dimension = 3L, prob = .6)
+sample_abstract(n = 6L, dimension = 0L, prob = .6,
+                method = "linial_meshulam_wallach")
+sample_abstract(n = 6L, dimension = 1L, prob = .6,
+                method = "linial_meshulam_wallach")
+sample_abstract(n = 6L, dimension = 2L, prob = .6,
+                method = "linial_meshulam_wallach")
+sample_abstract(n = 6L, dimension = 3L, prob = .6,
+                method = "linial_meshulam_wallach")
 ## Generate Costa-Farber random simplicial complexes
-plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
-plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
-plot(sample_costa_farber(n = 12L, prob = c(.5, .5, .5)))
+plot(sample_abstract(n = 12L, prob = c(.5, .5, .5), method = "costa_farber"))
+plot(sample_abstract(n = 12L, prob = c(.5, .5, .5), method = "costa_farber"))
+plot(sample_abstract(n = 12L, prob = c(.5, .5, .5), method = "costa_farber"))
 ## Construct a complete complex of a given size and dimension
-sample_linial_meshulam_wallach(n = 6L, dimension = 4L, prob = 0)
-sample_costa_farber(n = 6L, prob = rep(1, 4L))
+sample_abstract(n = 6L, dimension = 4L, prob = 0,
+                method = "linial_meshulam_wallach")
+sample_abstract(n = 6L, prob = rep(1, 4L), method = "costa_farber")
 ## Construct the clique complex of a random 1-skeleton
-plot(sample_costa_farber(n = 10L, prob = c(.7, .5, rep(1, 11L))))
+plot(sample_abstract(n = 10L, prob = c(.7, .6, rep(1, 11L)),
+                     method = "costa_farber"))
 }
 \references{
 Erdős P. and Rényi A. (1959) On Random Graphs I. Publicationes
