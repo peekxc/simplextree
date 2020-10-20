@@ -23,8 +23,8 @@ dimension of a Costa-Farber random simplicial complex will be at most
 \item{dimension}{an integer dimension at which to randomly insert simplices.}
 
 \item{method}{a character string indicating the model to use; matched to
-`"erdos_renyi"`, `"kahle"`, `"linial_meshulam_wallach"`, and
-`"costa_farber"`, allowing for spaces in place of underscores.}
+\code{"erdos_renyi"}, \code{"kahle"}, \code{"linial_meshulam_wallach"}, and
+\code{"costa_farber"}, allowing for spaces in place of underscores.}
 }
 \description{
 Generate random simplicial complexes following the models of

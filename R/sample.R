@@ -9,8 +9,8 @@
 #'   \code{length(prob) - 1L}.
 #' @param dimension an integer dimension at which to randomly insert simplices.
 #' @param method a character string indicating the model to use; matched to
-#'   `"erdos_renyi"`, `"kahle"`, `"linial_meshulam_wallach"`, and
-#'   `"costa_farber"`, allowing for spaces in place of underscores.
+#'   \code{"erdos_renyi"}, \code{"kahle"}, \code{"linial_meshulam_wallach"}, and
+#'   \code{"costa_farber"}, allowing for spaces in place of underscores.
 
 #' @details The random graph model \eqn{G(n,p)} of Erdős and Rényi (1959) powers
 #'   parts of other models and is exported for convenience.
