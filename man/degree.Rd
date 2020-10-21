@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{degree}
 \alias{degree}
-\title{The vertex degree.}
+\title{Vertex degree}
 \usage{
 degree(st, vertices)
 }

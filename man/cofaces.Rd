@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{cofaces}
 \alias{cofaces}
-\title{Generates a coface traversal on the simplex tree.}
+\title{Coface traversal}
 \usage{
 cofaces(st, sigma)
 }

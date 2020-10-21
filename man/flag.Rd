@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{flag}
 \alias{flag}
-\title{flag}
+\title{Flag complexes}
 \usage{
 flag(st, d)
 }

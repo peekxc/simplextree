@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{k_skeleton}
 \alias{k_skeleton}
-\title{Generates a k-skeleton traversal on the simplex tree.}
+\title{k-Skeleton traversal}
 \usage{
 k_skeleton(st, k, sigma = NULL)
 }

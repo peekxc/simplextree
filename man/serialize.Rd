@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{serialize}
 \alias{serialize}
-\title{Serializes the simplex tree.}
+\title{Serialize the simplex tree}
 \usage{
 serialize(st)
 }

@@ -1,5 +1,5 @@
-#' Simplex Tree
-#' @aliases simplex_tree simplextree SimplexTree
+#' @title Simplex Tree
+#' @aliases simplex_tree SimplexTree
 #' @description Simplex tree class exposed as an Rcpp Module.
 #' @docType class 
 #' @details A simplex tree is an ordered trie-like structure specialized for storing and doing general computation 
@@ -94,7 +94,7 @@ simplex_tree <- function(simplices = NULL){
   return(st)
 }
 
-#' flag
+#' @title Flag complexes
 #' @description Creates a filtration of flag complexes
 #' @param st a simplex tree. See details. 
 #' @param d a vector of edge weights, or a 'dist' object. 
@@ -113,7 +113,8 @@ flag <- function(st, d){
 }
 
 # ---- empty_face ----
-#' empty_face 
+
+#' @title Empty faces
 #' @description Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree. 
 #' @seealso traverse
 #' @export
@@ -121,8 +122,13 @@ empty_face <- integer(0L)
 
 .traversal_types = c("Preorder", "Level order", "Face", "Coface", "Coface roots", "K-skeleton", "K-simplices", "Maximal simplex", "Link")
 
+#' @name traversals
+#' @title Methods for traversal objects
+NULL
+
 # ---- print.st_traversal ----
-#' print.st_traversal
+
+#' @rdname traversals
 #' @param x traversal object.
 #' @param ... unused. 
 #' @export
@@ -133,7 +139,8 @@ print.st_traversal <- function(x, ...){
 }
 
 # ---- as.list.st_traversal ----
-#' as.list.st_traversal
+
+#' @rdname traversals
 #' @param x traversal object.
 #' @param ... unused. 
 #' @export
@@ -143,8 +150,9 @@ as.list.st_traversal <- function(x, ...){
 
 
 # ---- traverse ----
+
 #' @name traverse
-#' @title traverse
+#' @title Apply a function along a traversal
 #' @param traversal The type of traversal to use.
 #' @param f An arbitrary function to apply to eac simplex of the traversal. See details. 
 #' @param ... unused. 
@@ -176,10 +184,6 @@ traverse <- function(traversal, f, ...){
   traverse_R(traversal, f)
 }
 
-#' @name straverse 
-#' @param traversal the type of traversal. 
-#' @param f the function to apply to each simplex. 
-#' @param ... unused. 
 #' @rdname traverse
 #' @export
 straverse <- function(traversal, f, ...){
@@ -190,10 +194,6 @@ straverse <- function(traversal, f, ...){
   return(straverse_R(traversal, f))
 }
 
-#' ltraverse 
-#' @param traversal the type of traversal. 
-#' @param f the function to apply to each simplex. 
-#' @param ... unused. 
 #' @rdname traverse
 #' @export
 ltraverse <- function(traversal, f, ...){
@@ -205,8 +205,10 @@ ltraverse <- function(traversal, f, ...){
 }
 
 # ---- preorder ----- 
+
 #' @name preorder 
-#' @title Generates a preorder traversal on the simplex tree. 
+#' @title Preorder traversal
+#' @description Generate a preorder traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
 #' @export
@@ -217,8 +219,10 @@ preorder <- function(st, sigma = NULL){
 }
 
 # ---- level_order ----- 
+
 #' @name level_order 
-#' @title Generates a level order traversal on the simplex tree. 
+#' @title Level order traversal
+#' @description Generates a level order traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
 #' @export
@@ -229,8 +233,10 @@ level_order <- function(st, sigma = NULL){
 }
 
 # ---- faces ----- 
+
 #' @name faces 
-#' @title Generates a face traversal on the simplex tree. 
+#' @title Face traversal
+#' @description Generates a face traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
 #' @export
@@ -240,8 +246,10 @@ faces <- function(st, sigma){
 }
 
 # ---- cofaces ----- 
+
 #' @name cofaces 
-#' @title Generates a coface traversal on the simplex tree. 
+#' @title Coface traversal
+#' @description Generates a coface traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
 #' @export
@@ -251,8 +259,10 @@ cofaces <- function(st, sigma){
 }
 
 # ---- k_skeleton ----- 
+
 #' @name k_skeleton 
-#' @title Generates a k-skeleton traversal on the simplex tree.
+#' @title k-Skeleton traversal
+#' @description Generates a k-skeleton traversal on the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
@@ -264,24 +274,29 @@ k_skeleton <- function(st, k, sigma = NULL){
 }
 
 # ---- coface_roots ----- 
-#' @name coface_roots 
-#' @title Generates a coface roots traversal on the simplex tree.
+
+#' @name coface_roots
+#' @title Coface roots traversal
+#' @description Generates a coface roots traversal on the simplex tree.
 #' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
-#' @description The coface roots of a given simplex \code{sigma} are the roots of subtrees 
-#' in the trie whose descendents (including the roots themselves) are cofaces of \code{sigma}.
-#' This traversal is more useful when used in conjunction with other traversals, e.g. a \emph{preorder} 
-#' or \emph{level_order} traversal at the roots enumerates the cofaces of \code{sigma}.
+#' @param sigma simplex to start the traversal at.
+#' @description The coface roots of a given simplex \code{sigma} are the roots
+#'   of subtrees in the trie whose descendents (including the roots themselves)
+#'   are cofaces of \code{sigma}. This traversal is more useful when used in
+#'   conjunction with other traversals, e.g. a \emph{preorder} or
+#'   \emph{level_order} traversal at the roots enumerates the cofaces of
+#'   \code{sigma}.
 #' @export
 coface_roots <- function(st, sigma){
   stopifnot(class(st) %in% .st_classes)
   parameterize_R(st$as_XPtr(), sigma, "coface_roots", NULL)
 }
 
-
 # ---- maximal ----- 
+
 #' @name maximal 
-#' @title Generates a traversal on the maximal of the simplex tree.
+#' @title Maximal traversal
+#' @description Generates a traversal on the maximal of the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
 #' @export
@@ -292,8 +307,10 @@ maximal <- function(st, sigma = NULL){
 }
 
 # ---- k_simplices ----- 
+
 #' @name k_simplices 
-#' @title Generates a traversal on the k-simplices of the simplex tree.
+#' @title k-Simplex traversal
+#' @description Generates a traversal on the k-simplices of the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
@@ -305,17 +322,19 @@ k_simplices <- function(st, k, sigma = NULL){
 }
 
 # ---- link ----- 
-#' @name link 
-#' @title Generates a traversal on the link of a given simplex in the simplex tree.
+
+#' @name link
+#' @title Link traversal
+#' @description Generates a traversal on the link of a given simplex in the
+#'   simplex tree.
 #' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
+#' @param sigma simplex to start the traversal at.
 #' @export
 link <- function(st, sigma){
   stopifnot(class(st) %in% .st_classes)
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "link", NULL)
 }
-
 
 # setClass("Rcpp_SimplexTree")
 # .format_simplex_tree <- setMethod("format", "Rcpp_SimplexTree", function (object) {
@@ -339,10 +358,11 @@ link <- function(st, sigma){
 # }
 
 ## One printer to rule them all
+
 # ----- print method ------
+
 #' @name print_simplices
 #' @title Print simplices to the console
-#' @description Prints simplices in a formatted way 
 #' @param st a simplex tree. 
 #' @param format the choice of how to format the printing. See details.   
 #' @description Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
@@ -435,11 +455,13 @@ setClass("Rcpp_Filtration")
 # nocov end
 
 # ---- clear ----
+
 #' @name clear
-#' @title Clears the simplex tree
-#' @param st a simplex tree object. 
-#' @description Removes all simplices from the simplex tree, except the root node.
-#' @examples 
+#' @title Clear a simplex tree
+#' @description Removes all simplices from the simplex tree, except the root
+#'   node.
+#' @param st a simplex tree object.
+#' @examples
 #' st <- simplex_tree()
 #' st %>% insert(1:3)
 #' print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
@@ -453,12 +475,13 @@ clear <- function(st){
 }
 
 # ---- generate_ids ----
+
 #' @name generate_ids
 #' @aliases id_policy
-#' @title Generates vertex ids.
+#' @title Generate vertex ids
+#' @description Generates vertex ids representing 0-simplices not in the tree.
 #' @param st a simplex tree. 
 #' @param n the number of ids to generate. 
-#' @description Generates vertex ids representing 0-simplices not in the tree.
 #' @details This function generates new vertex ids for use in situations which involve generating new 
 #' new 0-simplices, e.g. insertions, contractions, collapses, etc. There are two 'policies' which designate 
 #' the generating mechanism of these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids 
@@ -491,25 +514,27 @@ generate_ids <- function(st, n){
 }
 
 # ---- degree ----
+
 #' @name degree
-#' @title The vertex degree.
+#' @title Vertex degree
+#' @description Returns the number of edges (degree) for each given vertex id. 
 #' @param st a simplex tree. 
 #' @param vertices the vertex ids to check the degree of. 
-#' @description Returns the number of edges (degree) for each given vertex id. 
 degree <- function(st, vertices){
   stopifnot(is.vector(vertices) && is.numeric(vertices))
   return(st$degree(vertices))
 }
 
 # ---- expand ----
+
 #' @name expand
-#' @title k-expansion.
-#' @param st a simplex tree. 
-#' @param k the target dimension of the expansion.
+#' @title k-expansion
 #' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
 #' if all combinations of edges are included. Because this operation uses the edges alone to infer 
 #' the existence of higher order simplices, the expansion assumes the underlying complex
 #' is a flag complex. 
+#' @param st a simplex tree. 
+#' @param k the target dimension of the expansion.
 #' @export
 expand <- function(st, k=2){
   stopifnot(is.numeric(k))
@@ -519,11 +544,12 @@ expand <- function(st, k=2){
 
 
 # ---- adjacent ----
+
 #' @name adjacent
-#' @title Adjacent vertices.
+#' @title Adjacent vertices
+#' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 #' @param st a simplex tree.
 #' @param vertices vertex ids. 
-#' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 #' @examples
 #' st <- simplex_tree(1:3)
 #' st %>% adjacent(2) 
@@ -538,6 +564,7 @@ adjacent <- function(st, vertices){
 }
 
 # ---- insert ----
+
 #' @name insert
 #' @title Insert simplices
 #' @description Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
@@ -564,6 +591,7 @@ insert <- function(st, simplices){
 }
 
 # ---- remove ----
+
 #' @name remove
 #' @title Remove simplices
 #' @description Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
@@ -585,6 +613,7 @@ remove <- function(st, simplices){
 }
 
 # ---- find ----
+
 #' @name find
 #' @title Find simplices
 #' @description Returns whether supplied simplices exist in the complex.  
@@ -609,8 +638,9 @@ find <- function(st, simplices){
 
 
 # ---- is_face ----
+
 #' @name is_face
-#' @title Is face 
+#' @title Face test
 #' @description Checks whether a simplex is a face of another simplex and is in the complex.
 #' @param st a simplex tree.  
 #' @param tau a simplex which may contain \code{sigma} as a coface. 
@@ -633,6 +663,7 @@ is_face <- function(st, tau, sigma){
 
 
 # ---- collapse ----
+
 #' @name collapse
 #' @title Elementary collapse
 #' @description Performs an elementary collapse. 
@@ -694,7 +725,8 @@ collapse <- function(st, pair, w=NULL){
 }
 
 
-#' threshold
+#' @name threshold
+#' @title Filtered complex thresholding
 #' @description Thresholds a given filtered simplicial complex.
 #' @param st simplex tree.
 #' @param index integer index to threshold to.
@@ -716,6 +748,7 @@ threshold <- function(st, index = NULL, value = NULL){
 }
 
 # ---- contract ----
+
 #' @name contract
 #' @title Edge contraction
 #' @description Performs an edge contraction. 
@@ -745,10 +778,10 @@ contract <- function(st, edge){
   return(invisible(st))
 }
 
-
 # ---- serialize / deserialize ----
+
 #' @name serialize
-#' @title Serializes the simplex tree. 
+#' @title Serialize the simplex tree
 #' @description Provides a compressed serialization interface for the simplex tree.
 #' @param st a simplex tree.
 #' @family serialization
@@ -791,7 +824,7 @@ serialize <- function(st){
 }
 
 #' @name deserialize 
-#' @title Deserializes the simplex tree. 
+#' @title Deserialize the simplex tree
 #' @description Provides a compressed serialization interface for the simplex tree.
 #' @param complex The result of \code{\link{serialize}}.
 #' @param st optionally, the simplex tree to insert into. Otherwise a new one is created. 
@@ -818,10 +851,11 @@ deserialize <- function(complex, st = NULL){
 }
 
 # ---- clone ----
+
 #' @name clone 
-#' @title Clones the given simplex tree.
-#' @param st a simplex tree.
+#' @title Clone a simplex tree
 #' @description Performs a deep-copy on the supplied simplicial complex. 
+#' @param st a simplex tree.
 #' @export
 clone <- function(st){
   stopifnot(class(st) %in% .st_classes)
@@ -830,11 +864,12 @@ clone <- function(st){
 }
 
 # ---- reindex ----
+
 #' @name reindex 
-#' @title reindexes vertex ids
+#' @title Reindex vertex ids
+#' @description This function allows one to 'reorder' or 'reindex' vertex ids.  
 #' @param st a simplex tree. 
 #' @param ids vector of new vertex ids. See details. 
-#' @description This function allows one to 'reorder' or 'reindex' vertex ids.  
 #' @details The \code{ids} parameter must be a sorted integer vector of new ids with length matching the 
 #' number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with 
 #' \code{ids}[i]. See examples.
@@ -856,12 +891,12 @@ reindex <- function(st, ids){
   return(invisible(st))
 }
 
-
 # ---- is_tree ----
+
 #' @name is_tree 
-#' @title Checks if the simplicial complex is a tree.
-#' @param st a simplex tree. 
+#' @title Tree (acyclicity) test
 #' @description This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.
+#' @param st a simplex tree. 
 #' @examples 
 #' st <- simplex_tree()
 #' st %>% insert(list(1:2, 2:3))
@@ -875,8 +910,9 @@ is_tree <- function(st){
 }
 
 # ---- plot.Rcpp_SimplexTree ----
-#' @name plot.simplextree
-#' @title Plots the simplex tree
+
+#' @name plot_simplextree
+#' @title Plot a simplex tree
 #' @param x a simplex tree.
 #' @param coords Optional (n x 2) matrix of coordinates, where n is the number of 0-simplices. 
 #' @param vertex_opt Optional parameters to modify default vertex plotting options. Passed to \code{\link[graphics]{points}}.
@@ -888,7 +924,7 @@ is_tree <- function(st){
 #' @param by_dim Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.
 #' @param add Whether to add to the plot or redraw. Defaults to false. See details.
 ## @param clip_polygons Whether to clip the polygons. Useful when visualizing large complexes. See details. 
-#' @param ... unused
+#' @param ... unused (\code{plot.Rcpp_SimplexTree}) or passed to \code{plot.Rcpp_SimplexTree} (\code{plot.Rcpp_Filtration}).
 #' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
 #' If not (x,y) coordinates are supplied via \code{coords}, a default layout is generated via phyllotaxis arrangement. This layout is 
 #' not in general does not optimize the embedding towards any usual visualization criteria e.g. it doesn't try to separate connected components, 
@@ -1037,7 +1073,7 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
   } else if (is_char_vec){
     simplex_colors <- rep(color_pal, length.out=sum(x$n_simplices))
   } else {
-    stop("Invalid color palette given. Must be either a character vector or named list. See `?plot.simplextree`.")
+    stop("Invalid color palette given. Must be either a character vector or named list. See `?plot_simplextree`.")
   }
   
   ## Get coordinates of vertices
@@ -1112,8 +1148,6 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
   }
 } # nocov end
 
-#' plot.Rcpp_Filtration
-#' @param ... passed to \code{\link{plot.Rcpp_SimplexTree}}
 #' @describeIn plot_simplextree family of plotting methods. 
 #' @export
 plot.Rcpp_Filtration <- function(...){

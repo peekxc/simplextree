@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{clear}
 \alias{clear}
-\title{Clears the simplex tree}
+\title{Clear a simplex tree}
 \usage{
 clear(st)
 }
@@ -10,7 +10,8 @@ clear(st)
 \item{st}{a simplex tree object.}
 }
 \description{
-Removes all simplices from the simplex tree, except the root node.
+Removes all simplices from the simplex tree, except the root
+  node.
 }
 \examples{
 st <- simplex_tree()

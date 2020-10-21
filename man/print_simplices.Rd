@@ -15,8 +15,6 @@ print_simplices(
 \item{format}{the choice of how to format the printing. See details.}
 }
 \description{
-Prints simplices in a formatted way
-
 Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
 options to customize how the simplices are printed. The \code{format} must be one of 
 "summary", "tree", "cousins", "short", "column", or "row", with the default being "short".

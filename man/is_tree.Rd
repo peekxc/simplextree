@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{is_tree}
 \alias{is_tree}
-\title{Checks if the simplicial complex is a tree.}
+\title{Tree (acyclicity) test}
 \usage{
 is_tree(st)
 }

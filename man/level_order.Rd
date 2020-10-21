@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{level_order}
 \alias{level_order}
-\title{Generates a level order traversal on the simplex tree.}
+\title{Level order traversal}
 \usage{
 level_order(st, sigma = NULL)
 }

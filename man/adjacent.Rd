@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{adjacent}
 \alias{adjacent}
-\title{Adjacent vertices.}
+\title{Adjacent vertices}
 \usage{
 adjacent(st, vertices)
 }

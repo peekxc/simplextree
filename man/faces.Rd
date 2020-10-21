@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{faces}
 \alias{faces}
-\title{Generates a face traversal on the simplex tree.}
+\title{Face traversal}
 \usage{
 faces(st, sigma)
 }

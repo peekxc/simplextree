@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{threshold}
 \alias{threshold}
-\title{threshold}
+\title{Filtered complex thresholding}
 \usage{
 threshold(st, index = NULL, value = NULL)
 }

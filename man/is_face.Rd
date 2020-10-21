@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{is_face}
 \alias{is_face}
-\title{Is face}
+\title{Face test}
 \usage{
 is_face(st, tau, sigma)
 }

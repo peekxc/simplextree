@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{reindex}
 \alias{reindex}
-\title{reindexes vertex ids}
+\title{Reindex vertex ids}
 \usage{
 reindex(st, ids)
 }

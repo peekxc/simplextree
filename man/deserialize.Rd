@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{deserialize}
 \alias{deserialize}
-\title{Deserializes the simplex tree.}
+\title{Deserialize the simplex tree}
 \usage{
 deserialize(complex, st = NULL)
 }

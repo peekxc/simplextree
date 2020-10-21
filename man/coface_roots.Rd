@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{coface_roots}
 \alias{coface_roots}
-\title{Generates a coface roots traversal on the simplex tree.}
+\title{Coface roots traversal}
 \usage{
 coface_roots(st, sigma)
 }
@@ -12,8 +12,12 @@ coface_roots(st, sigma)
 \item{sigma}{simplex to start the traversal at.}
 }
 \description{
-The coface roots of a given simplex \code{sigma} are the roots of subtrees 
-in the trie whose descendents (including the roots themselves) are cofaces of \code{sigma}.
-This traversal is more useful when used in conjunction with other traversals, e.g. a \emph{preorder} 
-or \emph{level_order} traversal at the roots enumerates the cofaces of \code{sigma}.
+Generates a coface roots traversal on the simplex tree.
+
+The coface roots of a given simplex \code{sigma} are the roots
+  of subtrees in the trie whose descendents (including the roots themselves)
+  are cofaces of \code{sigma}. This traversal is more useful when used in
+  conjunction with other traversals, e.g. a \emph{preorder} or
+  \emph{level_order} traversal at the roots enumerates the cofaces of
+  \code{sigma}.
 }

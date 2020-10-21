@@ -3,7 +3,7 @@
 \docType{data}
 \name{empty_face}
 \alias{empty_face}
-\title{empty_face}
+\title{Empty faces}
 \format{
 An object of class \code{integer} of length 0.
 }

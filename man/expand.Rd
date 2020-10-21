@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{expand}
 \alias{expand}
-\title{k-expansion.}
+\title{k-expansion}
 \usage{
 expand(st, k = 2)
 }

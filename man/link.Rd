@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{link}
 \alias{link}
-\title{Generates a traversal on the link of a given simplex in the simplex tree.}
+\title{Link traversal}
 \usage{
 link(st, sigma)
 }
@@ -12,5 +12,6 @@ link(st, sigma)
 \item{sigma}{simplex to start the traversal at.}
 }
 \description{
-Generates a traversal on the link of a given simplex in the simplex tree.
+Generates a traversal on the link of a given simplex in the
+  simplex tree.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{maximal}
 \alias{maximal}
-\title{Generates a traversal on the maximal of the simplex tree.}
+\title{Maximal traversal}
 \usage{
 maximal(st, sigma = NULL)
 }

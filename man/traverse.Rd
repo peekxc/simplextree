@@ -4,7 +4,7 @@
 \alias{traverse}
 \alias{straverse}
 \alias{ltraverse}
-\title{traverse}
+\title{Apply a function along a traversal}
 \usage{
 traverse(traversal, f, ...)
 
@@ -13,9 +13,9 @@ straverse(traversal, f, ...)
 ltraverse(traversal, f, ...)
 }
 \arguments{
-\item{traversal}{the type of traversal.}
+\item{traversal}{The type of traversal to use.}
 
-\item{f}{the function to apply to each simplex.}
+\item{f}{An arbitrary function to apply to eac simplex of the traversal. See details.}
 
 \item{...}{unused.}
 }

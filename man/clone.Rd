@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{clone}
 \alias{clone}
-\title{Clones the given simplex tree.}
+\title{Clone a simplex tree}
 \usage{
 clone(st)
 }

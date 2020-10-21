@@ -3,7 +3,7 @@
 \name{generate_ids}
 \alias{generate_ids}
 \alias{id_policy}
-\title{Generates vertex ids.}
+\title{Generate vertex ids}
 \usage{
 generate_ids(st, n)
 }

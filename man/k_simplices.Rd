@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{k_simplices}
 \alias{k_simplices}
-\title{Generates a traversal on the k-simplices of the simplex tree.}
+\title{k-Simplex traversal}
 \usage{
 k_simplices(st, k, sigma = NULL)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/simplex_tree.R
 \name{preorder}
 \alias{preorder}
-\title{Generates a preorder traversal on the simplex tree.}
+\title{Preorder traversal}
 \usage{
 preorder(st, sigma = NULL)
 }
@@ -12,5 +12,5 @@ preorder(st, sigma = NULL)
 \item{sigma}{simplex to start the traversal at.}
 }
 \description{
-Generates a preorder traversal on the simplex tree.
+Generate a preorder traversal on the simplex tree.
 }

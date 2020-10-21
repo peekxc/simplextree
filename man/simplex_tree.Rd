@@ -3,7 +3,6 @@
 \docType{class}
 \name{simplex_tree}
 \alias{simplex_tree}
-\alias{simplextree}
 \alias{SimplexTree}
 \title{Simplex Tree}
 \usage{
