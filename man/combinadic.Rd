@@ -5,7 +5,7 @@
 \alias{nat_to_sub}
 \alias{sub_to_nat}
 \alias{inverse.choose}
-\title{Lexicographic mappings of \emph{k}-combinations}
+\title{\eqn{k}-combinations and binomial coefficients}
 \usage{
 nat_to_sub(i, n, k)
 
@@ -22,31 +22,29 @@ inverse.choose(x, k)
 
 \item{s}{matrix whose columns represent \code{k}-combinations.}
 
-\item{x}{a binomial coefficient (\emph{n} choose \emph{k}).}
+\item{x}{a binomial coefficient \eqn{(n,k)}.}
 }
 \value{
-an integer matrix whose columns give the combinadics of \code{x}
-  (\code{nat_to_sub}), an integer vector of the positions of the given
-  combinations (\code{sub_to_nat}), or the integer numerator of the binomial
-  coefficient (\code{inverse.choose}).
+an integer matrix whose columns give the combinadics of \code{i}
+(\code{nat_to_sub}), an integer vector of the positions of the combinations \code{s}
+(\code{sub_to_nat}), or the integer numerator of the binomial coefficient \code{x}
+(\code{inverse.choose}).
 }
 \description{
-Map between \emph{k}-combinations of \code{n} and their
-  lexicographic positions, and recover binomial coefficient numerators.
+Map between \eqn{k}-combinations of \eqn{n} and their
+lexicographic positions, and recover binomial coefficient numerators.
 }
 \details{
-\code{nat_to_sub} computes the \code{x}^th (\code{n} choose
-  \code{k}) combination in the lexicographic order. \code{sub_to_nat}
-  computes the position of a combination \code{x} out of all
-  lexicographically-ordered (\code{n} choose \code{k}) combinations. The
-  values are calculated via a lexicographically-ordered combinadic mapping.
+\code{nat_to_sub} computes the \code{i}^th (\code{n} choose \code{k}) combination in the
+lexicographic order. \code{sub_to_nat} computes the position of a combination
+\code{s} out of all lexicographically-ordered (\code{n} choose \code{k}) combinations. The
+values are calculated via a lexicographically-ordered combinadic mapping.
 
-  In general, \code{nat_to_sub} is \emph{not} intended to be used to
-  \emph{generate} all 2-combinations in the combinadic mapping.
+In general, \code{nat_to_sub} is \emph{not} intended to be used to \emph{generate} all
+2-combinations in the combinadic mapping.
 
-  \code{inverse.choose} inverts the binomial coefficient for general
-  (\emph{n}, \emph{k}). That is, given the denominator \code{k} and \code{x =
-  choose(n, k)}, find \code{n}.
+\code{inverse.choose} inverts the binomial coefficient for general \eqn{(n,k)}.
+That is, given the denominator \code{k} and \code{x = choose(n, k)}, find \code{n}.
 }
 \examples{
 library(simplextree)
@@ -70,5 +68,5 @@ system.time(combn(300,2))
 }
 \references{
 McCaffrey, J. D. "Generating the mth lexicographical element of a
-  mathematical combination." MSDN Library (2004).
+mathematical combination." MSDN Library (2004).
 }

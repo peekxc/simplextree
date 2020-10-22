@@ -17,9 +17,11 @@ A disjoint set, as a \code{Rcpp_UnionFind} object (Rcpp module).
 Union find structure exposed as an Rcpp Module.
 }
 \section{Methods}{
- 
+
 \describe{
-    \item{$\code{print.simplextree}}{ S3 method to print a basic summary of the simplex tree. }
+\item{\verb{$print.simplextree}}{
+S3 method to print a basic summary of the simplex tree.
+}
 }
 }
 

@@ -1,28 +1,27 @@
+#' @md
 #' @name combinadic
-#' @title Lexicographic mappings of \emph{k}-combinations
-#' @description Map between \emph{k}-combinations of \code{n} and their
+#' @title \eqn{k}-combinations and binomial coefficients
+#' @description Map between \eqn{k}-combinations of \eqn{n} and their
 #'   lexicographic positions, and recover binomial coefficient numerators.
-#' @details \code{nat_to_sub} computes the \code{x}^th (\code{n} choose
-#'   \code{k}) combination in the lexicographic order. \code{sub_to_nat}
-#'   computes the position of a combination \code{x} out of all
-#'   lexicographically-ordered (\code{n} choose \code{k}) combinations. The
+#' @details `nat_to_sub` computes the `i`^th (`n` choose `k`) combination in the
+#'   lexicographic order. `sub_to_nat` computes the position of a combination
+#'   `s` out of all lexicographically-ordered (`n` choose `k`) combinations. The
 #'   values are calculated via a lexicographically-ordered combinadic mapping.
 #'
-#'   In general, \code{nat_to_sub} is \emph{not} intended to be used to
-#'   \emph{generate} all 2-combinations in the combinadic mapping.
+#'   In general, `nat_to_sub` is _not_ intended to be used to _generate_ all
+#'   2-combinations in the combinadic mapping.
 #'
-#'   \code{inverse.choose} inverts the binomial coefficient for general
-#'   (\emph{n}, \emph{k}). That is, given the denominator \code{k} and \code{x =
-#'   choose(n, k)}, find \code{n}.
+#'   `inverse.choose` inverts the binomial coefficient for general \eqn{(n,k)}.
+#'   That is, given the denominator `k` and `x = choose(n, k)`, find `n`.
 #' @param n integer numerator of the binomial coefficient.
 #' @param k integer denominator of the binomial coefficient.
-#' @param i vector of integers in the range \code{c(1L, choose(n, k))}.
-#' @param s matrix whose columns represent \code{k}-combinations.
-#' @param x a binomial coefficient (\emph{n} choose \emph{k}).
-#' @return an integer matrix whose columns give the combinadics of \code{x}
-#'   (\code{nat_to_sub}), an integer vector of the positions of the given
-#'   combinations (\code{sub_to_nat}), or the integer numerator of the binomial
-#'   coefficient (\code{inverse.choose}).
+#' @param i vector of integers in the range `c(1L, choose(n, k))`.
+#' @param s matrix whose columns represent `k`-combinations.
+#' @param x a binomial coefficient \eqn{(n,k)}.
+#' @return an integer matrix whose columns give the combinadics of `i`
+#'   (`nat_to_sub`), an integer vector of the positions of the combinations `s`
+#'   (`sub_to_nat`), or the integer numerator of the binomial coefficient `x`
+#'   (`inverse.choose`).
 #' @references McCaffrey, J. D. "Generating the mth lexicographical element of a
 #'   mathematical combination." MSDN Library (2004).
 #' @examples
