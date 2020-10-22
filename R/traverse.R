@@ -83,6 +83,15 @@ ltraverse <- function(traversal, f, ...){
   return(ltraverse_R(traversal, f))
 }
 
+# ---- empty_face ----
+
+#' @name empty_face
+#' @title Empty faces
+#' @description Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree. 
+#' @seealso traverse
+#' @export
+empty_face <- integer(0L)
+
 # ---- preorder ----- 
 
 #' @name preorder 

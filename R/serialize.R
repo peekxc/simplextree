@@ -67,3 +67,16 @@ deserialize <- function(complex, st = NULL){
   })
   return(st)
 }
+
+# ---- clone ----
+
+#' @name clone 
+#' @title Clone a simplex tree
+#' @description Performs a deep-copy on the supplied simplicial complex. 
+#' @param st a simplex tree.
+#' @export
+clone <- function(st){
+  stopifnot(class(st) %in% .st_classes)
+  new_st <- deserialize(st %>% serialize())
+  return(new_st)
+}
