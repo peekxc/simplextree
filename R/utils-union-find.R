@@ -1,5 +1,4 @@
-#' UnionFind
-#' @aliases union_find 
+#' @title Union-find
 #' @description Union find structure exposed as an Rcpp Module.
 #' @docType class 
 #' @section Methods: 

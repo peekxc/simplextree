@@ -1,5 +1,5 @@
-#' rips
-#' @description Constructs the Vietoris-Rips complex. 
+#' @title Vietoris–Rips complex
+#' @description Constructs the Vietoris–Rips complex. 
 #' @param d a numeric 'dist' vector. 
 #' @param eps diameter parameter. 
 #' @param dim maximum dimension to construct up to. Defaults to 1 (edges only).
@@ -18,7 +18,7 @@ rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
 	return(st)
 }
 
-#' enclosing_radius
+#' @title Enclosing radius of a set of distances
 #' @description Computes the enclosing radius of a set of distances. 
 #' @param d a \code{\link[stats]{dist}} object. 
 #' @details The enclosing radius is useful as an upper bound of the scale parameter 

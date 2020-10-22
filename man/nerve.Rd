@@ -2,7 +2,7 @@
 % Please edit documentation in R/nerve.R
 \name{nerve}
 \alias{nerve}
-\title{nerve}
+\title{Nerve of a cover}
 \usage{
 nerve(st, cover, k = st$dimension, threshold = 1L, neighborhood = NULL)
 }

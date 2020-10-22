@@ -3,7 +3,7 @@
 \docType{class}
 \name{union_find}
 \alias{union_find}
-\title{UnionFind}
+\title{Union-find}
 \usage{
 union_find(n = 0L)
 }

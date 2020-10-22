@@ -2,7 +2,7 @@
 % Please edit documentation in R/rips.R
 \name{enclosing_radius}
 \alias{enclosing_radius}
-\title{enclosing_radius}
+\title{Enclosing radius of a set of distances}
 \usage{
 enclosing_radius(d)
 }

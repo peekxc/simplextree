@@ -1,4 +1,4 @@
-#' nerve 
+#' @title Nerve of a cover
 #' @description Compute the nerve of a given cover.
 #' @param st a simplex tree.
 #' @param cover list of integers indicating set membership. See details. 
