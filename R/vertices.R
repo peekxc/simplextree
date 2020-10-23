@@ -6,6 +6,8 @@
 #' @description Returns the number of edges (degree) for each given vertex id. 
 #' @param st a simplex tree. 
 #' @param vertices the vertex ids to check the degree of. 
+#' @family vertex-level operations
+#' @export
 degree <- function(st, vertices){
   stopifnot(is.vector(vertices) && is.numeric(vertices))
   return(st$degree(vertices))
@@ -22,6 +24,7 @@ degree <- function(st, vertices){
 #' st <- simplex_tree(1:3)
 #' st %>% adjacent(2) 
 #' # 1 3
+#' @family vertex-level operations
 #' @export
 adjacent <- function(st, vertices){
   stopifnot(is.vector(vertices))

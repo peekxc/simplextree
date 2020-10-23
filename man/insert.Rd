@@ -30,5 +30,10 @@ st \%>\% insert(list(4:5, 6)) ## inserts a 1-simplex { 4, 5 } and a 0-simplex { 
 st \%>\% insert(combn(5,3)) ## inserts all the 2-faces of a 4-simplex
 }
 \seealso{
-find remove
+Other simplex-level operations: 
+\code{\link{find}()},
+\code{\link{generate_ids}()},
+\code{\link{reindex}()},
+\code{\link{remove}()}
 }
+\concept{simplex-level operations}

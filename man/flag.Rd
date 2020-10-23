@@ -21,3 +21,10 @@ weights. The resulting complex is a simplex tree object endowed with additional 
 Vertices have their weights set to 0, and k-simplices w/ k >= 2 have their weights set to the maximum
 weight of any of its edges.
 }
+\seealso{
+Other simplicial complex constructors: 
+\code{\link{nerve}()},
+\code{\link{rips}()},
+\code{\link{simplex_tree}()}
+}
+\concept{simplicial complex constructors}

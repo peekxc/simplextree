@@ -4,6 +4,7 @@
 #' @param eps diameter parameter. 
 #' @param dim maximum dimension to construct up to. Defaults to 1 (edges only).
 #' @param filtered whether to construct the filtration. Defaults to false. See details. 
+#' @family simplicial complex constructors
 #' @export
 rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
 	stopifnot(is.numeric(d) || 'dist' %in% class(d))

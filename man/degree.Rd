@@ -14,3 +14,8 @@ degree(st, vertices)
 \description{
 Returns the number of edges (degree) for each given vertex id.
 }
+\seealso{
+Other vertex-level operations: 
+\code{\link{adjacent}()}
+}
+\concept{vertex-level operations}

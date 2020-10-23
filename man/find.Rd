@@ -32,5 +32,10 @@ st %>% find(simplices)
 }
 
 \seealso{
-insert remove
+Other simplex-level operations: 
+\code{\link{generate_ids}()},
+\code{\link{insert}()},
+\code{\link{reindex}()},
+\code{\link{remove}()}
 }
+\concept{simplex-level operations}

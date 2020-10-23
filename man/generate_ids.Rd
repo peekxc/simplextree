@@ -42,3 +42,11 @@ st \%>\% remove(4)
 st \%>\% generate_ids(1) 
 # 4
 }
+\seealso{
+Other simplex-level operations: 
+\code{\link{find}()},
+\code{\link{insert}()},
+\code{\link{reindex}()},
+\code{\link{remove}()}
+}
+\concept{simplex-level operations}

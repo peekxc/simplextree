@@ -30,3 +30,11 @@ st \%>\% reindex(4:6) \%>\% print_simplices("tree")
 # 5 (h = 1): .( 6 )
 # 6 (h = 0):
 }
+\seealso{
+Other simplex-level operations: 
+\code{\link{find}()},
+\code{\link{generate_ids}()},
+\code{\link{insert}()},
+\code{\link{remove}()}
+}
+\concept{simplex-level operations}

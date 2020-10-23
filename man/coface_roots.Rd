@@ -21,3 +21,16 @@ The coface roots of a given simplex \code{sigma} are the roots
   \emph{level_order} traversal at the roots enumerates the cofaces of
   \code{sigma}.
 }
+\seealso{
+Other traversals: 
+\code{\link{cofaces}()},
+\code{\link{faces}()},
+\code{\link{k_simplices}()},
+\code{\link{k_skeleton}()},
+\code{\link{level_order}()},
+\code{\link{link}()},
+\code{\link{maximal}()},
+\code{\link{preorder}()},
+\code{\link{traverse}()}
+}
+\concept{traversals}

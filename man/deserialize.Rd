@@ -19,7 +19,8 @@ The serialize/deserialize commands can be used to compress/uncompress the comple
 smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use.
 }
 \seealso{
-Other serialization: 
+Other serialization methods: 
+\code{\link{clone}()},
 \code{\link{serialize}()}
 }
-\concept{serialization}
+\concept{serialization methods}

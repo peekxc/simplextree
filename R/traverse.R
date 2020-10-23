@@ -43,7 +43,7 @@ as.list.st_traversal <- function(x, ...){
 #' \code{\link{traverse}} does nothing with the result; if you want to collect the results of applying \code{f} to each simplex 
 #' into a list, use \code{\link{ltraverse}} (or \code{\link{straverse}}), which are meant to be used like \code{\link{lapply}} 
 #' and \code{\link{sapply}}, respectively. 
-#' @family traversals 
+#' @family traversals
 #' @return NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
 #' @examples
 #' ## Starter example complex 
@@ -99,6 +99,7 @@ empty_face <- integer(0L)
 #' @description Generate a preorder traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 preorder <- function(st, sigma = NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -113,6 +114,7 @@ preorder <- function(st, sigma = NULL){
 #' @description Generates a level order traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 level_order <- function(st, sigma = NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -127,6 +129,7 @@ level_order <- function(st, sigma = NULL){
 #' @description Generates a face traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 faces <- function(st, sigma){
   stopifnot(class(st) %in% .st_classes)
@@ -140,6 +143,7 @@ faces <- function(st, sigma){
 #' @description Generates a coface traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 cofaces <- function(st, sigma){
   stopifnot(class(st) %in% .st_classes)
@@ -154,6 +158,7 @@ cofaces <- function(st, sigma){
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 k_skeleton <- function(st, k, sigma = NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -174,6 +179,7 @@ k_skeleton <- function(st, k, sigma = NULL){
 #'   conjunction with other traversals, e.g. a \emph{preorder} or
 #'   \emph{level_order} traversal at the roots enumerates the cofaces of
 #'   \code{sigma}.
+#' @family traversals
 #' @export
 coface_roots <- function(st, sigma){
   stopifnot(class(st) %in% .st_classes)
@@ -187,6 +193,7 @@ coface_roots <- function(st, sigma){
 #' @description Generates a traversal on the maximal of the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 maximal <- function(st, sigma = NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -202,6 +209,7 @@ maximal <- function(st, sigma = NULL){
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
+#' @family traversals
 #' @export
 k_simplices <- function(st, k, sigma = NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -217,6 +225,7 @@ k_simplices <- function(st, k, sigma = NULL){
 #'   simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at.
+#' @family traversals
 #' @export
 link <- function(st, sigma){
   stopifnot(class(st) %in% .st_classes)

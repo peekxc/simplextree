@@ -12,3 +12,13 @@ clone(st)
 \description{
 Performs a deep-copy on the supplied simplicial complex.
 }
+\details{
+A clone is produced by serializing the input simplex tree \code{st}
+  and deserializing it into a new simplex tree that is then returned.
+}
+\seealso{
+Other serialization methods: 
+\code{\link{deserialize}()},
+\code{\link{serialize}()}
+}
+\concept{serialization methods}

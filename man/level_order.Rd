@@ -14,3 +14,16 @@ level_order(st, sigma = NULL)
 \description{
 Generates a level order traversal on the simplex tree.
 }
+\seealso{
+Other traversals: 
+\code{\link{coface_roots}()},
+\code{\link{cofaces}()},
+\code{\link{faces}()},
+\code{\link{k_simplices}()},
+\code{\link{k_skeleton}()},
+\code{\link{link}()},
+\code{\link{maximal}()},
+\code{\link{preorder}()},
+\code{\link{traverse}()}
+}
+\concept{traversals}

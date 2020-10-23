@@ -18,3 +18,10 @@ rips(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE)
 \description{
 Constructs the Vietoris–Rips complex.
 }
+\seealso{
+Other simplicial complex constructors: 
+\code{\link{flag}()},
+\code{\link{nerve}()},
+\code{\link{simplex_tree}()}
+}
+\concept{simplicial complex constructors}

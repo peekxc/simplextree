@@ -2,7 +2,7 @@
 #' @title Serialize the simplex tree
 #' @description Provides a compressed serialization interface for the simplex tree.
 #' @param st a simplex tree.
-#' @family serialization
+#' @family serialization methods
 #' @details The serialize/deserialize commands can be used to compress/uncompress the complex into 
 #' smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
 #' The serialization.
@@ -46,7 +46,7 @@ serialize <- function(st){
 #' @description Provides a compressed serialization interface for the simplex tree.
 #' @param complex The result of \code{\link{serialize}}.
 #' @param st optionally, the simplex tree to insert into. Otherwise a new one is created. 
-#' @family serialization
+#' @family serialization methods
 #' @details The serialize/deserialize commands can be used to compress/uncompress the complex into 
 #' smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use. 
 #' @export
@@ -70,10 +70,13 @@ deserialize <- function(complex, st = NULL){
 
 # ---- clone ----
 
-#' @name clone 
+#' @name clone
 #' @title Clone a simplex tree
-#' @description Performs a deep-copy on the supplied simplicial complex. 
+#' @description Performs a deep-copy on the supplied simplicial complex.
 #' @param st a simplex tree.
+#' @family serialization methods
+#' @details A clone is produced by serializing the input simplex tree \code{st}
+#'   and deserializing it into a new simplex tree that is then returned.
 #' @export
 clone <- function(st){
   stopifnot(class(st) %in% .st_classes)

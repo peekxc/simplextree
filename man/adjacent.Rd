@@ -19,3 +19,8 @@ st <- simplex_tree(1:3)
 st \%>\% adjacent(2) 
 # 1 3
 }
+\seealso{
+Other vertex-level operations: 
+\code{\link{degree}()}
+}
+\concept{vertex-level operations}

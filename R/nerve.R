@@ -20,6 +20,7 @@
 #' to filter out subsets of the cover the user knows are  The indices are 
 #' generated using the same code that performs \code{\link{expand}}.  
 #' 
+#' @family simplicial complex constructors
 #' @export
 nerve <- function(st, cover, k = st$dimension, threshold = 1L, neighborhood=NULL){
   stopifnot(class(st) %in% .st_classes)

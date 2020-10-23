@@ -24,5 +24,10 @@ represents a simplex (as vectors). If the simplices to insert are all of the sam
 optionally use a matrix, where each column is assumed to be a simplex.
 }
 \seealso{
-find remove
+Other simplex-level operations: 
+\code{\link{find}()},
+\code{\link{generate_ids}()},
+\code{\link{insert}()},
+\code{\link{reindex}()}
 }
+\concept{simplex-level operations}

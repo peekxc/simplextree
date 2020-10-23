@@ -38,7 +38,8 @@ print(utils::object.size(serialize(R)), units = "Kb")
 ## You can save these to disk via e.g. saveRDS(serialize(R), ...)
 }
 \seealso{
-Other serialization: 
+Other serialization methods: 
+\code{\link{clone}()},
 \code{\link{deserialize}()}
 }
-\concept{serialization}
+\concept{serialization methods}

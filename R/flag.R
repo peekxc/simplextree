@@ -7,6 +7,7 @@
 #' weights. The resulting complex is a simplex tree object endowed with additional structure; see. 
 #' Vertices have their weights set to 0, and k-simplices w/ k >= 2 have their weights set to the maximum
 #' weight of any of its edges. 
+#' @family simplicial complex constructors
 #' @export
 flag <- function(st, d){
   stopifnot(is.numeric(d), class(st) %in% .st_classes)

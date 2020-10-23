@@ -36,3 +36,10 @@ accept an integer vector of \emph{k} indices (of the cover) and return a boolean
 to filter out subsets of the cover the user knows are  The indices are 
 generated using the same code that performs \code{\link{expand}}.
 }
+\seealso{
+Other simplicial complex constructors: 
+\code{\link{flag}()},
+\code{\link{rips}()},
+\code{\link{simplex_tree}()}
+}
+\concept{simplicial complex constructors}

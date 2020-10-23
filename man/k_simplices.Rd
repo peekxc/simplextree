@@ -16,3 +16,16 @@ k_simplices(st, k, sigma = NULL)
 \description{
 Generates a traversal on the k-simplices of the simplex tree.
 }
+\seealso{
+Other traversals: 
+\code{\link{coface_roots}()},
+\code{\link{cofaces}()},
+\code{\link{faces}()},
+\code{\link{k_skeleton}()},
+\code{\link{level_order}()},
+\code{\link{link}()},
+\code{\link{maximal}()},
+\code{\link{preorder}()},
+\code{\link{traverse}()}
+}
+\concept{traversals}

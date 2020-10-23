@@ -87,6 +87,7 @@
 #' list_of_simplices <- st$as_list()
 #' adj_matrix <- st$as_adjacency_matrix()
 #' # ... see also as_adjacency_list(), as_edge_list(), etc 
+#' @family simplicial complex constructors
 #' @export
 simplex_tree <- function(simplices = NULL){
   st <- new(SimplexTree)
@@ -128,6 +129,7 @@ simplex_tree <- function(simplices = NULL){
 #' st %>% remove(4)
 #' st %>% generate_ids(1) 
 #' # 4
+#' @family simplex-level operations
 #' @export
 generate_ids <- function(st, n){
   stopifnot(is.numeric(n) && length(n) == 1)
@@ -148,7 +150,7 @@ generate_ids <- function(st, n){
 #' If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
 #' represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
 #' optionally use a matrix, where each column is assumed to be a simplex. 
-#' @seealso find remove
+#' @family simplex-level operations
 #' @examples 
 #' st <- simplex_tree()
 #' st %>% insert(1:3) ## inserts the 2-simplex { 1, 2, 3 }
@@ -175,7 +177,7 @@ insert <- function(st, simplices){
 #' If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
 #' represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
 #' optionally use a matrix, where each column is assumed to be a simplex. 
-#' @seealso find remove
+#' @family simplex-level operations
 #' @export
 remove <- function(st, simplices){
   stopifnot(class(st) %in% .st_classes)
@@ -200,7 +202,7 @@ remove <- function(st, simplices){
 #' represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
 #' optionally use a matrix, where each column is assumed to be a simplex. 
 #' @return boolean indicating whether or not \code{simplex} exists in the tree. 
-#' @seealso insert remove
+#' @family simplex-level operations
 #' @export
 find <- function(st, simplices){
   stopifnot(class(st) %in% .st_classes)
@@ -227,6 +229,7 @@ find <- function(st, simplices){
 #' # 4 (h = 2): .( 5 6 )..( 6 )
 #' # 5 (h = 1): .( 6 )
 #' # 6 (h = 0):
+#' @family simplex-level operations
 #' @export
 reindex <- function(st, ids){
   stopifnot(class(st) %in% .st_classes)
