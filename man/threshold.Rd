@@ -16,3 +16,10 @@ threshold(st, index = NULL, value = NULL)
 \description{
 Thresholds a given filtered simplicial complex.
 }
+\seealso{
+Other complex-level operations: 
+\code{\link{clear}()},
+\code{\link{contract}()},
+\code{\link{expand}()}
+}
+\concept{complex-level operations}

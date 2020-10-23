@@ -12,6 +12,7 @@
 #' print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
 #' st %>% clear()
 #' print(st) ## < empty simplex tree >
+#' @family complex-level operations
 #' @export
 clear <- function(st){
   stopifnot(class(st) %in% .st_classes)
@@ -29,6 +30,7 @@ clear <- function(st){
 #' is a flag complex. 
 #' @param st a simplex tree. 
 #' @param k the target dimension of the expansion.
+#' @family complex-level operations
 #' @export
 expand <- function(st, k=2){
   stopifnot(is.numeric(k))
@@ -105,6 +107,7 @@ collapse <- function(st, pair, w=NULL){
 #' @param st simplex tree.
 #' @param index integer index to threshold to.
 #' @param value numeric index to threshold filtration. 
+#' @family complex-level operations
 #' @export
 threshold <- function(st, index = NULL, value = NULL){
   stopifnot(class(st) %in% .st_classes)
@@ -144,6 +147,7 @@ threshold <- function(st, index = NULL, value = NULL){
 #' # 1, 2, 3, 1 2, 1 3, 2 3, 1 2 3
 #' st %>% contract(c(1, 3)) %>% print_simplices()
 #' # 1, 2, 1 2
+#' @family complex-level operations
 #' @export
 contract <- function(st, edge){
   stopifnot(class(st) %in% .st_classes)

@@ -35,3 +35,10 @@ st \%>\% contract(c(1, 3)) \%>\% print_simplices()
 \references{
 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 }
+\seealso{
+Other complex-level operations: 
+\code{\link{clear}()},
+\code{\link{expand}()},
+\code{\link{threshold}()}
+}
+\concept{complex-level operations}

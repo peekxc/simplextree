@@ -17,3 +17,10 @@ if all combinations of edges are included. Because this operation uses the edges
 the existence of higher order simplices, the expansion assumes the underlying complex
 is a flag complex.
 }
+\seealso{
+Other complex-level operations: 
+\code{\link{clear}()},
+\code{\link{contract}()},
+\code{\link{threshold}()}
+}
+\concept{complex-level operations}

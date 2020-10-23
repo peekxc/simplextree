@@ -20,3 +20,10 @@ print(st) ## Simplex Tree with (3, 3, 1) (0, 1, 2)-simplices
 st \%>\% clear()
 print(st) ## < empty simplex tree >
 }
+\seealso{
+Other complex-level operations: 
+\code{\link{contract}()},
+\code{\link{expand}()},
+\code{\link{threshold}()}
+}
+\concept{complex-level operations}
