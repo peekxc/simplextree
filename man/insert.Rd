@@ -15,12 +15,12 @@ insert(st, simplices)
 Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
 }
 \details{
-This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
-no insertion is made, and the tree is not modified. \code{simplex} is sorted before traversing the trie. 
-Faces of \code{simplex} not in the simplex tree are inserted as needed. \cr
-\cr
-If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
-represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
+This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree,
+no insertion is made, and the tree is not modified. \code{simplices} is sorted before traversing the trie.
+Faces of \code{simplices} not in the simplex tree are inserted as needed.
+
+If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list
+represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also
 optionally use a matrix, where each column is assumed to be a simplex.
 }
 \examples{

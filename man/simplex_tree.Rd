@@ -9,7 +9,7 @@
 simplex_tree(simplices = NULL)
 }
 \arguments{
-\item{simplices}{optional simplices to initialize the simplex tree with. See \code{\link{insert}}.}
+\item{simplices}{optional simplices to initialize the simplex tree with. See \code{\link[=insert]{insert()}}.}
 }
 \value{
 A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module).
@@ -18,57 +18,58 @@ A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module).
 Simplex tree class exposed as an Rcpp Module.
 }
 \details{
-A simplex tree is an ordered trie-like structure specialized for storing and doing general computation 
-simplicial complexes. Here is figure of a simplex tree, taken from the original paper (see 1): \cr  
+A simplex tree is an ordered trie-like structure specialized for storing and doing general computation
+simplicial complexes. Here is figure of a simplex tree, taken from the original paper (see Boissonnat and Maria, 2014):
+
 \if{html}{\figure{simplextree.png}{options: width="80\%" alt="Figure: simplextree.png"}}
 \if{latex}{\figure{simplextree.pdf}{options: width=12cm}}
-\cr 
+
 The current implementation provides a subset of the functionality described in the paper.
 }
 \section{Fields}{
 
 \describe{
-\item{\code{n_simplices}}{A vector, where each index k denotes the number (k-1)-simplices.}
+\item{\code{n_simplices}}{A vector, where each index \eqn{k} denotes the number \eqn{(k-1)}-simplices.}
 
 \item{\code{dimension}}{The dimension of the simplicial complex.}
 }}
 
 \section{Properties}{
 
-Properties are actively bound shortcuts to various methods of the simplex tree that may be thought of as fields. 
-Unlike fields, however, properties are not explicitly stored: they are generated on access. 
+Properties are actively bound shortcuts to various methods of the simplex tree that may be thought of as fields.
+Unlike fields, however, properties are not explicitly stored: they are generated on access.
 \describe{
-    \item{$\code{id_policy}}{ The policy used to generate new vertex ids. May be assigned "compressed" or "unique". See \code{\link{generate_ids}}. }
-    \item{$\code{vertices}}{ The 0-simplices of the simplicial complex, as a matrix. }
-    \item{$\code{edges}}{ The 1-simplices of the simplicial complex, as a matrix. }
-    \item{$\code{triangles}}{ The 2-simplices of the simplicial complex, as a matrix. }
-    \item{$\code{quads}}{ The 3-simplices of the simplicial complex, as a matrix. }
-    \item{$\code{connected_components}}{ The connected components of the simplicial complex. }
+\item{\verb{$id_policy}}{ The policy used to generate new vertex ids. May be assigned \code{"compressed"} or \code{"unique"}. See \code{\link[=generate_ids]{generate_ids()}}. }
+\item{\verb{$vertices}}{ The 0-simplices of the simplicial complex, as a matrix. }
+\item{\verb{$edges}}{ The 1-simplices of the simplicial complex, as a matrix. }
+\item{\verb{$triangles}}{ The 2-simplices of the simplicial complex, as a matrix. }
+\item{\verb{$quads}}{ The 3-simplices of the simplicial complex, as a matrix. }
+\item{\verb{$connected_components}}{ The connected components of the simplicial complex. }
 }
 }
 
 \section{Methods}{
- 
+
 \describe{
-    \item{$\code{as_XPtr}}{ Creates an external pointer. }
-    \item{$\code{clear}}{ Clears the simplex tree. }
-    \item{$\code{\link{generate_ids}}}{ Generates new vertex ids according to the set policy. }
-    \item{$\code{\link{degree}}}{ Returns the degree of each given vertex. }
-    \item{$\code{\link{adjacent}}}{ Returns vertices adjacent to a given vertex. }
-    \item{$\code{\link{insert}}}{ Inserts a simplex into the trie. }
-    \item{$\code{\link{remove}}}{ Removes a simplex from the trie. }
-    \item{$\code{\link{find}}}{ Returns whether a simplex exists in the trie. }
-    \item{$\code{\link{collapse}}}{ Performs an elementary collapse. }
-    \item{$\code{\link{contract}}}{ Performs an edge contraction. }
-    \item{$\code{\link{expand}}}{ Performs an k-expansion. }
-    \item{$\code{\link{traverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
-    \item{$\code{\link{ltraverse}}}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
-    \item{$\code{\link{is_face}}}{ Checks for faces. }
-    \item{$\code{\link{is_tree}}}{ Checks if the simplicial complex is a tree. }
-    \item{$\code{as_list}}{ Converts the simplicial complex to a list. }
-    \item{$\code{as_adjacency_matrix}}{ Converts the 1-skeleton to an adjacency matrix. }
-    \item{$\code{as_adjacency_list}}{ Converts the 1-skeleton to an adjacency list. }
-    \item{$\code{as_edgelist}}{ Converts the 1-skeleton to an edgelist. }
+\item{\verb{$as_XPtr()}}{ Creates an external pointer. }
+\item{\code{$}\code{\link[=generate_ids]{generate_ids()}}}{ Generates new vertex ids according to the set policy. }
+\item{\code{$}\code{\link[=insert]{insert()}}}{ Inserts a simplex into the trie. }
+\item{\code{$}\code{\link[=remove]{remove()}}}{ Removes a simplex from the trie. }
+\item{\code{$}\code{\link[=find]{find()}}}{ Returns whether a simplex exists in the trie. }
+\item{\code{$}\code{\link[=degree]{degree()}}}{ Returns the degree of each given vertex. }
+\item{\code{$}\code{\link[=adjacent]{adjacent()}}}{ Returns vertices adjacent to a given vertex. }
+\item{\code{$}\code{\link[=clear]{clear()}}}{ Clears the simplex tree. }
+\item{\code{$}\code{\link[=expand]{expand()}}}{ Performs an k-expansion. }
+\item{\code{$}\code{\link[=collapse]{collapse()}}}{ Performs an elementary collapse. }
+\item{\code{$}\code{\link[=contract]{contract()}}}{ Performs an edge contraction. }
+\item{\code{$}\code{\link[=traverse]{traverse()}}}{ Traverses a subset of the simplex tree, applying a function to each simplex. }
+\item{\code{$}\code{\link[=ltraverse]{ltraverse()}}}{ Traverses a subset of the simplex tree, applying a function to each simplex and returning the result as a list. }
+\item{\code{$}\code{\link[=is_face]{is_face()}}}{ Checks for faces. }
+\item{\code{$}\code{\link[=is_tree]{is_tree()}}}{ Checks if the simplicial complex is a tree. }
+\item{\verb{$as_list()}}{ Converts the simplicial complex to a list. }
+\item{\verb{$as_adjacency_matrix()}}{ Converts the 1-skeleton to an adjacency matrix. }
+\item{\verb{$as_adjacency_list()}}{ Converts the 1-skeleton to an adjacency list. }
+\item{\verb{$as_edgelist()}}{ Converts the 1-skeleton to an edgelist. }
 }
 }
 

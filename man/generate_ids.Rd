@@ -16,13 +16,12 @@ generate_ids(st, n)
 Generates vertex ids representing 0-simplices not in the tree.
 }
 \details{
-This function generates new vertex ids for use in situations which involve generating new 
-new 0-simplices, e.g. insertions, contractions, collapses, etc. There are two 'policies' which designate 
-the generating mechanism of these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids 
-sequentially, starting at 0. 'unique' tracks an incremental internal counter, which is updated on every 
-call to \code{generate_ids}. The new ids under the 'unique' policy generates the first sequential \code{n} 
-ids that are strictly greater  \code{max}(\emph{counter}, \emph{max vertex id}). \cr
-\cr
+This function generates new vertex ids for use in situations which involve generating new
+new 0-simplices, e.g. insertions, contractions, collapses, etc. There are two 'policies' which designate
+the generating mechanism of these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids
+sequentially, starting at 0. 'unique' tracks an incremental internal counter, which is updated on every
+call to \code{generate_ids()}. The new ids under the 'unique' policy generates the first sequential \code{n}
+ids that are strictly greater \verb{max(}\emph{counter}\verb{, }\emph{max vertex id}\verb{)}.
 }
 \examples{
 st <- simplex_tree()

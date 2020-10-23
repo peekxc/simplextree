@@ -15,12 +15,12 @@ remove(st, simplices)
 Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
 }
 \details{
-This function allows removal of a arbitrary order simplices. If \code{simplex} already exists in the tree, 
-it is removed, otherwise the tree is not modified. \code{simplex} is sorted before traversing the trie.
-Cofaces of \code{simplex} are also removed. \cr
-\cr
-If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
-represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
+This function allows removal of a arbitrary order simplices. If \code{simplices} already exists in the tree,
+it is removed, otherwise the tree is not modified. \code{simplices} is sorted before traversing the trie.
+Cofaces of \code{simplices} are also removed.
+
+If \code{simplices} is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list
+represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also
 optionally use a matrix, where each column is assumed to be a simplex.
 }
 \seealso{

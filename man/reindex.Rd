@@ -15,9 +15,9 @@ reindex(st, ids)
 This function allows one to 'reorder' or 'reindex' vertex ids.
 }
 \details{
-The \code{ids} parameter must be a sorted integer vector of new ids with length matching the 
-number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with 
-\code{ids}[i]. See examples.
+The \code{ids} parameter must be a sorted integer vector of new ids with length matching the
+number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with
+\code{ids[i]}. See examples.
 }
 \examples{
 st <- simplex_tree()
