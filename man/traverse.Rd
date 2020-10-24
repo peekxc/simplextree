@@ -20,19 +20,19 @@ ltraverse(traversal, f, ...)
 \item{...}{unused.}
 }
 \value{
-NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
+NULL; for list or vector-valued returns, use \code{ltraverse()} and \code{straverse()} respectively.
 }
 \description{
 Traverses specific subsets of a simplicial complex.
 }
 \details{
-\code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
-The specific subset and order are determined by the choice of \emph{traversal}: examples include 
-the \code{\link{preorder}} traversal, the \code{\link{cofaces}} traversal, etc. See the links below. 
+\code{\link[=traverse]{traverse()}} allows for traversing ordered subsets of the simplex tree.
+The specific subset and order are determined by the choice of \emph{traversal}: examples include
+the \code{\link[=preorder]{preorder()}} traversal, the \code{\link[=cofaces]{cofaces()}} traversal, etc. See the links below.
 Each simplex in the traversal is passed as the first and only argument to \code{f}, one per simplex in the traversal.
-\code{\link{traverse}} does nothing with the result; if you want to collect the results of applying \code{f} to each simplex 
-into a list, use \code{\link{ltraverse}} (or \code{\link{straverse}}), which are meant to be used like \code{\link{lapply}} 
-and \code{\link{sapply}}, respectively.
+\code{\link[=traverse]{traverse()}} does nothing with the result; if you want to collect the results of applying \code{f} to each simplex
+into a list, use \code{\link[=ltraverse]{ltraverse()}} (or \code{\link[=straverse]{straverse()}}), which are meant to be used like \code{\link[=lapply]{lapply()}}
+and \code{\link[=sapply]{sapply()}}, respectively.
 }
 \examples{
 ## Starter example complex 

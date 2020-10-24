@@ -30,21 +30,22 @@ as.list.st_traversal <- function(x, ...){
 
 # ---- traverse ----
 
+#' @md
 #' @name traverse
 #' @title Apply a function along a traversal
 #' @param traversal The type of traversal to use.
 #' @param f An arbitrary function to apply to eac simplex of the traversal. See details. 
 #' @param ... unused. 
 #' @description Traverses specific subsets of a simplicial complex.
-#' @details \code{\link{traverse}} allows for traversing ordered subsets of the simplex tree. 
-#' The specific subset and order are determined by the choice of \emph{traversal}: examples include 
-#' the \code{\link{preorder}} traversal, the \code{\link{cofaces}} traversal, etc. See the links below. 
-#' Each simplex in the traversal is passed as the first and only argument to \code{f}, one per simplex in the traversal.
-#' \code{\link{traverse}} does nothing with the result; if you want to collect the results of applying \code{f} to each simplex 
-#' into a list, use \code{\link{ltraverse}} (or \code{\link{straverse}}), which are meant to be used like \code{\link{lapply}} 
-#' and \code{\link{sapply}}, respectively. 
+#' @details [traverse()] allows for traversing ordered subsets of the simplex tree. 
+#' The specific subset and order are determined by the choice of _traversal_: examples include 
+#' the [preorder()] traversal, the [cofaces()] traversal, etc. See the links below. 
+#' Each simplex in the traversal is passed as the first and only argument to `f`, one per simplex in the traversal.
+#' [traverse()] does nothing with the result; if you want to collect the results of applying `f` to each simplex 
+#' into a list, use [ltraverse()] (or [straverse()]), which are meant to be used like [lapply()] 
+#' and [sapply()], respectively. 
 #' @family traversals
-#' @return NULL; for list or vector-valued returns, use \code{ltraverse} and \code{straverse} respectively.
+#' @return NULL; for list or vector-valued returns, use `ltraverse()` and `straverse()` respectively.
 #' @examples
 #' ## Starter example complex 
 #' st <- simplex_tree()
@@ -85,9 +86,10 @@ ltraverse <- function(traversal, f, ...){
 
 # ---- empty_face ----
 
+#' @md
 #' @name empty_face
 #' @title Empty faces
-#' @description Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree. 
+#' @description Alias to the empty integer vector (`integer(0L)`). Used to indicate the empty face of the tree. 
 #' @seealso traverse
 #' @export
 empty_face <- integer(0L)
@@ -168,17 +170,18 @@ k_skeleton <- function(st, k, sigma = NULL){
 
 # ---- coface_roots ----- 
 
+#' @md
 #' @name coface_roots
 #' @title Coface roots traversal
 #' @description Generates a coface roots traversal on the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at.
-#' @description The coface roots of a given simplex \code{sigma} are the roots
+#' @description The coface roots of a given simplex `sigma` are the roots
 #'   of subtrees in the trie whose descendents (including the roots themselves)
-#'   are cofaces of \code{sigma}. This traversal is more useful when used in
-#'   conjunction with other traversals, e.g. a \emph{preorder} or
-#'   \emph{level_order} traversal at the roots enumerates the cofaces of
-#'   \code{sigma}.
+#'   are cofaces of `sigma`. This traversal is more useful when used in
+#'   conjunction with other traversals, e.g. a _preorder_ or
+#'   _level order_ traversal at the roots enumerates the cofaces of
+#'   `sigma`.
 #' @family traversals
 #' @export
 coface_roots <- function(st, sigma){

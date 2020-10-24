@@ -3,22 +3,22 @@
 #' @param st a simplex tree.
 #' @param cover list of integers indicating set membership. See details. 
 #' @param k max simplex dimension to consider. 
-#' @param threshold the number of elements in common for \code{k} sets to be considered intersecting. Defaults to 1. 
+#' @param threshold the number of elements in common for `k` sets to be considered intersecting. Defaults to 1. 
 #' @param neighborhood which combinations of sets to check. See details. 
-#' @details This computes the nerve of a given cover, adding a \emph{k}-simplex for each combination of \emph{k+1} sets 
-#' in the given \code{cover} that have at least \code{threshold} elements in their common intersection. \cr
-#' \cr
-#' If \code{neighborhood} is supplied, it can be either 1) a matrix, 2) a list, or 3) a function. Each 
-#' type parameterizes which sets in the cover need be checked for to see if they have at least \code{threshold}
+#' @details This computes the nerve of a given cover, adding a \eqn{k}-simplex for each combination of \eqn{k+1} sets 
+#' in the given `cover` that have at least `threshold` elements in their common intersection.
+#' 
+#' If `neighborhood` is supplied, it can be either (1) a matrix, (2) a list, or (3) a function. Each 
+#' type parameterizes which sets in the cover need be checked for to see if they have at least `threshold`
 #' elements in their common intersection. If a matrix is supplied, the columns should indicate the indices 
-#' of the cover to check (e.g if \code{neighborhood = matrix(c(1,2), nrow = 2)}, then only the first two sets of \code{cover}
-#' are tested.). Similarly, if a list is supplied, each element in the list should give the indices to test. \cr
-#' \cr
-#' The most flexible option is supplying a function to \code{neighborhood}. If a function is passed, it's assumed to 
-#' accept an integer vector of \emph{k} indices (of the cover) and return a boolean indicating whether or not to 
-#' \emph{test} if they have at least \code{threshold} elements in their common intersection. This can be used
+#' of the cover to check (e.g if `neighborhood = matrix(c(1,2), nrow = 2)`, then only the first two sets of `cover`
+#' are tested.). Similarly, if a list is supplied, each element in the list should give the indices to test.
+#' 
+#' The most flexible option is supplying a function to `neighborhood`. If a function is passed, it's assumed to 
+#' accept an integer vector of \eqn{k} indices (of the cover) and return a boolean indicating whether or not to 
+#' _test_ if they have at least `threshold` elements in their common intersection. This can be used
 #' to filter out subsets of the cover the user knows are  The indices are 
-#' generated using the same code that performs \code{\link{expand}}.  
+#' generated using the same code that performs [expand()].
 #' 
 #' @family simplicial complex constructors
 #' @export

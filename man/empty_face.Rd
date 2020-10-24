@@ -11,7 +11,7 @@ An object of class \code{integer} of length 0.
 empty_face
 }
 \description{
-Alias to the empty integer vector (integer(0L)). Used to indicate the empty face of the tree.
+Alias to the empty integer vector (\code{integer(0L)}). Used to indicate the empty face of the tree.
 }
 \seealso{
 traverse

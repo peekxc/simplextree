@@ -19,9 +19,10 @@ rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
 	return(st)
 }
 
+#' @md
 #' @title Enclosing radius of a set of distances
 #' @description Computes the enclosing radius of a set of distances. 
-#' @param d a \code{\link[stats]{dist}} object. 
+#' @param d a [stats::dist()] object. 
 #' @details The enclosing radius is useful as an upper bound of the scale parameter 
 #' for the rips filtration. Scales above the enclosing radius render the Vietoris–Rips
 #' complex as a simplicial cone, beyond which the homology is trivial. 

@@ -15,11 +15,11 @@ coface_roots(st, sigma)
 Generates a coface roots traversal on the simplex tree.
 
 The coface roots of a given simplex \code{sigma} are the roots
-  of subtrees in the trie whose descendents (including the roots themselves)
-  are cofaces of \code{sigma}. This traversal is more useful when used in
-  conjunction with other traversals, e.g. a \emph{preorder} or
-  \emph{level_order} traversal at the roots enumerates the cofaces of
-  \code{sigma}.
+of subtrees in the trie whose descendents (including the roots themselves)
+are cofaces of \code{sigma}. This traversal is more useful when used in
+conjunction with other traversals, e.g. a \emph{preorder} or
+\emph{level order} traversal at the roots enumerates the cofaces of
+\code{sigma}.
 }
 \seealso{
 Other traversals: 

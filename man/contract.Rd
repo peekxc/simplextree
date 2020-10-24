@@ -15,14 +15,17 @@ contract(st, edge)
 Performs an edge contraction.
 }
 \details{
-This function performs an \emph{edge contraction} in the sense described by (1), which is 
-summarized here. Given an edge \eqn{ {va, vb}}, \eqn{vb} is contracted to \eqn{va} if \eqn{vb} is 
-removed from the complex and the link of \eqn{va} is augmented with the link of \eqn{vb}. This may be thought as 
-applying the mapping: \cr
-\deqn{f(u) = va}
-if \eqn{u = vb}
-and identity otherwise, to all simplices in the complex. \cr 
-\code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
+This function performs an \emph{edge contraction} in the sense described by (1), which is
+summarized here. Given an edge \eqn{(v,w)}, \eqn{w} is contracted to \eqn{v} if \eqn{w} is
+removed from the complex and the link of \eqn{v} is augmented with the link of \eqn{w}. This may be thought as
+applying the mapping:
+
+\deqn{f(u) = v}
+
+if \eqn{u = w}
+and identity otherwise, to all simplices in the complex.
+
+\code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first.
 Note that edge contraction is not symmetric.
 }
 \examples{
@@ -33,7 +36,9 @@ st \%>\% contract(c(1, 3)) \%>\% print_simplices()
 # 1, 2, 1 2
 }
 \references{
-1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+\enumerate{
+\item Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+}
 }
 \seealso{
 Other complex-level operations: 

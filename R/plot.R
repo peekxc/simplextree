@@ -1,47 +1,49 @@
+#' @md
 #' @name plot_simplextree
 #' @title Plot a simplex tree
 #' @param x a simplex tree.
-#' @param coords Optional (n x 2) matrix of coordinates, where n is the number of 0-simplices. 
-#' @param vertex_opt Optional parameters to modify default vertex plotting options. Passed to \code{\link[graphics]{points}}.
-#' @param text_opt Optional parameters to modify default vertex text plotting options. Passed to \code{\link[graphics]{text}}.
-#' @param edge_opt Optional parameters to modify default edge plotting options. Passed to \code{\link[graphics]{segments}}.
-#' @param polygon_opt Optional parameters to modify default k-simplex plotting options for k > 1. Passed to \code{\link[graphics]{polygon}}.
+#' @param coords Optional \eqn{n * 2} matrix of coordinates, where n is the number of 0-simplices. 
+#' @param vertex_opt Optional parameters to modify default vertex plotting options. Passed to [graphics::points()].
+#' @param text_opt Optional parameters to modify default vertex text plotting options. Passed to [graphics::text()].
+#' @param edge_opt Optional parameters to modify default edge plotting options. Passed to [graphics::segments()].
+#' @param polygon_opt Optional parameters to modify default k-simplex plotting options for \eqn{k > 1}. Passed to [graphics::polygon()].
 #' @param color_pal Optional vector of colors. See details.
 #' @param maximal Whether to draw only the maximal faces of the complex. Defaults to true. 
 #' @param by_dim Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.
 #' @param add Whether to add to the plot or redraw. Defaults to false. See details.
 ## @param clip_polygons Whether to clip the polygons. Useful when visualizing large complexes. See details. 
-#' @param ... unused (\code{plot.Rcpp_SimplexTree}) or passed to \code{plot.Rcpp_SimplexTree} (\code{plot.Rcpp_Filtration}).
-#' @details This function allows generic plotting of simplicial complexes using base \code{\link[graphics:graphics-package]{graphics}}.\cr
-#' If not (x,y) coordinates are supplied via \code{coords}, a default layout is generated via phyllotaxis arrangement. This layout is 
+#' @param ... unused (`plot.Rcpp_SimplexTree()`) or passed to `plot.Rcpp_SimplexTree()` (`plot.Rcpp_Filtration()`).
+#' @details This function allows generic plotting of simplicial complexes using base [`graphics::graphics-package`].
+#' 
+#' If \eqn{(x,y)} coordinates are not supplied via `coords`, a default layout is generated via phyllotaxis arrangement. This layout is 
 #' not in general does not optimize the embedding towards any usual visualization criteria e.g. it doesn't try to separate connected components, 
 #' minimize the number of crossings, etc. For those, the user is recommended to look in existing code graph drawing libraries, e.g. igraphs 'layout.auto' function, etc. 
 #' The primary benefit of the default phyllotaxis arrangement is that it is deterministic and fast to generate. 
-#' \cr
-#' All parameters passed via list to \code{vertex_opt}, \code{text_opt}, \code{edge_opt}, \code{polygon_opt} 
-#' override default parameters and are passed to \code{\link[graphics]{points}}, \code{\link[graphics]{text}}, \code{\link[graphics]{segments}}, 
-#' and \code{\link[graphics]{polygon}}, respectively.\cr
-#' \cr
-#' If \code{add} is true, the plot is not redrawn. \cr
-#' \cr
-#' If \code{maximal} is true, only the maximal simplices are drawn. \cr
-#' \cr
-#' The \code{color_pal} argument controls how the simplicial complex is colored. It can be specified in multiple ways.
+#' 
+#' All parameters passed via list to `vertex_opt`, `text_opt`, `edge_opt`, `polygon_opt` 
+#' override default parameters and are passed to [graphics::points()], [graphics::text()], [graphics::segments()],
+#' and [graphics::polygon()], respectively.
+#' 
+#' If `add` is true, the plot is not redrawn.
+#' 
+#' If `maximal` is true, only the maximal simplices are drawn.
+#' 
+#' The `color_pal` argument controls how the simplicial complex is colored. It can be specified in multiple ways.
 #' \enumerate{
-#'   \item A vector of colors of length \emph{dim+1}, where \emph{dim}=\code{x$dimension}
-#'   \item A vector of colors of length \emph{n}, where \emph{n}=\code{sum(x$n_simplices)}
+#'   \item A vector of colors of length `x$dimension + 1`
+#'   \item A vector of colors of length `sum(x$n_simplices)`
 #'   \item A named list of colors
 #' }
-#' Option (1) assigns every simplex a color based on its dimension. \cr
-#' \cr
+#' Option (1) assigns every simplex a color based on its dimension.
+#' 
 #' Option (2) assigns each individual simplex a color. The vector must be specified in level-order 
-#' (see \code{\link{ltraverse}} or examples below). \cr
-#' \cr
+#' (see [traverse()] or examples below).
+#' 
 #' Option (3) allows specifying individual simplices to draw. It expects a named list, where the names
-#' must correspond to simplices in \code{x} as comma-separated strings and whose values are colors. If 
-#' option (3) is specified, this method will \emph{only} draw the simplices given in \code{color_pal}.\cr
-#' \cr
-#' If \code{length(color_pal)} does not match the dimension or the number of simplices in the complex, 
+#' must correspond to simplices in `x` as comma-separated strings and whose values are colors. If 
+#' option (3) is specified, this method will _only_ draw the simplices given in `color_pal`.
+#' 
+#' If `length(color_pal)` does not match the dimension or the number of simplices in the complex, 
 #' the color palette is recyled and simplices are as such. 
 #' @importFrom utils modifyList
 #' @examples 
@@ -87,7 +89,7 @@
 #' plot(st, color_pal=unlist(coface_pal))
 #' 
 #' ## You can also give a named list to draw individual simplices. 
-#' ## **Only the maximal simplices in the list are drawn** 
+#' ## Note: Only the maximal simplices in the list are drawn
 #' blue_vertices <- structure(as.list(rep("blue", 5)), names=as.character(seq(5, 9)))
 #' plot(st, color_pal=append(blue_vertices, list("5,6,7,8,9"="red")))
 #' @export

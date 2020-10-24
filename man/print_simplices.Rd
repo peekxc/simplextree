@@ -15,27 +15,28 @@ print_simplices(
 \item{format}{the choice of how to format the printing. See details.}
 }
 \description{
-Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
-options to customize how the simplices are printed. The \code{format} must be one of 
+Prints a traversal, a simplex tree, or a list of simplices to the R console, with
+options to customize how the simplices are printed. The \code{format} must be one of
 "summary", "tree", "cousins", "short", "column", or "row", with the default being "short".
-In general, the "tree" and "cousins" format give more details on the structure of the trie, 
+In general, the "tree" and "cousins" format give more details on the structure of the trie,
 whereas the other formats just change how the given set of simplices are formatted.
-\cr
+
 The "tree" method prints the nodes grouped by the same last label and indexed by depth.
-The printed format is: \cr 
-\cr
-[vertex] (h = [subtree height]): [subtree depth]([subtree]) \cr 
-\cr
-Where each lists the top node (\emph{vertex}) and its corresponding subtree. The 
-\emph{subtree height} displays the highest order k-simplex in that subtree. Each 
-level in the subtree tree is a set of sibling k-simplices whose order is given  
-by the number of dots ('.') proceeding the print level.\cr 
-\cr
-The "cousin" format prints the simplex relations used by various algorithms to speed 
-up finding adjacencies in the complex. The cousins are grouped by label and depth. \cr 
-The format looks like: 
-\cr
-(last=[label], depth=[depth of label]): [simplex] \cr
-\cr
+The printed format is:
+
+\code{[vertex] (h = [subtree height]): [subtree depth]([subtree])}
+
+Where each lists the top node (\emph{vertex}) and its corresponding subtree. The
+\emph{subtree height} displays the highest order k-simplex in that subtree. Each
+level in the subtree tree is a set of sibling k-simplices whose order is given
+by the number of dots (\code{'.'}) proceeding the print level.
+
+The "cousin" format prints the simplex relations used by various algorithms to speed
+up finding adjacencies in the complex. The cousins are grouped by label and depth.
+
+The format looks like:
+
+\code{(last=[label], depth=[depth of label]): [simplex]}
+
 This function is useful for understanding how the simplex tree is stored, and for debugging purposes.
 }

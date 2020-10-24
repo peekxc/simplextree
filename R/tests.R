@@ -1,16 +1,17 @@
 
 # ---- is_face ----
 
+#' @md
 #' @name is_face
 #' @title Face test
 #' @description Checks whether a simplex is a face of another simplex and is in the complex.
 #' @param st a simplex tree.  
-#' @param tau a simplex which may contain \code{sigma} as a coface. 
-#' @param sigma a simplex which may contain \code{tau} as a face. 
-#' @details A simplex \eqn{\tau} is a face of \eqn{\sigma} if \eqn{\tau \subset \sigma}. This function 
-#' checks whether that is true. \code{tau} and \code{sigma} are sorted before comparison.
+#' @param tau a simplex which may contain `sigma` as a coface. 
+#' @param sigma a simplex which may contain `tau` as a face. 
+#' @details A simplex \eqn{\tau} is a face of \eqn{\sigma} if the vertices of \eqn{\tau} are vertices of \eqn{\sigma}. This function 
+#' checks whether that is true. `tau` and `sigma` are sorted before comparison.
 #' @seealso \href{https://en.cppreference.com/w/cpp/algorithm/includes}{std::includes}
-#' @return boolean indicating whether \code{tau} is a face of \code{sigma}. 
+#' @return boolean indicating whether `tau` is a face of `sigma`. 
 #' @examples 
 #' st <- simplex_tree()
 #' st %>% insert(1:3)
@@ -25,6 +26,7 @@ is_face <- function(st, tau, sigma){
 
 # ---- is_tree ----
 
+#' @md
 #' @name is_tree 
 #' @title Tree (acyclicity) test
 #' @description This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.

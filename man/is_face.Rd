@@ -20,7 +20,7 @@ boolean indicating whether \code{tau} is a face of \code{sigma}.
 Checks whether a simplex is a face of another simplex and is in the complex.
 }
 \details{
-A simplex \eqn{\tau} is a face of \eqn{\sigma} if \eqn{\tau \subset \sigma}. This function 
+A simplex \eqn{\tau} is a face of \eqn{\sigma} if the vertices of \eqn{\tau} are vertices of \eqn{\sigma}. This function
 checks whether that is true. \code{tau} and \code{sigma} are sorted before comparison.
 }
 \examples{

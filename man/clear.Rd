@@ -11,7 +11,7 @@ clear(st)
 }
 \description{
 Removes all simplices from the simplex tree, except the root
-  node.
+node.
 }
 \examples{
 st <- simplex_tree()

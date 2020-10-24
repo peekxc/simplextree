@@ -1,6 +1,7 @@
 
 # ---- clear ----
 
+#' @md
 #' @name clear
 #' @title Clear a simplex tree
 #' @description Removes all simplices from the simplex tree, except the root
@@ -22,6 +23,7 @@ clear <- function(st){
 
 # ---- expand ----
 
+#' @md
 #' @name expand
 #' @title k-expansion
 #' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
@@ -40,22 +42,23 @@ expand <- function(st, k=2){
 
 # ---- collapse ----
 
+#' @md
 #' @name collapse
 #' @title Elementary collapse
 #' @description Performs an elementary collapse. 
 #' @param st a simplex tree.
 #' @param pair list of simplices to collapse. 
 #' @param w vertex to collapse to, if performing a vertex collapse. 
-#' @details This function provides two types of \emph{elementary collapses}. \cr 
-#' \cr 
+#' @details This function provides two types of _elementary collapses_.
+#' 
 #' The first type of collapse is in the sense described by (1), which is 
 #' summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if 
 #' \eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
 #' (if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed. 
-#' \code{tau} and \code{sigma} are sorted before comparison.
-#' To perform this kind of elementary collapse, call \code{collapse} with two simplices as arguments, i.e. \code{tau} before \code{sigma}.
+#' `tau` and `sigma` are sorted before comparison.
+#' To perform this kind of elementary collapse, call `collapse` with two simplices as arguments, i.e. `tau` before `sigma`.
 #' 
-#' Alternatively, this method supports another type of elementary collapse, also called a \emph{vertex collapse}, as described 
+#' Alternatively, this method supports another type of elementary collapse, also called a _vertex collapse_, as described 
 #' in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first 
 #' two representing the free pair, and the last representing the target vertex to collapse to. 
 #' 
@@ -100,7 +103,7 @@ collapse <- function(st, pair, w=NULL){
   return(invisible(st))
 }
 
-
+#' @md
 #' @name threshold
 #' @title Filtered complex thresholding
 #' @description Thresholds a given filtered simplicial complex.
@@ -126,19 +129,23 @@ threshold <- function(st, index = NULL, value = NULL){
 
 # ---- contract ----
 
+#' @md
 #' @name contract
 #' @title Edge contraction
 #' @description Performs an edge contraction. 
 #' @param st a simplex tree.
 #' @param edge an edge to contract, as a 2-length vector. 
-#' @details This function performs an \emph{edge contraction} in the sense described by (1), which is 
-#' summarized here. Given an edge \eqn{ {va, vb}}, \eqn{vb} is contracted to \eqn{va} if \eqn{vb} is 
-#' removed from the complex and the link of \eqn{va} is augmented with the link of \eqn{vb}. This may be thought as 
-#' applying the mapping: \cr
-#' \deqn{f(u) = va}
-#' if \eqn{u = vb}
-#' and identity otherwise, to all simplices in the complex. \cr 
-#' \code{edge} is \strong{not} sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
+#' @details This function performs an _edge contraction_ in the sense described by (1), which is 
+#' summarized here. Given an edge \eqn{(v,w)}, \eqn{w} is contracted to \eqn{v} if \eqn{w} is 
+#' removed from the complex and the link of \eqn{v} is augmented with the link of \eqn{w}. This may be thought as 
+#' applying the mapping:
+#' 
+#' \deqn{f(u) = v}
+#' 
+#' if \eqn{u = w}
+#' and identity otherwise, to all simplices in the complex.
+#' 
+#' `edge` is **not** sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
 #' Note that edge contraction is not symmetric.
 #' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples 

@@ -20,17 +20,17 @@ boolean indicating whether the collapse was performed.
 Performs an elementary collapse.
 }
 \details{
-This function provides two types of \emph{elementary collapses}. \cr 
-\cr 
-The first type of collapse is in the sense described by (1), which is 
-summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if 
-\eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau}, 
-(if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed. 
+This function provides two types of \emph{elementary collapses}.
+
+The first type of collapse is in the sense described by (1), which is
+summarized here. A simplex \eqn{\sigma} is said to be collapsible through one of its faces \eqn{\tau} if
+\eqn{\sigma} is the only coface of \eqn{\tau} (excluding \eqn{\tau} itself). This function checks whether its possible to collapse \eqn{\sigma} through \eqn{\tau},
+(if \eqn{\tau} has \eqn{\sigma} as its only coface), and if so, both simplices are removed.
 \code{tau} and \code{sigma} are sorted before comparison.
 To perform this kind of elementary collapse, call \code{collapse} with two simplices as arguments, i.e. \code{tau} before \code{sigma}.
 
-Alternatively, this method supports another type of elementary collapse, also called a \emph{vertex collapse}, as described 
-in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first 
+Alternatively, this method supports another type of elementary collapse, also called a \emph{vertex collapse}, as described
+in (2). This type of collapse maps a pair of vertices into a single vertex. To use this collapse, specify three vertex ids, the first
 two representing the free pair, and the last representing the target vertex to collapse to.
 }
 \examples{
@@ -54,7 +54,8 @@ st \%>\% print_simplices("column")
 #                           3 5 5 5
 }
 \references{
-1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
-
-2. Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
+\enumerate{
+\item Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+\item Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
+}
 }
