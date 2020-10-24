@@ -131,3 +131,7 @@ sample_costa_farber <- function(n, prob) {
   ## Return the complex
   return(st)
 }
+
+sample_complex <- function(n, prob, dim=NULL, method = c("costa farber", "linial meshulam wallach")){
+  
+}

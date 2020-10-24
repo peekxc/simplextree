@@ -496,7 +496,9 @@ generate_ids <- function(st, n){
 #' @param st a simplex tree. 
 #' @param vertices the vertex ids to check the degree of. 
 #' @description Returns the number of edges (degree) for each given vertex id. 
-degree <- function(st, vertices){
+#' @export
+degree <- function(st, vertices=NULL){
+  if (missing(vertices) || is.null(vertices)){ vertices <- st$vertices }
   stopifnot(is.vector(vertices) && is.numeric(vertices))
   return(st$degree(vertices))
 }
@@ -523,18 +525,17 @@ expand <- function(st, k=2){
 #' @title Adjacent vertices.
 #' @param st a simplex tree.
 #' @param vertices vertex ids. 
-#' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
+#' @description Returns a list of vertex ids that are immediately adjacent to a given vertex. If a given vertex
+#' does not have any adjacencies, a vector of length 0 is returned. 
 #' @examples
 #' st <- simplex_tree(1:3)
 #' st %>% adjacent(2) 
 #' # 1 3
 #' @export
-adjacent <- function(st, vertices){
-  stopifnot(is.vector(vertices))
-  if (length(vertices) == 1){ return(st$adjacent(vertices)) }
-  else {
-    return(lapply(vertices, st$adjacent))
-  }
+adjacent <- function(st, vertices=NULL){
+  if (missing(vertices) || is.null(vertices)){ vertices <- st$vertices }
+  stopifnot(is.vector(vertices) && is.numeric(vertices))
+  return(st$adjacent(vertices))
 }
 
 # ---- insert ----
