@@ -13,6 +13,9 @@ threshold(st, index = NULL, value = NULL)
 
 \item{value}{numeric index to threshold filtration.}
 }
+\value{
+the thresholded simplex tree \code{st}, invisibly.
+}
 \description{
 Thresholds a given filtered simplicial complex.
 }

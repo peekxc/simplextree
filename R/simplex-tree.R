@@ -1,5 +1,5 @@
 #' @name simplex_tree
-#' @aliases SimplexTree
+#' @aliases SimplexTree Rcpp_SimplexTree
 #' @title Simplex Tree
 #' @description Simplex tree class exposed as an Rcpp Module.
 #' @docType class 
@@ -49,7 +49,7 @@
 #' @author Matt Piekenbrock
 #' @import methods
 #' @param simplices optional simplices to initialize the simplex tree with. See [insert()].
-#' @return A queryable simplex tree, as a `Rcpp_SimplexTree` object (Rcpp module). 
+#' @return A queryable simplex tree, as an object (Rcpp module) of class `"Rcpp_SimplexTree"`.
 #' @references Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
 #' @examples
 #' ## Recreating simplex tree from figure. 
@@ -105,6 +105,7 @@ simplex_tree <- function(simplices = NULL){
 #' @description Generates vertex ids representing 0-simplices not in the tree.
 #' @param st a simplex tree. 
 #' @param n the number of ids to generate. 
+#' @return a double vector of the `n` smallest natural numbers (starting at `0`) that are not vertex ids of `st`.
 #' @details This function generates new vertex ids for use in situations which involve generating new 
 #' new 0-simplices, e.g. insertions, contractions, collapses, etc. There are two 'policies' which designate 
 #' the generating mechanism of these ids: 'compressed' and 'unique'. 'compressed' generates vertex ids 
@@ -143,6 +144,7 @@ generate_ids <- function(st, n){
 #' @description Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param st a simplex tree.  
 #' @param simplices simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details. 
+#' @return the simplex tree `st` with the simplices `simplices` inserted, invisibly.
 #' @details This function allows insertion of arbitrary order simplices. If the simplex already exists in the tree, 
 #' no insertion is made, and the tree is not modified. `simplices` is sorted before traversing the trie. 
 #' Faces of `simplices` not in the simplex tree are inserted as needed.
@@ -170,6 +172,7 @@ insert <- function(st, simplices){
 #' @description Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
 #' @param st a simplex tree.  
 #' @param simplices simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details. 
+#' @return the simplex tree `st` with the simplices `simplices` removed, invisibly.
 #' @details This function allows removal of a arbitrary order simplices. If `simplices` already exists in the tree, 
 #' it is removed, otherwise the tree is not modified. `simplices` is sorted before traversing the trie.
 #' Cofaces of `simplices` are also removed.
@@ -192,6 +195,7 @@ remove <- function(st, simplices){
 #' @description Returns whether supplied simplices exist in the complex.  
 #' @param st a simplex tree.  
 #' @param simplices simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details. 
+#' @return a boolean vector indicating whether each simplex in `simplices` exists in `st`.
 #' @section Usage:
 #' st %>% find(simplices)
 #' @details Traverses the simplex tree looking for `simplices`, returning whether or not it exists.
@@ -201,39 +205,9 @@ remove <- function(st, simplices){
 #' If `simplices` is a vector, it's assumed to be a simplex. If a list, its assumed each element in the list 
 #' represents a simplex (as vectors). If the simplices to insert are all of the same dimension, you can also 
 #' optionally use a matrix, where each column is assumed to be a simplex. 
-#' @return boolean indicating whether or not `simplices` exists in the tree. 
 #' @family simplex-level operations
 #' @export
 find <- function(st, simplices){
   stopifnot(class(st) %in% .st_classes)
   st$find(simplices)
-}
-
-# ---- reindex ----
-
-#' @name reindex 
-#' @title Reindex vertex ids
-#' @description This function allows one to 'reorder' or 'reindex' vertex ids.  
-#' @param st a simplex tree. 
-#' @param ids vector of new vertex ids. See details. 
-#' @details The `ids` parameter must be a sorted integer vector of new ids with length matching the 
-#' number of vertices. The simplex tree is modified to replace the vertex label at index `i` with 
-#' `ids[i]`. See examples.
-#' @examples 
-#' st <- simplex_tree()
-#' st %>% insert(1:3) %>% print_simplices("tree")
-#' # 1 (h = 2): .( 2 3 )..( 3 )
-#' # 2 (h = 1): .( 3 )
-#' # 3 (h = 0):
-#' st %>% reindex(4:6) %>% print_simplices("tree")
-#' # 4 (h = 2): .( 5 6 )..( 6 )
-#' # 5 (h = 1): .( 6 )
-#' # 6 (h = 0):
-#' @family simplex-level operations
-#' @export
-reindex <- function(st, ids){
-  stopifnot(class(st) %in% .st_classes)
-  stopifnot(is.numeric(ids) && all(order(ids) == seq(length(ids))))
-  st$reindex(ids)
-  return(invisible(st))
 }

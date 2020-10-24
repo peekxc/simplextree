@@ -11,6 +11,9 @@ expand(st, k = 2)
 
 \item{k}{the target dimension of the expansion.}
 }
+\value{
+the expanded simplex tree \code{st}, invisibly.
+}
 \description{
 Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices
 if all combinations of edges are included. Because this operation uses the edges alone to infer

@@ -11,6 +11,9 @@ preorder(st, sigma = NULL)
 
 \item{sigma}{simplex to start the traversal at.}
 }
+\value{
+a traversal (object of class \code{"st_traversal"}).
+}
 \description{
 Generate a preorder traversal on the simplex tree.
 }

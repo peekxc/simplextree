@@ -11,6 +11,9 @@ adjacent(st, vertices)
 
 \item{vertices}{vertex ids.}
 }
+\value{
+a list of double vectors of vertices adjacent to each of \code{vertices} in \code{st} (or \code{numeric(0)} for vertices not in \code{st}), unlisted to a single vector if \verb{length(vertices == 1}.
+}
 \description{
 Returns a vector of vertex ids that are immediately adjacent to a given vertex.
 }
@@ -21,6 +24,7 @@ st \%>\% adjacent(2)
 }
 \seealso{
 Other vertex-level operations: 
-\code{\link{degree}()}
+\code{\link{degree}()},
+\code{\link{reindex}()}
 }
 \concept{vertex-level operations}

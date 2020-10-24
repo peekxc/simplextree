@@ -13,6 +13,9 @@ k_simplices(st, k, sigma = NULL)
 
 \item{sigma}{simplex to start the traversal at.}
 }
+\value{
+a traversal (object of class \code{"st_traversal"}).
+}
 \description{
 Generates a traversal on the k-simplices of the simplex tree.
 }

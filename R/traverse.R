@@ -99,6 +99,7 @@ empty_face <- integer(0L)
 #' @description Generate a preorder traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 preorder <- function(st, sigma = NULL){
@@ -114,6 +115,7 @@ preorder <- function(st, sigma = NULL){
 #' @description Generates a level order traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 level_order <- function(st, sigma = NULL){
@@ -129,6 +131,7 @@ level_order <- function(st, sigma = NULL){
 #' @description Generates a face traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 faces <- function(st, sigma){
@@ -143,6 +146,7 @@ faces <- function(st, sigma){
 #' @description Generates a coface traversal on the simplex tree. 
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 cofaces <- function(st, sigma){
@@ -158,6 +162,7 @@ cofaces <- function(st, sigma){
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 k_skeleton <- function(st, k, sigma = NULL){
@@ -173,6 +178,7 @@ k_skeleton <- function(st, k, sigma = NULL){
 #' @description Generates a coface roots traversal on the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at.
+#' @return a traversal (object of class `"st_traversal"`).
 #' @description The coface roots of a given simplex `sigma` are the roots
 #'   of subtrees in the trie whose descendents (including the roots themselves)
 #'   are cofaces of `sigma`. This traversal is more useful when used in
@@ -193,6 +199,7 @@ coface_roots <- function(st, sigma){
 #' @description Generates a traversal on the maximal of the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 maximal <- function(st, sigma = NULL){
@@ -209,6 +216,7 @@ maximal <- function(st, sigma = NULL){
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 k_simplices <- function(st, k, sigma = NULL){
@@ -225,6 +233,7 @@ k_simplices <- function(st, k, sigma = NULL){
 #'   simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param sigma simplex to start the traversal at.
+#' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
 link <- function(st, sigma){

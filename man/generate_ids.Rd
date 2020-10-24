@@ -12,6 +12,9 @@ generate_ids(st, n)
 
 \item{n}{the number of ids to generate.}
 }
+\value{
+a double vector of the \code{n} smallest natural numbers (starting at \code{0}) that are not vertex ids of \code{st}.
+}
 \description{
 Generates vertex ids representing 0-simplices not in the tree.
 }
@@ -45,7 +48,6 @@ st \%>\% generate_ids(1)
 Other simplex-level operations: 
 \code{\link{find}()},
 \code{\link{insert}()},
-\code{\link{reindex}()},
 \code{\link{remove}()}
 }
 \concept{simplex-level operations}

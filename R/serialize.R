@@ -74,6 +74,7 @@ deserialize <- function(complex, st = NULL){
 #' @title Clone a simplex tree
 #' @description Performs a deep-copy on the supplied simplicial complex.
 #' @param st a simplex tree.
+#' @return a new simplex tree copied from `st`.
 #' @family serialization methods
 #' @details A clone is produced by serializing the input simplex tree \code{st}
 #'   and deserializing it into a new simplex tree that is then returned.

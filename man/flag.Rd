@@ -11,6 +11,9 @@ flag(st, d)
 
 \item{d}{a vector of edge weights, or a 'dist' object.}
 }
+\value{
+a simplicial filtration (object of class \code{"Rcpp_Filtration"}).
+}
 \description{
 Creates a filtration of flag complexes
 }

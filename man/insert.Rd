@@ -11,6 +11,9 @@ insert(st, simplices)
 
 \item{simplices}{simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details.}
 }
+\value{
+the simplex tree \code{st} with the simplices \code{simplices} inserted, invisibly.
+}
 \description{
 Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
 }
@@ -33,7 +36,6 @@ st \%>\% insert(combn(5,3)) ## inserts all the 2-faces of a 4-simplex
 Other simplex-level operations: 
 \code{\link{find}()},
 \code{\link{generate_ids}()},
-\code{\link{reindex}()},
 \code{\link{remove}()}
 }
 \concept{simplex-level operations}

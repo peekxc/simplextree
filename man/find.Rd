@@ -12,7 +12,7 @@ find(st, simplices)
 \item{simplices}{simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details.}
 }
 \value{
-boolean indicating whether or not \code{simplices} exists in the tree.
+a boolean vector indicating whether each simplex in \code{simplices} exists in \code{st}.
 }
 \description{
 Returns whether supplied simplices exist in the complex.
@@ -35,7 +35,6 @@ st \%>\% find(simplices)
 Other simplex-level operations: 
 \code{\link{generate_ids}()},
 \code{\link{insert}()},
-\code{\link{reindex}()},
 \code{\link{remove}()}
 }
 \concept{simplex-level operations}

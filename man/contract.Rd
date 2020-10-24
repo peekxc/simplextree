@@ -11,6 +11,9 @@ contract(st, edge)
 
 \item{edge}{an edge to contract, as a 2-length vector.}
 }
+\value{
+the contracted simplex tree \code{st}, invisibly.
+}
 \description{
 Performs an edge contraction.
 }

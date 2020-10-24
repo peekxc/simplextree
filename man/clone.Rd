@@ -9,6 +9,9 @@ clone(st)
 \arguments{
 \item{st}{a simplex tree.}
 }
+\value{
+a new simplex tree copied from \code{st}.
+}
 \description{
 Performs a deep-copy on the supplied simplicial complex.
 }

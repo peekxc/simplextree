@@ -4,6 +4,7 @@
 \name{simplex_tree}
 \alias{simplex_tree}
 \alias{SimplexTree}
+\alias{Rcpp_SimplexTree}
 \title{Simplex Tree}
 \usage{
 simplex_tree(simplices = NULL)
@@ -12,7 +13,7 @@ simplex_tree(simplices = NULL)
 \item{simplices}{optional simplices to initialize the simplex tree with. See \code{\link[=insert]{insert()}}.}
 }
 \value{
-A queryable simplex tree, as a \code{Rcpp_SimplexTree} object (Rcpp module).
+A queryable simplex tree, as an object (Rcpp module) of class \code{"Rcpp_SimplexTree"}.
 }
 \description{
 Simplex tree class exposed as an Rcpp Module.

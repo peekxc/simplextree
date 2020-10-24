@@ -4,6 +4,7 @@
 #' @param eps diameter parameter. 
 #' @param dim maximum dimension to construct up to. Defaults to 1 (edges only).
 #' @param filtered whether to construct the filtration. Defaults to false. See details. 
+#' @return a simplicial complex (object of class `"Rcpp_SimplexTree"`).
 #' @family simplicial complex constructors
 #' @export
 rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
@@ -22,6 +23,7 @@ rips <- function(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE){
 #' @title Enclosing radius of a set of distances
 #' @description Computes the enclosing radius of a set of distances. 
 #' @param d a [stats::dist()] object. 
+#' @return a numeric scalar.
 #' @details The enclosing radius is useful as an upper bound of the scale parameter 
 #' for the rips filtration. Scales above the enclosing radius render the Vietoris–Rips
 #' complex as a simplicial cone, beyond which the homology is trivial. 

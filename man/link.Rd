@@ -11,6 +11,9 @@ link(st, sigma)
 
 \item{sigma}{simplex to start the traversal at.}
 }
+\value{
+a traversal (object of class \code{"st_traversal"}).
+}
 \description{
 Generates a traversal on the link of a given simplex in the
 simplex tree.

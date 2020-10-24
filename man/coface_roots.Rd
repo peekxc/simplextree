@@ -11,6 +11,9 @@ coface_roots(st, sigma)
 
 \item{sigma}{simplex to start the traversal at.}
 }
+\value{
+a traversal (object of class \code{"st_traversal"}).
+}
 \description{
 Generates a coface roots traversal on the simplex tree.
 

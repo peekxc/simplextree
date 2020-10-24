@@ -11,6 +11,9 @@ remove(st, simplices)
 
 \item{simplices}{simplices to insert, either as a vector, a list of vectors, or a column-matrix. See details.}
 }
+\value{
+the simplex tree \code{st} with the simplices \code{simplices} removed, invisibly.
+}
 \description{
 Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors.
 }
@@ -27,7 +30,6 @@ optionally use a matrix, where each column is assumed to be a simplex.
 Other simplex-level operations: 
 \code{\link{find}()},
 \code{\link{generate_ids}()},
-\code{\link{insert}()},
-\code{\link{reindex}()}
+\code{\link{insert}()}
 }
 \concept{simplex-level operations}

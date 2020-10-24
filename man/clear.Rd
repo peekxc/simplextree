@@ -9,6 +9,9 @@ clear(st)
 \arguments{
 \item{st}{a simplex tree object.}
 }
+\value{
+the simplex tree \code{st} with simplices removed, invisibly.
+}
 \description{
 Removes all simplices from the simplex tree, except the root
 node.

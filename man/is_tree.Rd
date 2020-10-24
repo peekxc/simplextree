@@ -9,6 +9,9 @@ is_tree(st)
 \arguments{
 \item{st}{a simplex tree.}
 }
+\value{
+a boolean indicating whether \code{st} is acyclic.
+}
 \description{
 This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.
 }

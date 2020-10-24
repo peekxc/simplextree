@@ -9,6 +9,9 @@ enclosing_radius(d)
 \arguments{
 \item{d}{a \code{\link[stats:dist]{stats::dist()}} object.}
 }
+\value{
+a numeric scalar.
+}
 \description{
 Computes the enclosing radius of a set of distances.
 }

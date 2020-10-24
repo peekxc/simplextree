@@ -5,6 +5,7 @@
 #' @param k max simplex dimension to consider. 
 #' @param threshold the number of elements in common for `k` sets to be considered intersecting. Defaults to 1. 
 #' @param neighborhood which combinations of sets to check. See details. 
+#' @return a simplicial complex (object of class `"Rcpp_SimplexTree"`).
 #' @details This computes the nerve of a given cover, adding a \eqn{k}-simplex for each combination of \eqn{k+1} sets 
 #' in the given `cover` that have at least `threshold` elements in their common intersection.
 #' 

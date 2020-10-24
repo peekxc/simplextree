@@ -11,11 +11,15 @@ degree(st, vertices)
 
 \item{vertices}{the vertex ids to check the degree of.}
 }
+\value{
+an integer vector of degrees of \code{vertices} in \code{st} (taken to be \code{0} for vertices not in \code{st}).
+}
 \description{
 Returns the number of edges (degree) for each given vertex id.
 }
 \seealso{
 Other vertex-level operations: 
-\code{\link{adjacent}()}
+\code{\link{adjacent}()},
+\code{\link{reindex}()}
 }
 \concept{vertex-level operations}

@@ -6,6 +6,7 @@
 #' @description Removes all simplices from the simplex tree, except the root
 #'   node.
 #' @param st a simplex tree object.
+#' @return the simplex tree `st` with simplices removed, invisibly.
 #' @examples
 #' st <- simplex_tree()
 #' st %>% insert(1:3)
@@ -30,6 +31,7 @@ clear <- function(st){
 #' is a flag complex. 
 #' @param st a simplex tree. 
 #' @param k the target dimension of the expansion.
+#' @return the expanded simplex tree `st`, invisibly.
 #' @family complex-level operations
 #' @export
 expand <- function(st, k=2){
@@ -106,6 +108,7 @@ collapse <- function(st, pair, w=NULL){
 #' @param st simplex tree.
 #' @param index integer index to threshold to.
 #' @param value numeric index to threshold filtration. 
+#' @return the thresholded simplex tree `st`, invisibly.
 #' @family complex-level operations
 #' @export
 threshold <- function(st, index = NULL, value = NULL){
@@ -130,6 +133,7 @@ threshold <- function(st, index = NULL, value = NULL){
 #' @description Performs an edge contraction. 
 #' @param st a simplex tree.
 #' @param edge an edge to contract, as a 2-length vector. 
+#' @return the contracted simplex tree `st`, invisibly.
 #' @details This function performs an _edge contraction_ in the sense described by (1), which is 
 #' summarized here. Given an edge \eqn{(v,w)}, \eqn{w} is contracted to \eqn{v} if \eqn{w} is 
 #' removed from the complex and the link of \eqn{v} is augmented with the link of \eqn{w}. This may be thought as 

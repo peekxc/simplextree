@@ -15,6 +15,9 @@ rips(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE)
 
 \item{filtered}{whether to construct the filtration. Defaults to false. See details.}
 }
+\value{
+a simplicial complex (object of class \code{"Rcpp_SimplexTree"}).
+}
 \description{
 Constructs the Vietoris–Rips complex.
 }

@@ -17,6 +17,9 @@ nerve(st, cover, k = st$dimension, threshold = 1L, neighborhood = NULL)
 
 \item{neighborhood}{which combinations of sets to check. See details.}
 }
+\value{
+a simplicial complex (object of class \code{"Rcpp_SimplexTree"}).
+}
 \description{
 Compute the nerve of a given cover.
 }
