@@ -1,7 +1,6 @@
 
 # ---- is_face ----
 
-#' @md
 #' @name is_face
 #' @title Face test
 #' @description Checks whether a simplex is a face of another simplex and is in the complex.
@@ -26,7 +25,6 @@ is_face <- function(st, tau, sigma){
 
 # ---- is_tree ----
 
-#' @md
 #' @name is_tree 
 #' @title Tree (acyclicity) test
 #' @description This function performs a breadth-first search on the simplicial complex, checking if the complex is acyclic.

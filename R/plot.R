@@ -1,4 +1,3 @@
-#' @md
 #' @name plot_simplextree
 #' @title Plot a simplex tree
 #' @param x a simplex tree.

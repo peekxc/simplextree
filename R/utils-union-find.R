@@ -1,4 +1,3 @@
-#' @md
 #' @title Union-find
 #' @description Union find structure exposed as an Rcpp Module.
 #' @docType class 

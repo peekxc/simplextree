@@ -22,7 +22,6 @@
 
 ## One printer to rule them all
 
-#' @md
 #' @name print_simplices
 #' @title Print simplices to the console
 #' @param st a simplex tree. 

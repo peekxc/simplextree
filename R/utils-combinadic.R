@@ -1,4 +1,3 @@
-#' @md
 #' @name combinadic
 #' @title \eqn{k}-combinations and binomial coefficients
 #' @description Map between \eqn{k}-combinations of \eqn{n} and their

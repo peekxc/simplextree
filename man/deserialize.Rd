@@ -15,7 +15,7 @@ deserialize(complex, st = NULL)
 Provides a compressed serialization interface for the simplex tree.
 }
 \details{
-The serialize/deserialize commands can be used to compress/uncompress the complex into 
+The serialize/deserialize commands can be used to compress/uncompress the complex into
 smaller form amenable for e.g. storing on disk (see \code{saveRDS}) or saving for later use.
 }
 \seealso{

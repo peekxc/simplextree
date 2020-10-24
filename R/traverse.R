@@ -30,7 +30,6 @@ as.list.st_traversal <- function(x, ...){
 
 # ---- traverse ----
 
-#' @md
 #' @name traverse
 #' @title Apply a function along a traversal
 #' @param traversal The type of traversal to use.
@@ -86,7 +85,6 @@ ltraverse <- function(traversal, f, ...){
 
 # ---- empty_face ----
 
-#' @md
 #' @name empty_face
 #' @title Empty faces
 #' @description Alias to the empty integer vector (`integer(0L)`). Used to indicate the empty face of the tree. 
@@ -170,7 +168,6 @@ k_skeleton <- function(st, k, sigma = NULL){
 
 # ---- coface_roots ----- 
 
-#' @md
 #' @name coface_roots
 #' @title Coface roots traversal
 #' @description Generates a coface roots traversal on the simplex tree.

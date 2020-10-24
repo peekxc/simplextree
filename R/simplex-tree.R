@@ -1,4 +1,3 @@
-#' @md
 #' @name simplex_tree
 #' @aliases SimplexTree
 #' @title Simplex Tree
@@ -100,7 +99,6 @@ simplex_tree <- function(simplices = NULL){
 
 # ---- generate_ids ----
 
-#' @md
 #' @name generate_ids
 #' @aliases id_policy
 #' @title Generate vertex ids
@@ -140,7 +138,6 @@ generate_ids <- function(st, n){
 
 # ---- insert ----
 
-#' @md
 #' @name insert
 #' @title Insert simplices
 #' @description Inserts simplices into the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
@@ -168,7 +165,6 @@ insert <- function(st, simplices){
 
 # ---- remove ----
 
-#' @md
 #' @name remove
 #' @title Remove simplices
 #' @description Removes simplices from the simplex tree. Individual simplices are specified as vectors, and a set of simplices as a list of vectors. 
@@ -191,7 +187,6 @@ remove <- function(st, simplices){
 
 # ---- find ----
 
-#' @md
 #' @name find
 #' @title Find simplices
 #' @description Returns whether supplied simplices exist in the complex.  
@@ -216,7 +211,6 @@ find <- function(st, simplices){
 
 # ---- reindex ----
 
-#' @md
 #' @name reindex 
 #' @title Reindex vertex ids
 #' @description This function allows one to 'reorder' or 'reindex' vertex ids.  

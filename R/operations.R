@@ -1,7 +1,6 @@
 
 # ---- clear ----
 
-#' @md
 #' @name clear
 #' @title Clear a simplex tree
 #' @description Removes all simplices from the simplex tree, except the root
@@ -23,7 +22,6 @@ clear <- function(st){
 
 # ---- expand ----
 
-#' @md
 #' @name expand
 #' @title k-expansion
 #' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
@@ -42,7 +40,6 @@ expand <- function(st, k=2){
 
 # ---- collapse ----
 
-#' @md
 #' @name collapse
 #' @title Elementary collapse
 #' @description Performs an elementary collapse. 
@@ -103,7 +100,6 @@ collapse <- function(st, pair, w=NULL){
   return(invisible(st))
 }
 
-#' @md
 #' @name threshold
 #' @title Filtered complex thresholding
 #' @description Thresholds a given filtered simplicial complex.
@@ -129,7 +125,6 @@ threshold <- function(st, index = NULL, value = NULL){
 
 # ---- contract ----
 
-#' @md
 #' @name contract
 #' @title Edge contraction
 #' @description Performs an edge contraction. 

@@ -13,7 +13,7 @@ link(st, sigma)
 }
 \description{
 Generates a traversal on the link of a given simplex in the
-  simplex tree.
+simplex tree.
 }
 \seealso{
 Other traversals: 
