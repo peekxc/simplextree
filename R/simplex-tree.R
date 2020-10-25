@@ -50,7 +50,7 @@
 #' @import methods
 #' @param simplices optional simplices to initialize the simplex tree with. See [insert()].
 #' @return A queryable simplex tree, as an object (Rcpp module) of class `"Rcpp_SimplexTree"`.
-#' @references Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @template ref-boissonnat2014
 #' @examples
 #' ## Recreating simplex tree from figure. 
 #' st <- simplex_tree()

@@ -21,8 +21,7 @@
 #'   (`nat_to_sub`), an integer vector of the positions of the combinations `s`
 #'   (`sub_to_nat`), or the integer numerator of the binomial coefficient `x`
 #'   (`inverse.choose`).
-#' @references McCaffrey, J. D. "Generating the mth lexicographical element of a
-#'   mathematical combination." MSDN Library (2004).
+#' @template ref-mccaffrey2004
 #' @examples
 #' library(simplextree)
 #' all(nat_to_sub(seq(choose(100,2)), n = 100, k = 2) == combn(100,2))

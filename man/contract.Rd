@@ -39,9 +39,9 @@ st \%>\% contract(c(1, 3)) \%>\% print_simplices()
 # 1, 2, 1 2
 }
 \references{
-\enumerate{
-\item Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
-}
+Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An
+efficient data structure for general simplicial complexes." Algorithmica
+70.3 (2014): 406-427.
 }
 \seealso{
 Other complex-level operations: 

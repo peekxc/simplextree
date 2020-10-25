@@ -54,8 +54,11 @@ st \%>\% print_simplices("column")
 #                           3 5 5 5
 }
 \references{
-\enumerate{
-\item Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
-\item Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
-}
+Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An
+efficient data structure for general simplicial complexes." Algorithmica
+70.3 (2014): 406-427.
+
+Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological
+persistence for simplicial maps." Proceedings of the Thirtieth Annual
+Symposium on Computational Geometry. ACM, 2014.
 }

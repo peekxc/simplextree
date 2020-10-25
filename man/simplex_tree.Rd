@@ -113,7 +113,9 @@ adj_matrix <- st$as_adjacency_matrix()
 # ... see also as_adjacency_list(), as_edge_list(), etc 
 }
 \references{
-Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An
+efficient data structure for general simplicial complexes." Algorithmica
+70.3 (2014): 406-427.
 }
 \seealso{
 Other simplicial complex constructors: 

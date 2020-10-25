@@ -62,11 +62,8 @@ expand <- function(st, k=2){
 #' two representing the free pair, and the last representing the target vertex to collapse to. 
 #' 
 #' @return boolean indicating whether the collapse was performed. 
-#' @references 
-#' 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
-#' 
-#' 2. Dey, Tamal K., Fengtao Fan, and Yusu Wang. "Computing topological persistence for simplicial maps." Proceedings of the thirtieth annual symposium on Computational geometry. ACM, 2014.
-#' 
+#' @template ref-boissonnat2014
+#' @template ref-dey2014
 #' @examples 
 #' st <- simplextree::simplex_tree(1:3)
 #' st %>% print_simplices()
@@ -146,7 +143,7 @@ threshold <- function(st, index = NULL, value = NULL){
 #' 
 #' `edge` is **not** sorted prior to contraction: the second vertex of the edge is always contracted to the first. 
 #' Note that edge contraction is not symmetric.
-#' @references 1. Boissonnat, Jean-Daniel, and Clement Maria. "The simplex tree: An efficient data structure for general simplicial complexes." Algorithmica 70.3 (2014): 406-427.
+#' @template ref-boissonnat2014
 #' @examples 
 #' st <- simplex_tree(1:3) 
 #' st %>% print_simplices()
