@@ -33,13 +33,15 @@ reindex <- function(st, ids){
 
 #' @name degree
 #' @title Vertex degree
-#' @description Returns the number of edges (degree) for each given vertex id. 
+#' @description Returns a list of vertex ids that are immediately adjacent to a given vertex. If a given vertex
+#' does not have any adjacencies, a vector of length 0 is returned. 
 #' @param st a simplex tree. 
 #' @param vertices the vertex ids to check the degree of. 
 #' @return an integer vector of degrees of `vertices` in `st` (taken to be `0` for vertices not in `st`).
 #' @family vertex-level operations
 #' @export
-degree <- function(st, vertices){
+degree <- function(st, vertices=NULL){
+  if (missing(vertices) || is.null(vertices)){ vertices <- st$vertices }
   stopifnot(is.vector(vertices) && is.numeric(vertices))
   return(st$degree(vertices))
 }
@@ -58,10 +60,8 @@ degree <- function(st, vertices){
 #' # 1 3
 #' @family vertex-level operations
 #' @export
-adjacent <- function(st, vertices){
-  stopifnot(is.vector(vertices))
-  if (length(vertices) == 1){ return(st$adjacent(vertices)) }
-  else {
-    return(lapply(vertices, st$adjacent))
-  }
+adjacent <- function(st, vertices=NULL){
+  if (missing(vertices) || is.null(vertices)){ vertices <- st$vertices }
+  stopifnot(is.vector(vertices) && is.numeric(vertices))
+  return(st$adjacent(vertices))
 }

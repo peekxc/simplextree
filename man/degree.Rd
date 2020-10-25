@@ -4,7 +4,7 @@
 \alias{degree}
 \title{Vertex degree}
 \usage{
-degree(st, vertices)
+degree(st, vertices = NULL)
 }
 \arguments{
 \item{st}{a simplex tree.}
@@ -15,7 +15,8 @@ degree(st, vertices)
 an integer vector of degrees of \code{vertices} in \code{st} (taken to be \code{0} for vertices not in \code{st}).
 }
 \description{
-Returns the number of edges (degree) for each given vertex id.
+Returns a list of vertex ids that are immediately adjacent to a given vertex. If a given vertex
+does not have any adjacencies, a vector of length 0 is returned.
 }
 \seealso{
 Other vertex-level operations: 

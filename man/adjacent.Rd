@@ -4,7 +4,7 @@
 \alias{adjacent}
 \title{Adjacent vertices}
 \usage{
-adjacent(st, vertices)
+adjacent(st, vertices = NULL)
 }
 \arguments{
 \item{st}{a simplex tree.}
