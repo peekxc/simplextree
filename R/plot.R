@@ -5,7 +5,7 @@
 #' @param vertex_opt Optional parameters to modify default vertex plotting options. Passed to [graphics::points()].
 #' @param text_opt Optional parameters to modify default vertex text plotting options. Passed to [graphics::text()].
 #' @param edge_opt Optional parameters to modify default edge plotting options. Passed to [graphics::segments()].
-#' @param polygon_opt Optional parameters to modify default k-simplex plotting options for \eqn{k > 1}. Passed to [graphics::polygon()].
+#' @param polygon_opt Optional parameters to modify default \eqn{k}-simplex plotting options for \eqn{k > 1}. Passed to [graphics::polygon()].
 #' @param color_pal Optional vector of colors. See details.
 #' @param maximal Whether to draw only the maximal faces of the complex. Defaults to true. 
 #' @param by_dim Whether to apply (and recycle or truncate) the color palette to the dimensions rather than to the individual simplices. Defaults to true.

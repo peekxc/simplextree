@@ -2,7 +2,7 @@
 % Please edit documentation in R/traverse.R
 \name{k_simplices}
 \alias{k_simplices}
-\title{k-Simplex traversal}
+\title{\eqn{k}-Simplex traversal}
 \usage{
 k_simplices(st, k, sigma = NULL)
 }
@@ -17,7 +17,7 @@ k_simplices(st, k, sigma = NULL)
 a traversal (object of class \code{"st_traversal"}).
 }
 \description{
-Generates a traversal on the k-simplices of the simplex tree.
+Generates a traversal on the \eqn{k}-simplices of the simplex tree.
 }
 \seealso{
 Other traversals: 

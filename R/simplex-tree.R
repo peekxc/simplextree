@@ -34,7 +34,7 @@
 #'     \item{`$`[degree()]}{ Returns the degree of each given vertex. }
 #'     \item{`$`[adjacent()]}{ Returns vertices adjacent to a given vertex. }
 #'     \item{`$`[clear()]}{ Clears the simplex tree. }
-#'     \item{`$`[expand()]}{ Performs an k-expansion. }
+#'     \item{`$`[expand()]}{ Performs an \eqn{k}-expansion. }
 #'     \item{`$`[collapse()]}{ Performs an elementary collapse. }
 #'     \item{`$`[contract()]}{ Performs an edge contraction. }
 #'     \item{`$`[traverse()]}{ Traverses a subset of the simplex tree, applying a function to each simplex. }

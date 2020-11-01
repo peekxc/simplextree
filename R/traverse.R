@@ -157,8 +157,8 @@ cofaces <- function(st, sigma){
 # ---- k_skeleton ----- 
 
 #' @name k_skeleton 
-#' @title k-Skeleton traversal
-#' @description Generates a k-skeleton traversal on the simplex tree.
+#' @title \eqn{k}-Skeleton traversal
+#' @description Generates a \eqn{k}-skeleton traversal on the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 
@@ -211,8 +211,8 @@ maximal <- function(st, sigma = NULL){
 # ---- k_simplices ----- 
 
 #' @name k_simplices 
-#' @title k-Simplex traversal
-#' @description Generates a traversal on the k-simplices of the simplex tree.
+#' @title \eqn{k}-Simplex traversal
+#' @description Generates a traversal on the \eqn{k}-simplices of the simplex tree.
 #' @param st the simplex tree to traverse.
 #' @param k the dimension of the skeleton to include.
 #' @param sigma simplex to start the traversal at. 

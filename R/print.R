@@ -38,8 +38,8 @@
 #' \code{[vertex] (h = [subtree height]): [subtree depth]([subtree])}
 #' 
 #' Where each lists the top node (_vertex_) and its corresponding subtree. The 
-#' _subtree height_ displays the highest order k-simplex in that subtree. Each 
-#' level in the subtree tree is a set of sibling k-simplices whose order is given  
+#' _subtree height_ displays the highest order \eqn{k}-simplex in that subtree. Each 
+#' level in the subtree tree is a set of sibling \eqn{k}-simplices whose order is given  
 #' by the number of dots (`'.'`) proceeding the print level.
 #' 
 #' The "cousin" format prints the simplex relations used by various algorithms to speed 

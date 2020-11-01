@@ -2,7 +2,7 @@
 % Please edit documentation in R/traverse.R
 \name{k_skeleton}
 \alias{k_skeleton}
-\title{k-Skeleton traversal}
+\title{\eqn{k}-Skeleton traversal}
 \usage{
 k_skeleton(st, k, sigma = NULL)
 }
@@ -17,7 +17,7 @@ k_skeleton(st, k, sigma = NULL)
 a traversal (object of class \code{"st_traversal"}).
 }
 \description{
-Generates a k-skeleton traversal on the simplex tree.
+Generates a \eqn{k}-skeleton traversal on the simplex tree.
 }
 \seealso{
 Other traversals: 

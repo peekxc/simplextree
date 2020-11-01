@@ -33,7 +33,7 @@
 
 \item{edge_opt}{Optional parameters to modify default edge plotting options. Passed to \code{\link[graphics:segments]{graphics::segments()}}.}
 
-\item{polygon_opt}{Optional parameters to modify default k-simplex plotting options for \eqn{k > 1}. Passed to \code{\link[graphics:polygon]{graphics::polygon()}}.}
+\item{polygon_opt}{Optional parameters to modify default \eqn{k}-simplex plotting options for \eqn{k > 1}. Passed to \code{\link[graphics:polygon]{graphics::polygon()}}.}
 
 \item{color_pal}{Optional vector of colors. See details.}
 

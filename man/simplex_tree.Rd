@@ -60,7 +60,7 @@ Unlike fields, however, properties are not explicitly stored: they are generated
 \item{\code{$}\code{\link[=degree]{degree()}}}{ Returns the degree of each given vertex. }
 \item{\code{$}\code{\link[=adjacent]{adjacent()}}}{ Returns vertices adjacent to a given vertex. }
 \item{\code{$}\code{\link[=clear]{clear()}}}{ Clears the simplex tree. }
-\item{\code{$}\code{\link[=expand]{expand()}}}{ Performs an k-expansion. }
+\item{\code{$}\code{\link[=expand]{expand()}}}{ Performs an \eqn{k}-expansion. }
 \item{\code{$}\code{\link[=collapse]{collapse()}}}{ Performs an elementary collapse. }
 \item{\code{$}\code{\link[=contract]{contract()}}}{ Performs an edge contraction. }
 \item{\code{$}\code{\link[=traverse]{traverse()}}}{ Traverses a subset of the simplex tree, applying a function to each simplex. }

@@ -24,8 +24,8 @@ clear <- function(st){
 # ---- expand ----
 
 #' @name expand
-#' @title k-expansion
-#' @description Performs a k-expansion on the 1-skeleton of the complex, adding k-simplices 
+#' @title \eqn{k}-expansion
+#' @description Performs a \eqn{k}-expansion on the 1-skeleton of the complex, adding \eqn{k}-simplices 
 #' if all combinations of edges are included. Because this operation uses the edges alone to infer 
 #' the existence of higher order simplices, the expansion assumes the underlying complex
 #' is a flag complex. 
