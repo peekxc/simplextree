@@ -3,13 +3,13 @@
 
 #' @name traversals
 #' @title Methods for traversal objects
+#' @param x traversal object.
+#' @param ... unused. 
 NULL
 
 # ---- print.st_traversal ----
 
 #' @rdname traversals
-#' @param x traversal object.
-#' @param ... unused. 
 #' @export
 print.st_traversal <- function(x, ...){
   sigma_str <- ifelse(length(x$sigma) == 0 || is.null(x$sigma), "empty face", paste0(x$sigma, collapse = " "))
@@ -20,13 +20,10 @@ print.st_traversal <- function(x, ...){
 # ---- as.list.st_traversal ----
 
 #' @rdname traversals
-#' @param x traversal object.
-#' @param ... unused. 
 #' @export
 as.list.st_traversal <- function(x, ...){
   return(ltraverse(x, identity))
 }
-
 
 # ---- traverse ----
 
