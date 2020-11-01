@@ -97,8 +97,7 @@ empty_face <- integer(0L)
 #' @name preorder 
 #' @title Preorder traversal
 #' @description Generate a preorder traversal on the simplex tree. 
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -113,8 +112,7 @@ preorder <- function(st, sigma = NULL){
 #' @name level_order 
 #' @title Level order traversal
 #' @description Generates a level order traversal on the simplex tree. 
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -129,8 +127,7 @@ level_order <- function(st, sigma = NULL){
 #' @name faces 
 #' @title Face traversal
 #' @description Generates a face traversal on the simplex tree. 
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -144,8 +141,7 @@ faces <- function(st, sigma){
 #' @name cofaces 
 #' @title Coface traversal
 #' @description Generates a coface traversal on the simplex tree. 
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -159,9 +155,8 @@ cofaces <- function(st, sigma){
 #' @name k_skeleton 
 #' @title \eqn{k}-Skeleton traversal
 #' @description Generates a \eqn{k}-skeleton traversal on the simplex tree.
-#' @param st the simplex tree to traverse.
+#' @template params-traversal
 #' @param k the dimension of the skeleton to include.
-#' @param sigma simplex to start the traversal at. 
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -176,8 +171,7 @@ k_skeleton <- function(st, k, sigma = NULL){
 #' @name coface_roots
 #' @title Coface roots traversal
 #' @description Generates a coface roots traversal on the simplex tree.
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at.
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @description The coface roots of a given simplex `sigma` are the roots
 #'   of subtrees in the trie whose descendents (including the roots themselves)
@@ -197,8 +191,7 @@ coface_roots <- function(st, sigma){
 #' @name maximal 
 #' @title Maximal traversal
 #' @description Generates a traversal on the maximal of the simplex tree.
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at. 
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -213,9 +206,8 @@ maximal <- function(st, sigma = NULL){
 #' @name k_simplices 
 #' @title \eqn{k}-Simplex traversal
 #' @description Generates a traversal on the \eqn{k}-simplices of the simplex tree.
-#' @param st the simplex tree to traverse.
+#' @template params-traversal
 #' @param k the dimension of the skeleton to include.
-#' @param sigma simplex to start the traversal at. 
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export
@@ -231,8 +223,7 @@ k_simplices <- function(st, k, sigma = NULL){
 #' @title Link traversal
 #' @description Generates a traversal on the link of a given simplex in the
 #'   simplex tree.
-#' @param st the simplex tree to traverse.
-#' @param sigma simplex to start the traversal at.
+#' @template params-traversal
 #' @return a traversal (object of class `"st_traversal"`).
 #' @family traversals
 #' @export

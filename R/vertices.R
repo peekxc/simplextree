@@ -35,8 +35,7 @@ reindex <- function(st, ids){
 #' @title Vertex degree
 #' @description Returns a list of vertex ids that are immediately adjacent to a given vertex. If a given vertex
 #' does not have any adjacencies, a vector of length 0 is returned. 
-#' @param st a simplex tree. 
-#' @param vertices the vertex ids to check the degree of. 
+#' @template params-vertices
 #' @return an integer vector of degrees of `vertices` in `st` (taken to be `0` for vertices not in `st`).
 #' @family vertex-level operations
 #' @export
@@ -51,8 +50,7 @@ degree <- function(st, vertices=NULL){
 #' @name adjacent
 #' @title Adjacent vertices
 #' @description Returns a vector of vertex ids that are immediately adjacent to a given vertex.
-#' @param st a simplex tree.
-#' @param vertices vertex ids. 
+#' @template params-vertices
 #' @return a list of double vectors of vertices adjacent to each of `vertices` in `st` (or `numeric(0)` for vertices not in `st`), unlisted to a single vector if `length(vertices == 1`.
 #' @examples
 #' st <- simplex_tree(1:3)

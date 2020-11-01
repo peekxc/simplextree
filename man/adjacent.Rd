@@ -9,7 +9,7 @@ adjacent(st, vertices = NULL)
 \arguments{
 \item{st}{a simplex tree.}
 
-\item{vertices}{vertex ids.}
+\item{vertices}{a numeric vector of vertex ids.}
 }
 \value{
 a list of double vectors of vertices adjacent to each of \code{vertices} in \code{st} (or \code{numeric(0)} for vertices not in \code{st}), unlisted to a single vector if \verb{length(vertices == 1}.

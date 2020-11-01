@@ -9,7 +9,7 @@ degree(st, vertices = NULL)
 \arguments{
 \item{st}{a simplex tree.}
 
-\item{vertices}{the vertex ids to check the degree of.}
+\item{vertices}{a numeric vector of vertex ids.}
 }
 \value{
 an integer vector of degrees of \code{vertices} in \code{st} (taken to be \code{0} for vertices not in \code{st}).
