@@ -91,6 +91,12 @@ test_that("Export types work", {
     st %>% insert(as.integer(e))
   }))
   
+  ## Test can export to list
+  expect_is(st$as_list(), class = "list")
+  l <- st$as_list()
+  expect_equal(length(l), st$dimension + 1L)
+  expect_equal(length(l[[1L]]), n_vertices)
+  
   ## Test can export to adjacency matrix 
   expect_is(st$as_adjacency_matrix(), class = "matrix")
   am <- st$as_adjacency_matrix()
