@@ -4,7 +4,7 @@
 \alias{adjacent}
 \title{Adjacent vertices.}
 \usage{
-adjacent(st, vertices)
+adjacent(st, vertices = NULL)
 }
 \arguments{
 \item{st}{a simplex tree.}
@@ -12,7 +12,8 @@ adjacent(st, vertices)
 \item{vertices}{vertex ids.}
 }
 \description{
-Returns a vector of vertex ids that are immediately adjacent to a given vertex.
+Returns a list of vertex ids that are immediately adjacent to a given vertex. If a given vertex
+does not have any adjacencies, a vector of length 0 is returned.
 }
 \examples{
 st <- simplex_tree(1:3)

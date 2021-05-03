@@ -148,6 +148,9 @@ struct SimplexTree {
 	  }
 	}
 	
+	template < typename Iter > 
+	auto append_node(Iter pos, node_ptr cn, idx_t label, size_t depth) -> node_set_t::iterator;
+	
 	// Checks if cousins exist 
 	bool cousins_exist(const idx_t label, const idx_t depth) const noexcept {
 	  if (depth_index(depth) >= level_map.size()){ return false; }
