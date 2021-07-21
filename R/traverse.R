@@ -229,3 +229,6 @@ link <- function(st, sigma){
   if (is.null(sigma)){ sigma <- empty_face }
   parameterize_R(st$as_XPtr(), sigma, "link", NULL)
 }
+
+
+
