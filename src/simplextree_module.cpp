@@ -41,6 +41,7 @@ void insert_R(SimplexTree* st, SEXP x){
   vector_handler(x, [&st_ref](simplex_t&& sigma){ st_ref.insert(sigma); });
 }
 
+
 // R-facing Inserter for lexicographically-sorted column matrix
 void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
   SimplexTree& st_ref = *st;
@@ -123,14 +124,6 @@ bool collapse_R(SimplexTree* st, IntegerVector tau, IntegerVector sigma){
 void copy_trees(SEXP st1, SEXP st2){
   Rcpp::XPtr<SimplexTree> st1_ptr(st1), st2_ptr(st2);
   *st2_ptr = static_cast< const SimplexTree& >(*st1_ptr);
-}
-
-IntegerVector degree_R(SimplexTree* st, IntegerVector ids){
-  IntegerVector res(ids.size());
-  std::transform(begin(ids), end(ids), begin(res), [&st](int id){
-    return st->degree(static_cast< idx_t >(id));
-  });
-  return res;
 }
 
 IntegerMatrix get_k_simplices(SimplexTree* st, const size_t k) {
@@ -226,6 +219,32 @@ List as_list(SimplexTree* st){
 }
 
 
+
+IntegerVector degree_R(SimplexTree* st, vector< idx_t > ids){
+  // if (ids.size() == 0){ ids = wrap(get_vertices(st); }
+  // Nullable< IntegerVector > ids_ = R_NilValue
+  // IntegerVector ids = ids_.isUsable() ? IntegerVector(ids_) : (IntegerVector) wrap(get_vertices(st)); 
+  // if (){ ; } else { ids = wrap(get_vertices(st)); }
+  IntegerVector res(ids.size());
+  std::transform(begin(ids), end(ids), begin(res), [&st](int id){
+    return st->degree(static_cast< idx_t >(id));
+  });
+  return res;
+}
+IntegerVector degree_R_default(SimplexTree* st){
+  return(degree_R(st, get_vertices(st)));
+}
+
+List adjacent_R(SimplexTree* st, vector< idx_t > ids = vector< idx_t >()){
+  if (ids.size() == 0){ ids = get_vertices(st); }
+  List res(ids.size());
+  std::transform(begin(ids), end(ids), begin(res), [&st](int id){
+    return st->adjacent_vertices(static_cast< idx_t >(id));
+  });
+  return res;
+}
+
+
 void print_tree(SimplexTree* st){ st->print_tree(Rcout); }
 void print_cousins(SimplexTree* st){ st->print_cousins(Rcout); }
 
@@ -253,6 +272,7 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "print_tree", &print_tree )
     .method( "print_cousins", &print_cousins )
     .method( "clear", &SimplexTree::clear)
+    // .method( "degree", (IntegerVector (SimplexTree::*)())(&degree_R_default))
     .method( "degree", &degree_R)
     .method( "insert",  &insert_R)
     .method( "insert_lex", &insert_lex)
@@ -260,7 +280,7 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "find", &find_R)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "reindex", &SimplexTree::reindex)
-    .method( "adjacent", &SimplexTree::adjacent_vertices)
+    .method( "adjacent", &adjacent_R)
     .method( "expand", &SimplexTree::expansion )
     .method( "collapse", &collapse_R)
     .method( "vertex_collapse", (bool (SimplexTree::*)(idx_t, idx_t, idx_t))(&SimplexTree::vertex_collapse))
@@ -343,7 +363,7 @@ RCPP_MODULE(filtration_module) {
     .method( "clear", &SimplexTree::clear)
     .method( "generate_ids", &SimplexTree::generate_ids)
     .method( "reindex", &SimplexTree::reindex)
-    .method( "adjacent", &SimplexTree::adjacent_vertices)
+    .method( "adjacent", &adjacent_R)
     .method( "degree", &degree_R)
     .method( "insert",  &insert_R)
     .method( "insert_lex", &insert_lex)

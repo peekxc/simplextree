@@ -18,8 +18,11 @@ print_simplices(
 Prints simplices in a formatted way
 
 Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
-options to customize how the simplices are printed. The \code{format} must be one of 
-"summary", "tree", "cousins", "short", "column", or "row", with the default being "short".
+options to customize how the simplices are printed.
+}
+\details{
+This function provides multiple formats for printing a simplicial complex. 
+\code{format} must be one of "summary", "tree", "cousins", "short", "column", or "row", with the default being "short".
 In general, the "tree" and "cousins" format give more details on the structure of the trie, 
 whereas the other formats just change how the given set of simplices are formatted.
 \cr

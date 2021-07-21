@@ -4,7 +4,7 @@
 \alias{degree}
 \title{The vertex degree.}
 \usage{
-degree(st, vertices)
+degree(st, vertices = NULL)
 }
 \arguments{
 \item{st}{a simplex tree.}
