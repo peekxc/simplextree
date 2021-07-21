@@ -3,6 +3,8 @@
 
 #include "simplextree.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wambiguous-reversed-operator"
 
 // --------- Begin C++ only API --------- 
 // These functions are only available through the included header, and thus can only be accessed 
@@ -853,6 +855,6 @@ inline bool SimplexTree::is_tree() const{
   return !has_cycle;
 }
 
-
+#pragma GCC diagnostic pop
 
 #endif

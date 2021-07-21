@@ -94,6 +94,11 @@ simplex_tree <- function(simplices = NULL){
   return(st)
 }
 
+#' @export
+is.simplextree <- function(x){
+  return(class(x) %in% .st_classes)
+}
+
 #' flag
 #' @description Creates a filtration of flag complexes
 #' @param st a simplex tree. See details. 

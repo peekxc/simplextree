@@ -17,6 +17,9 @@ using node_ptr = SimplexTree::node_ptr;
 using node_uptr = SimplexTree::node_uptr;
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wambiguous-reversed-operator"
+
 // #include <string_view>
 // 
 // template <typename T>
@@ -1097,6 +1100,8 @@ namespace st {
   
   
 }; // end namespace st 
+
+#pragma GCC diagnostic pop
 
 
 #endif 

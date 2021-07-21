@@ -6,6 +6,40 @@
 
 using namespace Rcpp;
 
+// bench_preorder
+IntegerVector bench_preorder(SEXP stree);
+RcppExport SEXP _simplextree_bench_preorder(SEXP streeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type stree(streeSEXP);
+    rcpp_result_gen = Rcpp::wrap(bench_preorder(stree));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bench_levelorder
+IntegerVector bench_levelorder(SEXP stree);
+RcppExport SEXP _simplextree_bench_levelorder(SEXP streeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type stree(streeSEXP);
+    rcpp_result_gen = Rcpp::wrap(bench_levelorder(stree));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cech_complex
+void cech_complex(SEXP stx, const size_t k, Function seb_f);
+RcppExport SEXP _simplextree_cech_complex(SEXP stxSEXP, SEXP kSEXP, SEXP seb_fSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type stx(stxSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type k(kSEXP);
+    Rcpp::traits::input_parameter< Function >::type seb_f(seb_fSEXP);
+    cech_complex(stx, k, seb_f);
+    return R_NilValue;
+END_RCPP
+}
 // n_choose_k
 size_t n_choose_k(const size_t n, const size_t k);
 RcppExport SEXP _simplextree_n_choose_k(SEXP nSEXP, SEXP kSEXP) {
@@ -171,6 +205,9 @@ RcppExport SEXP _rcpp_module_boot_simplex_tree_module();
 RcppExport SEXP _rcpp_module_boot_filtration_module();
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_simplextree_bench_preorder", (DL_FUNC) &_simplextree_bench_preorder, 1},
+    {"_simplextree_bench_levelorder", (DL_FUNC) &_simplextree_bench_levelorder, 1},
+    {"_simplextree_cech_complex", (DL_FUNC) &_simplextree_cech_complex, 3},
     {"_simplextree_n_choose_k", (DL_FUNC) &_simplextree_n_choose_k, 2},
     {"_simplextree_inv_choose_2_R", (DL_FUNC) &_simplextree_inv_choose_2_R, 1},
     {"_simplextree_to_subscript_R", (DL_FUNC) &_simplextree_to_subscript_R, 3},

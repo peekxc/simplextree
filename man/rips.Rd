@@ -4,17 +4,22 @@
 \alias{rips}
 \title{rips}
 \usage{
-rips(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE)
+rips(d, diameter = enclosing_radius(d), dim = 1L, filtered = FALSE, ...)
 }
 \arguments{
 \item{d}{a numeric 'dist' vector.}
 
-\item{eps}{diameter parameter.}
-
 \item{dim}{maximum dimension to construct up to. Defaults to 1 (edges only).}
 
 \item{filtered}{whether to construct the filtration. Defaults to false. See details.}
+
+\item{eps}{diameter parameter.}
 }
 \description{
 Constructs the Vietoris-Rips complex.
+}
+\details{
+This function constructs a rips complex from a 'dist' object up to scale \code{diameter}. 
+By default, if \code{diameter} is not provided, a rips complex is constructed up to the enclosing radius 
+of the space, at which the complex has trivial homology.
 }

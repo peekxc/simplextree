@@ -81,13 +81,12 @@ struct SimplexTree {
   using value_type = node_ptr;
   
   // Fields 
-  node_uptr root; 															// empty face; initialized to id = 0, parent = nullptr
-  vector< cousin_map_t > level_map;	            // adjacency map between cousins
-  std::array< size_t, 32 > n_simplexes = { { 0 } }; 
-  // vector< size_t > n_simplexes; 								// tracks the number of simplices if each order
-  size_t tree_max_depth; 												// maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
-  size_t max_id;										 						// maximum vertex id used so far. Only needed by the id generator. 
-  size_t id_policy;  														// policy type to generate new ids
+  node_uptr root; 															    // empty face; initialized to id = 0, parent = nullptr
+  vector< cousin_map_t > level_map;	                // adjacency map between cousins
+  std::array< size_t, 32 > n_simplexes = { { 0 } }; // tracks the number of simplices if each order
+  size_t tree_max_depth; 												    // maximum tree depth; largest path from any given leaf to the root. The depth of the root is 0.
+  size_t max_id;										 						    // maximum vertex id used so far. Only needed by the id generator. 
+  size_t id_policy;  														    // policy type to generate new ids
 
 	// Node structure stored by the simplex tree. Contains the following fields:
 	//  label := integer index type representing the id of simplex it represents
@@ -103,73 +102,11 @@ struct SimplexTree {
 			return (this == &rhs); 
 		} 
 		bool operator< (const node& rhs) const { return (label < rhs.label); } // order by label
-		
-    // 		struct iterator {
-    // 	  	using difference_type = std::ptrdiff_t;
-    // 			using value_type = node_ptr; 
-    // 			using pointer = node_ptr*; 
-    // 			using reference = node_ptr&;
-    // 			using iterator_category = std::forward_iterator_tag;
-    //   		std::reference_wrapper< node_ptr > cn; 
-    //   		iterator(node_ptr current) : cn(std::ref(current)) { };
-    // 			bool operator==(const iterator& t) const { return cn == t.cn; }
-    // 			bool operator!=(const iterator& t) const { return cn != t.cn; }
-    // 			auto operator*() { return cn.get(); };
-    // 			auto operator++() { 
-    // 			  cn = std::ref(cn.get()->parent);
-    // 			  return(*this);
-    // 			};
-    // 		};
-    // 		auto begin() { return iterator(this); };
-    //   	auto end() { return iterator(nullptr); };
 	};
 	
 	SimplexTree(const SimplexTree&);
 	SimplexTree& operator=(const SimplexTree&);
-	
-	// Adds node ptr to cousin map
-	void add_cousin(node_ptr cn,  const idx_t depth){
-	  if (depth_index(depth) >= level_map.size()){
-	    level_map.resize(depth_index(depth) + 1);
-	  }
-	  auto& label_map = level_map[depth_index(depth)][cn->label];
-	  auto it = std::find(begin(label_map), end(label_map), cn);
-	  if (it == end(label_map)){ label_map.push_back(cn); } // insert 
-	}
-	
-	// Removes node ptr from cousin map
-	void remove_cousin(node_ptr cn, const idx_t depth){
-	  if (depth_index(depth) >= level_map.size()){ return; }
-	  auto& depth_map = level_map[depth_index(depth)];
-	  auto cousin_it = depth_map.find(cn->label);
-	  if (cousin_it != end(depth_map)){
-	    auto& v = cousin_it->second; 
-	    v.erase(std::remove(v.begin(), v.end(), cn), v.end());
-	  }
-	}
-	
-	template < typename Iter > 
-	auto append_node(Iter pos, node_ptr cn, idx_t label, size_t depth) -> node_set_t::iterator;
-	
-	// Checks if cousins exist 
-	bool cousins_exist(const idx_t label, const idx_t depth) const noexcept {
-	  if (depth_index(depth) >= level_map.size()){ return false; }
-	  return level_map[depth_index(depth)].find(label) != end(level_map[depth_index(depth)]);
-	}
-	
-	const cousin_map_t::mapped_type& cousins(const idx_t label, const idx_t depth) const {
-	  return level_map[depth_index(depth)].at(label);
-	}
-	
-	template < typename Lambda >
-	void traverse_cousins(const idx_t label, const idx_t depth, Lambda f) const {
-	  if (depth_index(depth) >= level_map.size()){ return; }
-	  if (cousins_exist(label, depth)){
-	    const auto& c_cousins = level_map[depth_index(depth)].at(label);
-	    std::for_each(begin(c_cousins), end(c_cousins), f);
-	  }
-	};
-	
+
   // Constructor
   SimplexTree() : root(new node(-1, nullptr)), tree_max_depth(0), max_id(0), id_policy(0) { };
   
@@ -179,6 +116,7 @@ struct SimplexTree {
   auto adjacent_vertices(const idx_t) const -> simplex_t;
   auto record_new_simplexes(const idx_t k, const int n) -> void;// record keeping
   auto dimension() const -> idx_t { return tree_max_depth == 0 ? 0 : tree_max_depth - 1; }
+  auto size() const -> size_t { return(std::accumulate(n_simplexes.begin(), n_simplexes.end(), 0)); }
   
   template< typename Iterable > 
   auto insert(Iterable v) -> void; 
@@ -245,11 +183,52 @@ struct SimplexTree {
   template < typename OutputStream > void print_subtree(OutputStream&, node_ptr) const;
   template < typename OutputStream > void print_simplex(OutputStream&, node_ptr, bool newline = true) const;
 
-
   // Policy for generating ids
   std::string get_id_policy() const;
   void set_id_policy(std::string);
   
+  	// Adds node ptr to cousin map
+	void add_cousin(node_ptr cn,  const idx_t depth){
+	  if (depth_index(depth) >= level_map.size()){
+	    level_map.resize(depth_index(depth) + 1);
+	  }
+	  auto& label_map = level_map[depth_index(depth)][cn->label];
+	  auto it = std::find(begin(label_map), end(label_map), cn);
+	  if (it == end(label_map)){ label_map.push_back(cn); } // insert 
+	}
+	
+	// Removes node ptr from cousin map
+	void remove_cousin(node_ptr cn, const idx_t depth){
+	  if (depth_index(depth) >= level_map.size()){ return; }
+	  auto& depth_map = level_map[depth_index(depth)];
+	  auto cousin_it = depth_map.find(cn->label);
+	  if (cousin_it != end(depth_map)){
+	    auto& v = cousin_it->second; 
+	    v.erase(std::remove(v.begin(), v.end(), cn), v.end());
+	  }
+	}
+	
+	template < typename Iter > 
+	auto append_node(Iter pos, node_ptr cn, idx_t label, size_t depth) -> node_set_t::iterator;
+	
+	// Checks if cousins exist 
+	bool cousins_exist(const idx_t label, const idx_t depth) const noexcept {
+	  if (depth_index(depth) >= level_map.size()){ return false; }
+	  return level_map[depth_index(depth)].find(label) != end(level_map[depth_index(depth)]);
+	}
+	
+	const cousin_map_t::mapped_type& cousins(const idx_t label, const idx_t depth) const {
+	  return level_map[depth_index(depth)].at(label);
+	}
+	
+	template < typename Lambda >
+	void traverse_cousins(const idx_t label, const idx_t depth, Lambda f) const {
+	  if (depth_index(depth) >= level_map.size()){ return; }
+	  if (cousins_exist(label, depth)){
+	    const auto& c_cousins = level_map[depth_index(depth)].at(label);
+	    std::for_each(begin(c_cousins), end(c_cousins), f);
+	  }
+	};  
 };
 
 #include "simplextree/st_iterators.hpp"
