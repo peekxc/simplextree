@@ -167,6 +167,6 @@ sample_abstract <- function(
   return(st)
 }
 
-sample_complex <- function(n, prob, dim=NULL, method = c("costa farber", "linial meshulam wallach")){
-  
-}
+# sample_complex <- function(n, prob, dim=NULL, method = c("costa farber", "linial meshulam wallach")){
+#   
+# }

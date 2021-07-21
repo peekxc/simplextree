@@ -5,6 +5,7 @@
 ^vignettes$
 ^ignore$
 ^docs$
+^man-roxygen$
 ^doc$
 ^codecov\.yml$
 ^cran-comments\.md$
