@@ -6,23 +6,23 @@
 #' @param prob a numeric simplex insertion probability (Linial-Meshulam-Wallach,
 #'   Kahle) or a vector of probabilities for all dimensions (Costa-Farber). The
 #'   dimension of a Costa-Farber random simplicial complex will be at most
-#'   \code{length(prob) - 1L}.
+#'   `length(prob) - 1L`.
 #' @param dimension an integer dimension at which to randomly insert simplices.
 #' @param method a character string indicating the model to use; matched to
-#'   \code{"erdos_renyi"}, \code{"kahle"}, \code{"linial_meshulam_wallach"}, and
-#'   \code{"costa_farber"}, allowing for spaces in place of underscores.
+#'   `"erdos_renyi"`, `"kahle"`, `"linial_meshulam_wallach"`, and
+#'   `"costa_farber"`, allowing for spaces in place of underscores.
 
 #' @details The random graph model \eqn{G(n,p)} of Erdős and Rényi (1959) powers
 #'   parts of other models and is exported for convenience.
 #'
 #'   The random clique complex model of Kahle (2009) samples an Erdős-Rényi
-#'   random graph, then uses \code{\link{expand}} to insert all complete
+#'   random graph, then uses `[expand()]` to insert all complete
 #'   subgraphs.
 #'
 #'   The random simplicial complex model of Costa and Farber (2016) begins with
-#'   a finite number of vertices \eqn{n} (\code{n}) and proceeds as follows,
+#'   a finite number of vertices \eqn{n} (`n`) and proceeds as follows,
 #'   based on the \eqn{d+1}-dimensional vector of probabilities
-#'   \eqn{p_0,\ldots,p_d} (\code{prob}):
+#'   \eqn{p_0,\ldots,p_d} (`prob`):
 
 #'   \itemize{
 #'     \item{Delete each vertex
@@ -40,23 +40,14 @@
 
 #'   The model of Meshulam and Wallach (2009), generalized from that of Linial
 #'   and Meshulam (2006), is a special case in which \eqn{p_k=1} for \eqn{0\le
-#'   k\le d-1}; the only parameters are \eqn{n} (\code{n}) and \eqn{p_d}
-#'   (\code{prob}).
+#'   k\le d-1}; the only parameters are \eqn{n} (`n`) and \eqn{p_d}
+#'   (`prob`).
 
-#' @references Erdős P. and Rényi A. (1959) On Random Graphs I. Publicationes
-#'   Mathematicae 6: 290–297.
-#' @references Linial N. and Meshulam R. (2006) Homological Connectivity of
-#'   Random 2-Complexes. Combinatorica 26, 4, 475–487.
-#'   doi:10.1007/s00493-006-0027-9
-#' @references Meshulam, R. and Wallach, N. (2009) Homological Connectivity of
-#'   Random k‐Dimensional Complexes. Random Struct. Alg., 34: 408–417.
-#'   doi:10.1002/rsa.20238
-#' @references Kahle, M. (2009) Topology of Random Clique Complexes. Discrete
-#'   Math., 309(6): 1658–1671. doi:10.1016/j.disc.2008.02.037
-#' @references Costa A. and Farber M. (2016) Random Simplicial Complexes. In:
-#'   Callegaro F., Cohen F., De Concini C., Feichtner E., Gaiffi G., Salvetti M.
-#'   (eds) Configuration Spaces. Springer INdAM Series, vol 14. Springer, Cham.
-#'   doi:10.1007/978-3-319-31580-5_6
+#' @template ref-erdos1959
+#' @template ref-linial2006
+#' @template ref-meshulam2009
+#' @template ref-kahle2009
+#' @template ref-costa2016
 #' @examples
 #' set.seed(1)
 #' ## Generate Erdos-Renyi random graphs
@@ -166,7 +157,3 @@ sample_abstract <- function(
   ## Return the complex
   return(st)
 }
-
-# sample_complex <- function(n, prob, dim=NULL, method = c("costa farber", "linial meshulam wallach")){
-#   
-# }
