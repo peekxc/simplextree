@@ -2,7 +2,7 @@
 % Please edit documentation in R/rips.R
 \name{rips}
 \alias{rips}
-\title{rips}
+\title{Vietoris–Rips complex}
 \usage{
 rips(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE)
 }
@@ -15,6 +15,16 @@ rips(d, eps = enclosing_radius(d), dim = 1L, filtered = FALSE)
 
 \item{filtered}{whether to construct the filtration. Defaults to false. See details.}
 }
-\description{
-Constructs the Vietoris-Rips complex.
+\value{
+a simplicial complex (object of class \code{"Rcpp_SimplexTree"}).
 }
+\description{
+Constructs the Vietoris–Rips complex.
+}
+\seealso{
+Other simplicial complex constructors: 
+\code{\link{flag}()},
+\code{\link{nerve}()},
+\code{\link{simplex_tree}()}
+}
+\concept{simplicial complex constructors}

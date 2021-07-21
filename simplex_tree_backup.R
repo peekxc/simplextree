@@ -346,8 +346,9 @@ link <- function(st, sigma){
 #' @param st a simplex tree. 
 #' @param format the choice of how to format the printing. See details.   
 #' @description Prints a traversal, a simplex tree, or a list of simplices to the R console, with 
-#' options to customize how the simplices are printed. The \code{format} must be one of 
-#' "summary", "tree", "cousins", "short", "column", or "row", with the default being "short".
+#' options to customize how the simplices are printed. 
+#' @details This function provides multiple formats for printing a simplicial complex. 
+#' \code{format} must be one of "summary", "tree", "cousins", "short", "column", or "row", with the default being "short".
 #' In general, the "tree" and "cousins" format give more details on the structure of the trie, 
 #' whereas the other formats just change how the given set of simplices are formatted.
 #' \cr
@@ -1069,6 +1070,11 @@ plot.Rcpp_SimplexTree <- function(x, coords = NULL, vertex_opt=NULL, text_opt=NU
     for (d in seq(x$dimension, 2)){
       if (any(draw_simplex[dim_idx == d])){
         
+        ## TODO: this code union's the polygons in the plane using the polyclip package,
+        ## dramatically reducing the amount of rendering that needs to occur. However, the processing 
+        ## time to perform the union is sometimes larger on my machine than the naive method of rendering 
+        ## many polygons, making this code ineffective. Nonetheless, the logic is retained here in case this can 
+        ## be improved upon later. 
         # safe_to_clip <- is_char_vec && ((length(color_pal) == x$dimension+1L) || by_dim)
         # if (clip_polygons && safe_to_clip){
         #   polys <- ltraverse(k_simplices(x, k=d), function(simplex){ 

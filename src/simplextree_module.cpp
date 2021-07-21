@@ -41,6 +41,7 @@ void insert_R(SimplexTree* st, SEXP x){
   vector_handler(x, [&st_ref](simplex_t&& sigma){ st_ref.insert(sigma); });
 }
 
+
 // R-facing Inserter for lexicographically-sorted column matrix
 void insert_lex(SimplexTree* st, const IntegerMatrix& simplices){
   SimplexTree& st_ref = *st;
