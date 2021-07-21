@@ -15,7 +15,8 @@ adjacent(st, vertices = NULL)
 a list of double vectors of vertices adjacent to each of \code{vertices} in \code{st} (or \code{numeric(0)} for vertices not in \code{st}), unlisted to a single vector if \verb{length(vertices == 1}.
 }
 \description{
-Returns a vector of vertex ids that are immediately adjacent to a given vertex.
+Returns a list of vertex ids that are immediately adjacent to a given vertex. If a given vertex
+does not have any adjacencies, a vector of length 0 is returned.
 }
 \examples{
 st <- simplex_tree(1:3)
