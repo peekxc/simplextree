@@ -15,7 +15,8 @@
 #' @param n an integer number of starting points.
 #' @param torus a logical instruction to identify opposite faces of the sampling
 #'   region.
-#' @param ... additional parameters passed to `[rips()]`.
+#' @param ... additional parameters passed to the constructor indicated by
+#'   `method`.
 
 #' @details The geometric random graph model (see Penrose, 2003) begins with a
 #'   random sample of points from a distribution on a manifold (usually
@@ -75,6 +76,7 @@ make_geometric <- function(
     radius >= 0,
     dimension > 0L
   )
+  
   ## Match (unique) method, allowing for spaces
   method <- match.arg(
     gsub(" ", "_", method),
@@ -86,8 +88,14 @@ make_geometric <- function(
     rips_vietoris = "vietoris_rips"
   )
   
-  ## Construct the geometric simplicial complex
-  st <- rips(d, eps = 2 * radius, dim = dimension, ...)
+  ## Construct the geometric simplicial complex using the selected constructor
+  st <- switch(
+    method,
+    vietoris_rips = rips(d, eps = 2 * radius, dim = dimension, ...)
+  )
+  if (is.null(st))
+    stop("No constructor found for method `", method, "`.")
+  
   ## Attribute coordinates if requested
   if (coords) attr(st, "coords") <- x
   ## Return geometric complex
