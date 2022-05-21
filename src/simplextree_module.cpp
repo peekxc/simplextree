@@ -195,7 +195,6 @@ IntegerMatrix as_edge_list(SimplexTree* st) {
 }
 
 // Exports the k-skeleton as a list
-<<<<<<< HEAD
 // List as_list(SimplexTree* st){
 //   List res = List();
 //   vector< idx_t > all = vector< idx_t >();
@@ -218,7 +217,6 @@ IntegerMatrix as_edge_list(SimplexTree* st) {
 //   });
 //   return res;
 // }
-=======
 List as_list(SimplexTree* st){
   List res = List();
   vector< idx_t > all = vector< idx_t >();
@@ -248,7 +246,6 @@ List as_list(SimplexTree* st){
   res.push_back(tmp);
   return res;
 }
->>>>>>> 9fb38a3b8662dfbbc316bff5f58a2d0c59419c47
 
 
 
@@ -321,6 +318,7 @@ RCPP_MODULE(simplex_tree_module) {
     .method( "as_adjacency_matrix", &as_adjacency_matrix)
     .method( "as_adjacency_list", &as_adjacency_list)
     .method( "as_edge_list", &as_edge_list)
+    .method( "as_list", &as_list)
     ;
 }
 
@@ -408,6 +406,7 @@ RCPP_MODULE(filtration_module) {
     .method( "as_adjacency_matrix", &as_adjacency_matrix)
     .method( "as_adjacency_list", &as_adjacency_list)
     .method( "as_edge_list", &as_edge_list)
+    .method( "as_list", &as_list)
     ;
   Rcpp::class_< Filtration >("Filtration")
     .derives< SimplexTree >("SimplexTree")

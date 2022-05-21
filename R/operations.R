@@ -171,7 +171,7 @@ contract <- function(st, edge){
 #' This operation does not change the structure of the complex; the original and relabeled complexes are isomorphic.    
 #' @details The \code{ids} parameter must be a sorted integer vector of new ids with length matching the 
 #' number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with 
-#' \code{ids}[i]. See examples.
+#' \code{ids}\[\[i\]\]. See examples.
 #' @examples 
 #' st <- simplex_tree()
 #' st %>% insert(1:3) %>% print_simplices("tree")

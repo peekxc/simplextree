@@ -18,7 +18,7 @@ This operation does not change the structure of the complex; the original and re
 \details{
 The \code{ids} parameter must be a sorted integer vector of new ids with length matching the
 number of vertices. The simplex tree is modified to replace the vertex label at index \code{i} with
-\code{ids}\link{i}. See examples.
+\code{ids}[[i]]. See examples.
 }
 \examples{
 st <- simplex_tree()
