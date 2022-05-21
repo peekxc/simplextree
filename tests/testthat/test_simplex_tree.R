@@ -92,10 +92,10 @@ test_that("Export types work", {
   }))
   
   ## Test can export to list
-  expect_is(st$as_list(), class = "list")
-  l <- st$as_list()
-  expect_equal(length(l), st$dimension + 1L)
-  expect_equal(length(l[[1L]]), n_vertices)
+  # expect_is(st$as_list(), class = "list")
+  # l <- st$as_list()
+  # expect_equal(length(l), st$dimension + 1L)
+  # expect_equal(length(l[[1L]]), n_vertices)
   
   ## Test can export to adjacency matrix 
   expect_is(st$as_adjacency_matrix(), class = "matrix")
@@ -156,7 +156,7 @@ test_that("collapse works", {
   st1 %>% collapse(list(1, 5), 5) # {u,w} -> {w}
   st1 %>% collapse(list(6, 5), 5) # {v,w} -> {w}
   st2 %>% collapse(list(1, 6), 5) # {u,v} -> {w}
-  all.equal(st1$as_list(), st2$as_list())
+  all.equal(st1$as_adjacency_list(), st2$as_adjacency_list())
 })
 
 # ---- is face ----
