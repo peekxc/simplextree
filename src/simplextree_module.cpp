@@ -194,64 +194,6 @@ IntegerMatrix as_edge_list(SimplexTree* st) {
   return get_k_simplices(st, 1);
 }
 
-// Exports the k-skeleton as a list
-<<<<<<< HEAD
-// List as_list(SimplexTree* st){
-//   List res = List();
-//   vector< idx_t > all = vector< idx_t >();
-//   idx_t d = 1;
-//   auto bfs = st::level_order< true >(st);
-//   traverse(bfs, [&res, &d, &all](node_ptr cn, idx_t depth, simplex_t sigma){
-//     if (depth > d){
-//       const size_t n = all.size() / d;
-//       IntegerMatrix tmp = IntegerMatrix(d,n);
-//       for (size_t i = 0; i < n; ++i){
-//         IntegerVector col = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-//         tmp(_, i) = col;
-//       }
-//       res.push_back(tmp);
-//       all.clear();
-//       d = sigma.size();
-//     }
-//     all.insert(all.end(), sigma.begin(), sigma.end());
-//     return true; 
-//   });
-//   return res;
-// }
-=======
-List as_list(SimplexTree* st){
-  List res = List();
-  vector< idx_t > all = vector< idx_t >();
-  idx_t d = 1;
-  auto bfs = st::level_order< true >(st);
-  traverse(bfs, [&res, &d, &all](node_ptr cn, idx_t depth, simplex_t sigma){
-    if (depth > d){
-      const size_t n = all.size() / d;
-      IntegerMatrix tmp = IntegerMatrix(d,n);
-      for (size_t i = 0; i < n; ++i){
-        IntegerVector col = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-        tmp(_, i) = col;
-      }
-      res.push_back(tmp);
-      all.clear();
-      d = sigma.size();
-    }
-    all.insert(all.end(), sigma.begin(), sigma.end());
-    return true; 
-  });
-  const size_t n = all.size() / d;
-  IntegerMatrix tmp = IntegerMatrix(d,n);
-  for (size_t i = 0; i < n; ++i){
-    IntegerVector col = IntegerVector(all.begin() + i*d, all.begin() + (i+1)*d);
-    tmp(_, i) = col;
-  }
-  res.push_back(tmp);
-  return res;
-}
->>>>>>> 9fb38a3b8662dfbbc316bff5f58a2d0c59419c47
-
-
-
 IntegerVector degree_R(SimplexTree* st, vector< idx_t > ids){
   // if (ids.size() == 0){ ids = wrap(get_vertices(st); }
   // Nullable< IntegerVector > ids_ = R_NilValue
