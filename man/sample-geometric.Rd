@@ -29,8 +29,8 @@ sample_geometric(
 )
 }
 \arguments{
-\item{d}{a distance matrix (\code{"dist"} class) object, or a numeric matrix
-of (row) coordinates of points (which will be transformed into a distance
+\item{d}{a distance matrix (\code{"dist"} class) object, or a numeric matrix of
+(row) coordinates of points (which will be transformed into a distance
 matrix).}
 
 \item{radius}{a numeric distance within which subsets of points will form
@@ -45,7 +45,8 @@ anticipating future additional methods like \code{"cech"}.}
 \item{coords}{a logical instruction to retain the coordinates from a numeric
 matrix \code{d} as an attribute of the simplicial complex.}
 
-\item{...}{additional parameters passed to \code{\link{rips}()}.}
+\item{...}{additional parameters passed to the constructor indicated by
+\code{method}.}
 
 \item{n}{an integer number of starting points.}
 
@@ -53,22 +54,22 @@ matrix \code{d} as an attribute of the simplicial complex.}
 region.}
 }
 \value{
-A \code{\link{simplex_tree}} (\code{*_geometric()}) or a
-  \code{"dist"} object or coordinate matrix (\code{sample_unit()}).
+A \verb{[simplex_tree()]} (\verb{*_geometric()}) or a
+\code{"dist"} object or coordinate matrix (\code{sample_unit()}).
 }
 \description{
 Generate Vietoris–Rips complexes on random point clouds.
 }
 \details{
 The geometric random graph model (see Penrose, 2003) begins with a
-  random sample of points from a distribution on a manifold (usually
-  Euclidean space), which are taken to be vertices, and introduces edges
-  between vertices within a fixed distance of each other.
+random sample of points from a distribution on a manifold (usually
+Euclidean space), which are taken to be vertices, and introduces edges
+between vertices within a fixed distance of each other.
 
-  The geometric random simplicial complex model extends this model by
-  constructing a Vietoris–Rips or Čech complex on the sample. See Kahle
-  (2011) and Bobrowski and Weinberger (2017) for key results and Kahle (2017)
-  for a review.
+The geometric random simplicial complex model extends this model by
+constructing a Vietoris–Rips or Čech complex on the sample. See Kahle
+(2011) and Bobrowski and Weinberger (2017) for key results and Kahle (2017)
+for a review.
 }
 \examples{
 set.seed(1)
@@ -91,16 +92,16 @@ plot(sample_geometric(24L, radius = .1, dimension = 2L, torus = TRUE))
 }
 \references{
 Penrose M. (2003) Random Geometric Graphs. Oxford University
-  Press. doi:10.1093/acprof:oso/9780198506263.001.0001/acprof-9780198506263
+Press. doi:10.1093/acprof:oso/9780198506263.001.0001/acprof-9780198506263
 
 Kahle M. (2011) Random Geometric Complexes. Discrete Comput.
-  Geom. 45, 553–573. doi:10.1007/s00454-010-9319-3
+Geom. 45, 553–573. doi:10.1007/s00454-010-9319-3
 
 Bobrowski O. and Weinberger S. (2017) On the vanishing of
-  homology in random Čech complexes. Random Struct. Alg., 51: 14–51.
-  doi:10.1002/rsa.20697
+homology in random Čech complexes. Random Struct. Alg., 51: 14–51.
+doi:10.1002/rsa.20697
 
 Kahle M. (2017) In: J.E. Goodman, J. O'Rourke, and C.D. Tóth
-  (eds) Handbook of Discrete and Computational Geometry, 3rd edition. CRC
-  Press, Boca Raton, FL.
+(eds) Handbook of Discrete and Computational Geometry, 3rd edition. CRC
+Press, Boca Raton, FL.
 }

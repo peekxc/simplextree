@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // n_choose_k
 size_t n_choose_k(const size_t n, const size_t k);
 RcppExport SEXP _simplextree_n_choose_k(SEXP nSEXP, SEXP kSEXP) {

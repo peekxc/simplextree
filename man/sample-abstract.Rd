@@ -35,7 +35,7 @@ The random graph model \eqn{G(n,p)} of Erdős and Rényi (1959) powers
 parts of other models and is exported for convenience.
 
 The random clique complex model of Kahle (2009) samples an Erdős-Rényi
-random graph, then uses \code{\link{expand}} to insert all complete
+random graph, then uses \verb{[expand()]} to insert all complete
 subgraphs.
 
 The random simplicial complex model of Costa and Farber (2016) begins with
