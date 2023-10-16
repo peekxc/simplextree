@@ -1,7 +1,4 @@
 # simplextree
-[![Appveyor Windows Build status](https://img.shields.io/appveyor/ci/peekxc/simplextree/master.svg?logo=windows&logoColor=DDDDDD)](https://ci.appveyor.com/project/peekxc/simplextree)
-[![Travis OS X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=Apple&logoColor=DDDDDD&env=BADGE=osx&label=build)](https://travis-ci.org/peekxc/simplextree)
-[![Travis Linux X Build status](https://img.shields.io/travis/peekxc/simplextree/master.svg?logo=linux&logoColor=DDDDDD&env=BADGE=linux&label=build&branch=master)](https://travis-ci.org/peekxc/simplextree)
 [![Codecov test coverage](https://img.shields.io/codecov/c/github/peekxc/simplextree)](https://codecov.io/gh/peekxc/simplextree?branch=master)
 [![CRAN badge](https://www.r-pkg.org/badges/version/simplextree)](https://cran.r-project.org/web/packages/simplextree/)
 
