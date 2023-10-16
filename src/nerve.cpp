@@ -1,7 +1,7 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 
-// [[Rcpp::plugins(cpp17)]]  
+// [[Rcpp::plugins(cpp11)]]  
 #include "simplextree.h"
 
 // Given list of integer vectors

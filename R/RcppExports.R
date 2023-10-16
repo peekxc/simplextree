@@ -29,6 +29,10 @@ nerve_expand_f <- function(stx, ids, include_f, k) {
     invisible(.Call(`_simplextree_nerve_expand_f`, stx, ids, include_f, k))
 }
 
+expand_f_bernoulli <- function(stx, k, p) {
+    invisible(.Call(`_simplextree_expand_f_bernoulli`, stx, k, p))
+}
+
 profile <- function(st) {
     .Call(`_simplextree_profile`, st)
 }

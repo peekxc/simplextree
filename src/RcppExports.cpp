@@ -6,6 +6,11 @@
 
 using namespace Rcpp;
 
+#ifdef RCPP_USE_GLOBAL_ROSTREAM
+Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
+Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
+#endif
+
 // n_choose_k
 size_t n_choose_k(const size_t n, const size_t k);
 RcppExport SEXP _simplextree_n_choose_k(SEXP nSEXP, SEXP kSEXP) {
@@ -93,6 +98,18 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// expand_f_bernoulli
+void expand_f_bernoulli(SEXP stx, const size_t k, const double p);
+RcppExport SEXP _simplextree_expand_f_bernoulli(SEXP stxSEXP, SEXP kSEXP, SEXP pSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type stx(stxSEXP);
+    Rcpp::traits::input_parameter< const size_t >::type k(kSEXP);
+    Rcpp::traits::input_parameter< const double >::type p(pSEXP);
+    expand_f_bernoulli(stx, k, p);
+    return R_NilValue;
+END_RCPP
+}
 // profile
 NumericVector profile(SEXP st);
 RcppExport SEXP _simplextree_profile(SEXP stSEXP) {
@@ -166,6 +183,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_simplextree_nfold_intersection", (DL_FUNC) &_simplextree_nfold_intersection, 2},
     {"_simplextree_nerve_expand", (DL_FUNC) &_simplextree_nerve_expand, 5},
     {"_simplextree_nerve_expand_f", (DL_FUNC) &_simplextree_nerve_expand_f, 4},
+    {"_simplextree_expand_f_bernoulli", (DL_FUNC) &_simplextree_expand_f_bernoulli, 3},
     {"_simplextree_profile", (DL_FUNC) &_simplextree_profile, 1},
     {"_simplextree_parameterize_R", (DL_FUNC) &_simplextree_parameterize_R, 4},
     {"_simplextree_traverse_R", (DL_FUNC) &_simplextree_traverse_R, 2},

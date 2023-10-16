@@ -1,5 +1,6 @@
-#' simplextree package
 #' @name simplextree-package
+#' @aliases simplextree
+#' @title 'simplextree' package
 #' @description Provides an R/Rcpp implementation of a Simplex Tree data structure and its related tools. 
 #' @author Matt Piekenbrock
 #' @useDynLib simplextree, .registration = TRUE

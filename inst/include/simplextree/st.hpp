@@ -209,6 +209,43 @@ inline void SimplexTree::remove(node_ptr cn){
   }
 };
 
+template< typename Iter >
+inline auto SimplexTree::append_node(Iter pos, node_ptr cn, idx_t label, size_t depth) -> node_set_t::iterator {
+  auto new_it = cn->children.emplace_hint(pos, make_unique< node >(label, cn));
+  add_cousin((*new_it).get(), depth);
+  record_new_simplexes(depth-1, 1);
+  return(new_it);
+}
+
+// Inserts man simplices of a fixed dimension
+// Assumes Iterator to int types are correct type to avoid casts + sorted
+// template< typename Iter, size_t d >
+// inline void SimplexTree::insert_fast(Iter s, Iter e){
+// 
+//   if constexpr(d == 0){
+//     while(s != e){
+//       node_children(root).emplace(make_unique< node >(*s, root))
+//       ++s;
+//     }
+//   } else if constexpr ( d == 1 ){
+//     const auto label1 = *s;
+//     const auto label2 = *(s+1);
+//     // const auto val_end = std::upper_bound(s, e, label); // wrong [1, 2, 1, 3, 1, 4]...
+//     auto v_it = node_children(root).find(label);
+//     if (v_it == end(node_children(root))){ v_it = append_node(v_it, root, label1, 1); }
+//     if (v_it != end(node_children(root))){
+//       v_it->
+//     }
+//   }
+//   if (it == end(c_node->children)){
+//     auto new_it = c_node->children.emplace_hint(it, make_unique< node >(label, c_node));
+//     if (child_depth > 1){ // keep track of nodes which share ids at the same depth
+//       add_cousin((*new_it).get(), child_depth);
+//     }
+//     record_new_simplexes(child_depth-1, 1);
+//   }
+// }
+
 // Create a set of (i)-simplexes as children of the current node, if they don't already exist
 // depth == (depth of c_node)
 template< bool lex_order, typename Iter >
