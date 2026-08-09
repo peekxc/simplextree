@@ -110,7 +110,9 @@ public:
   {
     using functor_type = typename ::std::decay<T>::type;
 
-    if ((sizeof(functor_type) > store_size_) || !store_.unique())
+    // Ignore guidance and use equivalent statement in `use_count()` terms:
+    // https://en.cppreference.com/w/cpp/memory/shared_ptr/use_count#Notes
+    if ((sizeof(functor_type) > store_size_) || store_.use_count() != 1)
     {
       store_.reset(operator new(sizeof(functor_type)),
         functor_deleter<functor_type>);
